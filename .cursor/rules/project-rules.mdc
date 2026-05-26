@@ -1,0 +1,268 @@
+---
+description: DupBuster v1 project handbook — stack, boundaries, bans, milestones, security, and implementation law
+alwaysApply: true
+---
+
+# DupBuster v1 — Project Rules
+
+**Authority (in order):** `docs/requirements.md` → `docs/architecture.md` → `docs/implementation-plan.md`. Universal engineering standards live in `senior-standards.mdc`; this file is **DupBuster-specific law**. On conflict, requirements win; update this file when a project-specific decision resolves ambiguity.
+
+**Status:** M0 design locked. Implementation follows M1→M4 per `docs/implementation-plan.md`. Do not ship v1 scope outside these docs without new debate consensus.
+
+---
+
+## 1. Product invariants (non-negotiable)
+
+- **On-device only:** No account login, backend sync, or cloud upload of user files in v1.
+- **Duplicate definition:** Same **content** only — not path, filename, resolution, thumbnails, or metadata (except text normalization per `TEXT_NFC_LF`). Near-duplicates are **out of scope** except video cross-resolution via `VIDEO_CONTENT_V1`.
+- **Review-before-delete:** Every destructive delete requires explicit keeper choice + two-step confirm. No auto-delete.
+- **Partial coverage honesty:** Never claim full-device scan without grants. Use `CoverageBanner` and footer copy from frozen tokens.
+- **EN string freeze:** User-facing copy comes from `src/tokens/tokens.ts` verbatim per `docs/requirements.md` §9 and architecture §9.3. Do not paraphrase frozen strings in UI.
+
+---
+
+## 2. Technology stack (locked)
+
+| Layer | Required | Notes |
+|-------|----------|-------|
+| App | React Native **bare workflow** | `android/`, `ios/` native dirs required |
+| Min OS | Android API 26+, iOS 15+ | |
+| Native module | **ScanEngine** Turbo Module / JSI | All I/O, hash, index, delete on native executors |
+| Index | SQLite single merged catalog | Schema per `docs/architecture.md` §5 |
+| Hash | SHA-256 streaming (1 MiB buffer) | `EMPTY:0`, `TEXT_NFC_LF`, `RAW_BYTES`, `VIDEO_CONTENT_V1` only in v1 |
+| UI styling | `StyleSheet` + `tokens.ts` | No runtime theme switching v1 |
+| CI/CD | GitHub Actions + Fastlane | Tag-push matrix; internal/prod lanes |
+
+**Sign-off build:** When `./build.sh` exists, run it before task sign-off (`senior-standards.mdc`). Until scaffolded (M1-01), run the closest project-equivalent checks (native unit tests, lint) documented in the PR or task.
+
+---
+
+## 3. Architecture boundaries (strict)
+
+### 3.1 JS vs native split
+
+| **JavaScript owns** | **Native (ScanEngine) owns** |
+|---------------------|------------------------------|
+| Scan session UI state (`ScanSessionController`) | Discovery, stat, hash, video fingerprint, group, index writes |
+| Permission UX, `CoverageBanner` variants | `UriValidator`, `RedactionFilter`, `DeleteCoordinator` |
+| Duplicate-group presentation, keeper/delete UX | SQLite CRUD, checkpoint/resume, FGS (Android) |
+| Accessibility announcements (decoupled from 4 Hz feed) | Platform delete APIs |
+
+### 3.2 Bridge law (violations fail review)
+
+- **Zero content bytes** across the JS bridge except throttled progress metadata.
+- **Progress (native → JS):** Max **4 events/s** (250 ms coalesce). Fields only: `filesProcessed`, `filesTotalKnown`, `groupsFound`, `reclaimableBytesEst`, `phase`, optional `contentKind` (`none` \| `video_content`). **Never** paths, hashes, file bytes, or `uri_or_path`.
+- **Errors (native → JS):** `file_entry_id`, `unscannable_reason`, optional `scan_run_id` only. Map `PERMISSION_DENIED` to `CoverageBanner` denied variant in RN.
+- **Delete (JS → native):** Only after two-step confirm; payload: `group_id`, `keeper_file_entry_id`, member IDs to delete.
+
+### 3.3 Scan phase enum (must match both sides)
+
+`idle` → `discovering` → `hashing` → `grouping` → `complete` \| `paused` \| `error` \| `cancelling` → `cancelled`
+
+Do not add phases or rename without updating requirements, architecture, native bridge, and `ScanSessionController` together.
+
+### 3.4 Hash pipeline (implement exactly)
+
+1. Discovery → stat (size, mtime, inode/device_id; video: duration_ms, width, height)
+2. Size bucket skip **except** `EMPTY:0` and **all video** (video always runs `VIDEO_CONTENT_V1`)
+3. Quick sample if size > 50 MB: SHA-256(first 64 KiB + last 64 KiB)
+4. Full SHA-256 `RAW_BYTES` with 1 MiB buffer; parallel `VIDEO_CONTENT_V1` for video
+5. Group: `EXACT_BYTES` or `SAME_CONTENT_VIDEO` per requirements §7.1 FR-FP-07
+
+**Caps:** 2 GB default skip (`LARGE_SKIPPED`) unless `settings.largeFiles`; 120 s hash timeout; video fingerprint 90 s wall-clock, 500 MB budget (2 GB with opt-in), 32 MB header parse cap, max 1 hardware decode session.
+
+### 3.5 Text normalization (`TEXT_NFC_LF`)
+
+UTF-8 decode → strip BOM → NFC → CRLF→LF → SHA-256. **Do not trim** trailing whitespace.
+
+---
+
+## 4. Security and privacy (mandatory)
+
+- **`UriValidator` before every stat/open/hash:** API-only URI resolution; grant boundary under active `scan_root`; authority allowlist; **fail-closed** → `PERMISSION_DENIED`; **no** `..` in SAF docId; **do not follow** symlinks.
+- **`RedactionFilter`** on all strings to crash SDK, opt-in analytics, and JS bridge errors (denylist patterns 1–7 in architecture §8.2). On-screen paths for the user are allowed; telemetry egress is not.
+- **Hash phase:** Read-only FDs only — no write/truncate/delete syscalls.
+- **Delete phase:** `DeleteCoordinator` only, isolated from hash FD pool.
+- **Prod:** `frame_hashes_blob` debug-only; never in crash/analytics (AC-security-blob-01).
+- **Analytics:** Opt-in, **default off**. Allowed telemetry fields only per architecture §8.2.
+
+---
+
+## 5. Data model and schema
+
+- Implement tables and columns per `docs/architecture.md` §5. Do not invent parallel stores (AsyncStorage catalog, second DB, in-memory-only index for production paths).
+- **`schema_version`** in `meta` is independent of app semver. Bump → set `full_rescan_required` → `RescanPromptBanner`. **Do not** support app downgrade across schema migrations.
+- **Unscannable reason codes (closed set):** `CLOUD_PLACEHOLDER`, `ENCRYPTED`, `PERMISSION_DENIED`, `OFFLINE_ONLY`, `LOCKED`, `LARGE_SKIPPED`, `HASH_TIMEOUT`, `VIDEO_DECODE_FAILED`. Never skip silently (FR-UN-01).
+- **Hard links:** Same inode+device → one `file_entry_id`, multiple `file_path` alias rows.
+
+---
+
+## 6. Platform rules
+
+### Android
+
+- Discovery: MediaStore + optional SAF tree — **not** recursive `/sdcard` crawl without grants.
+- Access: `ContentResolver.openFileDescriptor(uri, "r")`.
+- Delete: `MediaStore.createDeleteRequest` (API 30+) / platform delete APIs.
+- FGS: type `dataSync`; channel `com.dupbuster.scan.foreground.v1`; notification copy from frozen tokens; **no** "delete"/"remove" in channel or ongoing notification.
+- Cancel teardown: `CANCELLING` → stop enqueue → cancel reads (5 s/file) → drain ≤30 s → stop FGS → persist `cancelled`; notification cleared ≤120 s hard bound.
+
+### iOS
+
+- Discovery: PHAsset + security-scoped bookmarks; limited library → authorized IDs only + `limited-library` banner.
+- Access: `NSFileCoordinator` + scoped resource access.
+- Delete: `PHAssetChangeRequest`.
+- Background: foreground-primary scan; BGProcessingTask continuation only.
+
+### Both
+
+- Batch size **32** files; yield on thermal/battery APIs.
+- Mode A: user-selected SAF/DocumentPicker root. Mode B: platform discovery union — not blind full-device walk.
+
+---
+
+## 7. UI implementation law (M2+)
+
+Implement catalog components per `docs/requirements.md` §13 with props/behavior from architecture §9.1.
+
+| Rule | Detail |
+|------|--------|
+| Tokens | `src/tokens/tokens.ts` — global semantic, component, platform, `a11y.*` layers |
+| Touch targets | Min 44×44 dp |
+| Partial permission color | `color.surface.caution` — not danger (danger = delete confirm only) |
+| `KeeperSelector` | Largest `defaultHighlighted`; **no** `selected=true` until explicit activation (AC-action-keeper-01) |
+| `ContentMatchNotice` | Polite announcement **once** on mount for `SAME_CONTENT_VIDEO` only; before delete in a11y order |
+| `MatchKindBadge` | Readable text, not color-only |
+| Progress a11y | Decoupled from native 4 Hz: 10% of `filesTotalKnown` OR 500-file delta; terminal phase announcements always |
+
+**Controller:** `ScanSessionController` in `src/controllers/` owns phase machine and `coverageSessionKey`; UI components stay presentational where possible.
+
+---
+
+## 8. Directory layout (required)
+
+```
+dupbuster/
+├── android/.../scanengine/     # ScanEngine native (Android)
+├── ios/ScanEngine/             # ScanEngine native (iOS)
+├── src/
+│   ├── components/             # UI catalog
+│   ├── controllers/            # ScanSessionController
+│   ├── tokens/tokens.ts
+│   ├── screens/
+│   └── types/
+├── tests/fixtures/dupbuster/v1/  # Hash + security fixture matrix
+└── .github/workflows/
+```
+
+New code must land in these areas unless architecture is amended first.
+
+---
+
+## 9. Milestones and definition of done
+
+Work must respect **dependency order:** M1 ScanEngine (critical path) → M2 RN shell (mock bridge OK after M1 week 1) → M3 actions/integrity → M4 release hardening.
+
+| Milestone | Do not mark done until |
+|-----------|-------------------------|
+| **M1** | Fixture matrix green offline; progress ≤4 Hz; schema matches architecture; video pipeline + `VIDEO_DECODE_FAILED` covered |
+| **M2** | Catalog + a11y ACs; frozen EN tokens; live bridge where M1 complete |
+| **M3** | Two-step delete; TOCTOU + perm-revoke + resume ACs; `DeleteCoordinator` isolated |
+| **M4** | FGS + RedactionFilter CI gates; store checklist; prod promote gates in implementation-plan §6.2 |
+
+**Internal builds** (Play internal, TestFlight internal) may ship during M1–M3 **without** green redaction gate. **Production** requires all M4 prod promote gates.
+
+---
+
+## 10. Testing requirements
+
+| Change touches | Required verification |
+|----------------|----------------------|
+| ScanEngine / hash / schema | Native unit tests; all relevant `tests/fixtures/dupbuster/v1/` rows |
+| Bridge / progress | AC-integrity-progress-01 (≤4 events/s under load) |
+| URI / SAF | AC-security-uri-01 fixture |
+| Redaction / telemetry | AC-security-redact-01 CI gate |
+| RN UI catalog | Component tests + automated a11y (zero critical violations on M2 gate components) |
+| Delete / TOCTOU | M3 integration suite |
+
+Fixture layout per `docs/implementation-plan.md` §9.2. Add new fixtures when adding equivalence or security behavior — do not rely on manual-only proof for hash correctness.
+
+---
+
+## 11. Banned approaches (do not propose or implement)
+
+### Stack and platform
+
+| Banned | Why | Use instead |
+|--------|-----|-------------|
+| Expo managed workflow | No unconstrained FGS + custom Turbo Module | Bare RN |
+| `MANAGE_EXTERNAL_STORAGE` | Play policy / scope | MediaStore + SAF Mode A/B |
+| Cloud upload hashing | v1 privacy model | On-device ScanEngine only |
+| FFmpeg for video v1 | Architecture lock | MediaCodec + MediaExtractor / AVAssetReader |
+| BLAKE3 / alternate hash algos | v1 schema lock | SHA-256 + documented `schema_version` bump if ever changed |
+
+### Bridge and data
+
+| Banned | Why | Use instead |
+|--------|-----|-------------|
+| Sending paths/hashes/bytes over RN bridge | NFR-04, security | Progress + error contract only |
+| String path concatenation for URI resolution | TOCTOU / escape risk | Platform APIs + `UriValidator` |
+| Following symlinks for duplicate detection | Requirements §4 | Index symlink node only; `is_symlink` |
+| JS-thread hashing or SQLite writes for scan path | Performance architecture | Native ScanEngine |
+| Second catalog source of truth | FR-IX-01 | Single SQLite index |
+
+### Product scope (defer list — requires new debate)
+
+Do not implement without explicit new consensus: perceptual image near-dupes; cross-format document dedup; symlink follow; filesystem watchers; payload-only A/V hashing; account/backend sync; auto-delete; secure wipe claims; runtime themes; broad `/sdcard` crawl; near-duplicate audio.
+
+### UX and copy
+
+| Banned | Why | Use instead |
+|--------|-----|-------------|
+| Paraphrasing frozen EN tokens | Store/a11y freeze | `tokens.ts` literals |
+| Auto-selecting keeper on delete | FR-AC-03, AC-action-keeper-01 | Explicit selection + presets |
+| Forensic erasure marketing or implementation | FR-SE-05 | Platform default delete semantics |
+| FGS notification implying delete/complete early | Play rejection risk | Copy from `notification.*` tokens; complete only when run ends |
+
+---
+
+## 12. Decisions (do not relitigate without doc update)
+
+| Decision | Reasoning | Prevents |
+|----------|-----------|----------|
+| Bare RN + ScanEngine Turbo Module | FGS, JSI, full filesystem APIs | Expo limits, perf regressions |
+| Video exception to size-bucket skip | Cross-resolution dupes are v1 scope | Missing `SAME_CONTENT_VIDEO` groups |
+| `schema_version` ≠ app semver | Algo changes without forcing app version semantics | Silent stale index after upgrade |
+| Separate delete coordinator | Safety + FD isolation | Accidental writes during hash |
+| 4 Hz progress + independent a11y cadence | Bridge perf + screen reader usability | Flooded bridge / chatter |
+| `EXACT_BYTES` takes precedence over video content match for byte-identical copies | AC-equiv-video-xres-04 | Duplicate competing groups |
+| Mock progress stub in M2 until bridge live | Parallel UI track per implementation plan | Blocking UI on full M1 |
+
+---
+
+## 13. Implementation workflow
+
+1. **Read** the relevant sections of requirements + architecture before coding.
+2. **Scope** to the active milestone; do not pull M4 security CI into M1 unless explicitly tasked.
+3. **Native first** for scan/hash/index/delete; wire RN only to published bridge contracts.
+4. **Match** existing patterns in the touched directory once code exists.
+5. **Test** with fixtures for any ScanEngine or equivalence change.
+6. **Update this file** when you learn a ban, dependency caveat, or non-obvious build step (`tracking.mdc`).
+7. **Verify** `./build.sh` when present; otherwise document what was run.
+
+---
+
+## 14. Release and store constraints
+
+- Privacy forms: on-device processing only; no off-device unscannable reason codes in v1 telemetry.
+- Permission strings: derive from `denied.blocking` + `partial.*`.
+- Schema bump release notes: *"Rescan recommended — comparison rules changed in this update."*
+- Prod submit: all M4 prod promote gates in `docs/implementation-plan.md` §6.2 green.
+
+---
+
+## 15. Quick reference — acceptance criteria IDs
+
+When implementing a feature, trace to AC IDs in `docs/requirements.md` §11 (equiv, unscan, integrity, security, action, a11y). PR descriptions should name AC IDs exercised or added.
+
+**Video ship defaults:** Hamming ≤8 (QA may tune ≤10 under false-positive budget); duration gate per FR-FP-07 / AC-equiv-video-xres-05/05b.

@@ -1,0 +1,82 @@
+---
+description: Senior developer/engineer/designer/architect standards — no workarounds, existing patterns, SOLID/DRY/KISS/YAGNI, quality and review
+alwaysApply: true
+---
+
+# Senior Developer Standards
+
+- **No workarounds.** Prefer proper fixes over temporary hacks.
+- **Use existing coding patterns.** Match the project’s structure, naming, and conventions.
+- **Write and refactor like a senior developer/engineer/designer/architect.** All decisions, designs, and implementations must meet senior-level standards.
+
+---
+
+## Core Coding Principles
+
+- **SOLID**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion for flexible, maintainable code.
+- **DRY**: Avoid duplication; extract common logic into functions or modules.
+- **KISS**: Prefer simple solutions over over-engineered ones.
+- **YAGNI**: Don’t add functionality until it’s actually required.
+
+---
+
+## Readability & Maintainability
+
+- **Meaningful names**: Clear, descriptive names for variables, functions, and classes.
+- **Small functions**: One responsibility per function; easier to test and reuse.
+- **Comment the “why”**: Code shows what; comments explain non-obvious reasons.
+- **Consistent formatting**: Follow the project’s style guide.
+
+---
+
+## Architecture & Design
+
+- **Master fundamentals**: Solid grasp of core concepts and patterns.
+- **Focus on architecture**: New code must fit the project’s structure.
+- **Composition over inheritance**: Prefer composition to avoid deep inheritance.
+- **Abstraction**: Balance simplicity with flexibility.
+
+---
+
+## Quality & Process
+
+- **Testability**: Write testable code; use unit and integration tests.
+- **Security**: Consider vulnerabilities and edge cases (nulls, invalid inputs).
+- **Performance**: Optimize when needed; avoid premature optimization.
+- **Code reviews**: Participate in and conduct thorough reviews.
+- **Fail fast**: Handle errors early and clearly.
+- **Balance delivery & quality**: No shortcuts; deliver working, high-quality code.
+
+---
+
+## Mindset
+
+- **Ownership**: Take responsibility for the long-term health of the code.
+- **Continuous learning**: Keep up with best practices and tools.
+
+---
+
+## Senior-Level Control Flow
+
+- **Guard clauses (early returns)**: Check invalid conditions and return early; avoid wrapping entire functions in `if`. Prefer `if (!condition) return;` over `if (condition) { ... }`.
+- **Polymorphism**: For type-based logic (e.g. `if (type == 'Admin')`), prefer abstract types and implementations instead of long conditionals.
+- **Strategy pattern**: For complex business rules, encapsulate behaviors in separate strategy objects instead of large if/else blocks.
+- **Boolean consolidation**: Combine related conditions with `&&` or extract into a well-named helper.
+- **When nesting is acceptable**: One or two levels for simple, clear logic; or in rare performance-critical code where it’s justified and documented.
+
+---
+
+## Task Completion Checklist
+
+After each task/subtask:
+
+1. **Verify adherence**: Does the implementation follow established patterns and senior standards above?
+2. **If yes**: Briefly show how (e.g. which principles applied), ensure existing tests pass, then continue.
+3. **If no**: Explain with concrete justification why patterns or standards weren’t followed or couldn’t be met; then fix and re-verify. If still not possible, stop and wait for further instructions.
+4. **Review**: After meeting standards, perform a short senior-level review: which principles were applied well and which were not.
+
+---
+
+## Sign-off
+
+End each response with: **Mischief managed 🪄**

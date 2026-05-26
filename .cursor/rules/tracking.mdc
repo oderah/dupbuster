@@ -1,0 +1,97 @@
+---
+description: Maintain project-rules.mdc with learnings, bans, decisions, and dependency caveats while building and reviewing
+alwaysApply: true
+---
+
+# Project Knowledge Tracking
+
+`project-rules.mdc` is the living project handbook. Keep it updated with information that helps build the project correctly and avoids repeating mistakes. **Do not treat it as optional documentation** — update it as part of implementation and review, not only at the end of a task.
+
+Reference: `senior-standards.mdc` defines how work should be done; `project-rules.mdc` captures **this project’s** facts, bans, and decisions.
+
+---
+
+## When to Update `project-rules.mdc`
+
+Update it whenever you learn something that would help a future agent or developer build this project without rediscovering the same issues.
+
+| Trigger | What to add |
+|--------|-------------|
+| **Implementing requirements** | Conventions, file layout, APIs, env/setup steps, and anything non-obvious needed to build or run the project |
+| **Failed approach** | Ban the approach and briefly state what was tried and why it failed |
+| **Decision** | Record the choice, the reasoning, and what errors or conflicts it prevents |
+| **New dependency** | Name, purpose, version constraints if any, caveats, restrictions, and decisions about how it must (or must not) be used |
+| **Review / standards check** | If work violates `senior-standards.mdc`, add a project-specific ban or rule so the same violation is not repeated |
+
+---
+
+## What to Record
+
+### Useful build information
+
+- How to build, test, and run (if not already documented elsewhere in the repo)
+- Project-specific structure, naming, and patterns that differ from generic best practices
+- Required tooling, versions, or environment assumptions
+- Non-obvious integration points (services, config files, feature flags)
+
+### Failed approaches (ban list)
+
+When an approach does not work, add an entry under a **Banned approaches** (or similar) section:
+
+- **What not to do** — concrete enough to recognize if proposed again
+- **Why it failed** — error, limitation, or conflict observed
+- **What to do instead** — if known
+
+Example shape:
+
+```markdown
+### Banned: Using X for Y
+- **Tried:** …
+- **Failed because:** …
+- **Use instead:** …
+```
+
+### Decisions and reasoning
+
+When you make a choice that prevents future errors or conflicts:
+
+- **Decision** — what was chosen
+- **Reasoning** — why this option over alternatives
+- **Prevents** — which mistakes, bugs, or merge/architecture conflicts it avoids
+
+### Dependencies
+
+When adding or changing a dependency, document in `project-rules.mdc`:
+
+- **Package** and role in the project
+- **Caveats** — known bugs, platform limits, breaking changes, upgrade risks
+- **Restrictions** — where it must not be used, thread-safety, licensing, bundle size, etc.
+- **Usage decisions** — wrappers, config, patterns required for correct use
+
+### Standards violations found in review
+
+During review (including the checklist in `senior-standards.mdc`):
+
+1. Fix the violation in code when possible.
+2. If the violation is likely to recur (e.g. a tempting shortcut or misunderstood pattern), add a **project-specific ban or requirement** to `project-rules.mdc` that makes the correct behavior explicit.
+3. Tie the rule to the standard violated (e.g. “no workarounds”, “match existing patterns”) so future work stays aligned with `senior-standards.mdc`.
+
+---
+
+## How to Write Entries
+
+- **Be specific** — vague rules (“write good code”) do not help; name files, patterns, libraries, or commands.
+- **Be actionable** — future readers should know what to do or avoid without re-reading the whole chat.
+- **Keep it concise** — one short paragraph or bullet list per item; merge duplicates instead of appending near-copies.
+- **Do not duplicate** `senior-standards.mdc` — only add project-specific bans and facts; universal standards stay in `senior-standards.mdc`.
+
+---
+
+## Workflow Hooks
+
+1. **Before marking a task done** — Ask: “Should anything learned here go into `project-rules.mdc`?” If yes, update it in the same session.
+2. **After a failed attempt** — Ban the failed approach before trying the next one, so the same dead end is not explored again.
+3. **After adding a dependency** — Document caveats and usage decisions before moving on.
+4. **After review** — Any repeated or serious `senior-standards.mdc` violation → add a project rule to prevent recurrence.
+
+`project-rules.mdc` should grow into a reliable, project-specific source of truth for building Dupbuster correctly.
