@@ -39,5 +39,18 @@
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "codegenConfig": {
+    "name": "ScanEngineSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/native",
+    "android": {
+      "javaPackageName": "com.dupbuster.scanengine"
+    },
+    "ios": {
+      "modulesProvider": {
+        "NativeScanEngine": "RCTNativeScanEngine"
+      }
+    }
   }
 }

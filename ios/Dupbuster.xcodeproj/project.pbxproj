@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D4F8A2042B68108700A75B9A /* RCTNativeScanEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */; };
 		0C80B921A6F3F58F76C31292 /* libPods-Dupbuster.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-Dupbuster.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
@@ -21,6 +22,8 @@
 		3B4392A12AC88292D35C810B /* Pods-Dupbuster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dupbuster.debug.xcconfig"; path = "Target Support Files/Pods-Dupbuster/Pods-Dupbuster.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Dupbuster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dupbuster.release.xcconfig"; path = "Target Support Files/Pods-Dupbuster/Pods-Dupbuster.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Dupbuster.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Dupbuster.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4F8A2022B68108700A75B9A /* RCTNativeScanEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTNativeScanEngine.h; path = ScanEngine/RCTNativeScanEngine.h; sourceTree = "<group>"; };
+		D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = RCTNativeScanEngine.mm; path = ScanEngine/RCTNativeScanEngine.mm; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -59,6 +62,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		D4F8A2012B68108700A75B9A /* ScanEngine */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A2022B68108700A75B9A /* RCTNativeScanEngine.h */,
+				D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */,
+			);
+			name = ScanEngine;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -70,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07FAE1A68108700A75B9A /* Dupbuster */,
+				D4F8A2012B68108700A75B9A /* ScanEngine */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -245,6 +258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				D4F8A2042B68108700A75B9A /* RCTNativeScanEngine.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

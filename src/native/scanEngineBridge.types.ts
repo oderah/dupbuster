@@ -1,0 +1,81 @@
+/**
+ * Jest-safe ScanEngine bridge types (no TurboModuleRegistry side effects).
+ * Must stay aligned with [NativeScanEngine.ts] — codegen requires types in that file.
+ */
+
+export type ScanPhase =
+  | 'idle'
+  | 'discovering'
+  | 'hashing'
+  | 'grouping'
+  | 'complete'
+  | 'paused'
+  | 'error'
+  | 'cancelling'
+  | 'cancelled';
+
+export type ScanRootMode = 'user_selected' | 'platform_discovery';
+
+export type UnscannableReason =
+  | 'CLOUD_PLACEHOLDER'
+  | 'ENCRYPTED'
+  | 'PERMISSION_DENIED'
+  | 'OFFLINE_ONLY'
+  | 'LOCKED'
+  | 'LARGE_SKIPPED'
+  | 'HASH_TIMEOUT'
+  | 'VIDEO_DECODE_FAILED';
+
+export type ScanProgressContentKind = 'none' | 'video_content';
+
+export type ScanProgressEvent = {
+  filesProcessed: number;
+  filesTotalKnown: number | null;
+  groupsFound: number;
+  reclaimableBytesEst: number;
+  phase: ScanPhase;
+  contentKind?: ScanProgressContentKind;
+};
+
+export type ScanErrorEvent = {
+  fileEntryId: number;
+  unscannableReason: UnscannableReason;
+  scanRunId?: number;
+};
+
+export type ScanRootInput = {
+  uriGrant: string;
+  scanRootId?: number;
+};
+
+export type ScanStartOptions = {
+  mode: ScanRootMode;
+  roots: ScanRootInput[];
+  resumeScanRunId?: number;
+};
+
+export type ScanStartResult = {
+  scanRunId: number;
+};
+
+export type DeleteDuplicatesCommand = {
+  groupId: number;
+  keeperFileEntryId: number;
+  deleteFileEntryIds: number[];
+};
+
+export type DeleteDuplicatesResult = {
+  deletedCount: number;
+  failedCount: number;
+};
+
+export type CatalogMeta = {
+  schemaVersion: number;
+  fullRescanRequired: boolean;
+};
+
+export const TERMINAL_SCAN_PHASES = [
+  'complete',
+  'cancelled',
+  'error',
+] as const satisfies readonly ScanPhase[];

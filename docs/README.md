@@ -26,7 +26,23 @@ npm install && npm start
 npm run android   # or npm run ios on macOS after pod install
 ```
 
-Native ScanEngine code will live under `android/.../scanengine/` and `ios/ScanEngine/`.
+Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine/`.
+
+### ScanEngine Turbo Module (M1-02)
+
+| Piece | Location |
+|-------|----------|
+| Codegen spec + types | `src/native/NativeScanEngine.ts` |
+| Jest-safe types (no native load) | `src/native/scanEngineBridge.types.ts`, re-exported from `src/types/scanEngine.ts` |
+| Android stub | `android/.../scanengine/ScanEngineModule.kt` + `ScanEnginePackage.kt` |
+| iOS stub | `ios/ScanEngine/RCTNativeScanEngine.{h,mm}` |
+
+- **Module name:** `NativeScanEngine` (New Architecture / Turbo Module).
+- **Commands (JS → native):** `startScan`, `pauseScan`, `resumeScan`, `cancelScan`, `deleteDuplicates`, `getCatalogMeta`.
+- **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
+- **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
+- **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
+- Stubs reject scan/delete commands until M1-03+ / M3; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

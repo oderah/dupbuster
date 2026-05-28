@@ -168,6 +168,14 @@ New code must land in these areas unless architecture is amended first.
 - **WSL emulator + build:** Linux SDK at `~/Android/Sdk` for Gradle/NDK (`sdk.dir` in `local.properties`). Run `bash scripts/setup-wsl-adb.sh` to install ELF `scripts/adb-proxy` as `platform-tools/adb` (forwards to Windows `adb.exe`; CRLF-safe `devices` output). Use `npm run android` → `scripts/run-android-wsl.sh` (`assembleDebug` + `adb install`) because Gradle `installDebug` uses DDMLib on WSL port 5037 and cannot see the Windows emulator. Fallback: `npm run android:rn` (stock RN; needs DDMLib bridge fix). Do not use shell `alias adb` for Gradle.
 - **NDK version:** set via `ndkVersion` in `android/build.gradle` + `android/app/build.gradle`; do **not** use `ndk.dir` in `local.properties` (deprecated CXX5106).
 
+### 8.2 ScanEngine Turbo Module interface (M1-02)
+
+- **Turbo Module name:** `NativeScanEngine` — import runtime from `src/native/NativeScanEngine.ts`; use `src/types/scanEngine.ts` or `scanEngineBridge.types.ts` in Jest (no `TurboModuleRegistry` side effects).
+- **Codegen:** `package.json` → `codegenConfig.name` = `ScanEngineSpec`, `jsSrcsDir` = `src/native`, `android.javaPackageName` = `com.dupbuster.scanengine`, iOS `modulesProvider.NativeScanEngine` → `RCTNativeScanEngine`.
+- **Codegen constraint:** Bridge types for the spec must live **inline** in `NativeScanEngine.ts` (codegen does not follow imports from sibling files). Keep `scanEngineBridge.types.ts` aligned manually for Jest/controllers.
+- **Android registration:** `ScanEnginePackage` in `MainApplication` `PackageList` (not autolinked).
+- **Bridge surface:** Commands `startScan` / `pauseScan` / `resumeScan` / `cancelScan` / `deleteDuplicates` / `getCatalogMeta`; events `onScanProgress` / `onScanError` per `docs/architecture.md` §6.5 and §11.
+
 ---
 
 ## 9. Milestones and definition of done
