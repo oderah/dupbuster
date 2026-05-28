@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 
 /**
- * ScanEngine Turbo Module stub (M1-02). Pipeline implementation lands in M1-03+.
+ * ScanEngine Turbo Module stub (M1-02). UriValidator in M1-03; pipeline lands in M1-04+.
  * Bridge contract: [src/native/NativeScanEngine.ts]
  */
 @DoNotStrip

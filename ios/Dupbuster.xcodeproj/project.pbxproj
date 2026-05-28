@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
+		D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
+		D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */; };
 		D4F8A2042B68108700A75B9A /* RCTNativeScanEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */; };
 		0C80B921A6F3F58F76C31292 /* libPods-Dupbuster.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-Dupbuster.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -24,12 +27,23 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-Dupbuster.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Dupbuster.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4F8A2022B68108700A75B9A /* RCTNativeScanEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTNativeScanEngine.h; path = ScanEngine/RCTNativeScanEngine.h; sourceTree = "<group>"; };
 		D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = RCTNativeScanEngine.mm; path = ScanEngine/RCTNativeScanEngine.mm; sourceTree = "<group>"; };
+		D4F8A2052B68120000A75B9A /* DBUriValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBUriValidator.h; path = ScanEngine/Security/DBUriValidator.h; sourceTree = "<group>"; };
+		D4F8A2062B68120000A75B9A /* DBUriValidator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBUriValidator.mm; path = ScanEngine/Security/DBUriValidator.mm; sourceTree = "<group>"; };
+		D4F8A2092B68120000A75B9A /* DupbusterScanEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DupbusterScanEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBUriValidatorTests.m; path = ScanEngineTests/DBUriValidatorTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D4F8A20F2B68120000A75B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -67,8 +81,26 @@
 			children = (
 				D4F8A2022B68108700A75B9A /* RCTNativeScanEngine.h */,
 				D4F8A2032B68108700A75B9A /* RCTNativeScanEngine.mm */,
+				D4F8A2082B68120000A75B9A /* Security */,
 			);
 			name = ScanEngine;
+			sourceTree = "<group>";
+		};
+		D4F8A2082B68120000A75B9A /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A2052B68120000A75B9A /* DBUriValidator.h */,
+				D4F8A2062B68120000A75B9A /* DBUriValidator.mm */,
+			);
+			name = Security;
+			sourceTree = "<group>";
+		};
+		D4F8A20D2B68120000A75B9A /* ScanEngineTests */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */,
+			);
+			name = ScanEngineTests;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -83,6 +115,7 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* Dupbuster */,
 				D4F8A2012B68108700A75B9A /* ScanEngine */,
+				D4F8A20D2B68120000A75B9A /* ScanEngineTests */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -97,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Dupbuster.app */,
+				D4F8A2092B68120000A75B9A /* DupbusterScanEngineTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -134,6 +168,22 @@
 			productReference = 13B07F961A680F5B00A75B9A /* Dupbuster.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D4F8A2102B68120000A75B9A /* DupbusterScanEngineTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4F8A2132B68120000A75B9A /* Build configuration list for PBXNativeTarget "DupbusterScanEngineTests" */;
+			buildPhases = (
+				D4F8A20E2B68120000A75B9A /* Sources */,
+				D4F8A20F2B68120000A75B9A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DupbusterScanEngineTests;
+			productName = DupbusterScanEngineTests;
+			productReference = D4F8A2092B68120000A75B9A /* DupbusterScanEngineTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -161,6 +211,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Dupbuster */,
+				D4F8A2102B68120000A75B9A /* DupbusterScanEngineTests */,
 			);
 		};
 /* End PBXProject section */
@@ -253,12 +304,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D4F8A20E2B68120000A75B9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */,
+				D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		13B07F871A680F5B00A75B9A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				D4F8A2042B68108700A75B9A /* RCTNativeScanEngine.mm in Sources */,
+				D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,6 +523,66 @@
 			};
 			name = Release;
 		};
+		D4F8A2112B68120000A75B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ScanEngine/Security",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dupbuster.ScanEngineTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4F8A2122B68120000A75B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ScanEngine/Security",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dupbuster.ScanEngineTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -479,6 +600,15 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4F8A2132B68120000A75B9A /* Build configuration list for PBXNativeTarget "DupbusterScanEngineTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4F8A2112B68120000A75B9A /* Debug */,
+				D4F8A2122B68120000A75B9A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

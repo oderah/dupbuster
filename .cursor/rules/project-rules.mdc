@@ -176,6 +176,14 @@ New code must land in these areas unless architecture is amended first.
 - **Android registration:** `ScanEnginePackage` in `MainApplication` `PackageList` (not autolinked).
 - **Bridge surface:** Commands `startScan` / `pauseScan` / `resumeScan` / `cancelScan` / `deleteDuplicates` / `getCatalogMeta`; events `onScanProgress` / `onScanError` per `docs/architecture.md` §6.5 and §11.
 
+### 8.3 UriValidator (M1-03)
+
+- **Android:** `com.dupbuster.scanengine.security.UriValidator` — call before every stat/open/hash; pure rules in `SafUriRules` (unit-tested).
+- **iOS:** `DBUriValidator` — validates PHAsset `localIdentifier` (platform-fetch format) and security-scoped `file://` URLs; fail-closed → `PERMISSION_DENIED`.
+- **Provenance:** `UriProvenance.USER_SUPPLIED` / `DBUriProvenanceUserSupplied` always denied (no pasted URIs).
+- **SAF:** Reject `..` in document IDs (AC-security-uri-01); grant boundary via `DocumentsContract` tree/document IDs — no string path concatenation.
+- **Tests:** `./gradlew :app:testDebugUnitTest`; iOS `DupbusterScanEngineTests` target in Xcode.
+
 ---
 
 ## 9. Milestones and definition of done

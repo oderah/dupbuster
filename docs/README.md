@@ -42,7 +42,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until M1-03+ / M3; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
+- Stubs reject scan/delete commands until M1-04+ / M3; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
+
+### UriValidator (M1-03)
+
+| Piece | Location |
+|-------|----------|
+| Android | `android/.../scanengine/security/UriValidator.kt` (+ `SafUriRules.kt`) |
+| iOS | `ios/ScanEngine/Security/DBUriValidator.{h,mm}` |
+| Fixture | `tests/fixtures/dupbuster/v1/security-uri-01.json` (AC-security-uri-01) |
+
+- Fail-closed → `PERMISSION_DENIED` (FR-SE-01 / FR-UN-03). Rejects user-pasted URIs, `file://`, SAF docIds containing `..`, and out-of-grant documents.
+- **Android unit tests:** `cd android && ./gradlew :app:testDebugUnitTest`
+- **iOS unit tests (macOS):** `xcodebuild test -project ios/Dupbuster.xcodeproj -scheme Dupbuster -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:DupbusterScanEngineTests` (after `pod install`)
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

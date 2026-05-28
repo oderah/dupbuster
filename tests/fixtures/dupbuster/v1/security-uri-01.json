@@ -1,0 +1,15 @@
+{
+  "id": "AC-security-uri-01",
+  "description": "Crafted SAF docId with .. segment must yield PERMISSION_DENIED without open()",
+  "platform": "android",
+  "input": {
+    "treeGrant": "content://com.android.externalstorage.documents/tree/primary%3ADocuments",
+    "candidate": "content://com.android.externalstorage.documents/document/primary%3ADocuments%2F..%2Fsecret",
+    "provenance": "discovery"
+  },
+  "expect": {
+    "validation": "denied",
+    "unscannableReason": "PERMISSION_DENIED",
+    "mustNotOpen": true
+  }
+}
