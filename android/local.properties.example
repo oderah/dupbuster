@@ -1,0 +1,13 @@
+## Copy to local.properties (gitignored) and pick ONE profile.
+##
+## WSL (recommended for `npm run android` in WSL):
+##   Use a Linux Android SDK with linux-x86_64 NDK toolchains.
+##   Install via Android Studio "Linux" SDK in WSL, or sdkmanager under ~/Android/Sdk.
+##   Keep Windows adb.exe on PATH for the emulator (see project-rules §8.1).
+sdk.dir=/home/YOUR_USER/Android/Sdk
+##
+## Windows PowerShell / cmd (build on Windows host, not WSL Gradle):
+# sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
+##
+## Do NOT point WSL builds at /mnt/c/... Windows SDK for New Architecture / CMake:
+##   NDK prebuilt is windows-x86_64; WSL needs linux-x86_64 (clang not found).

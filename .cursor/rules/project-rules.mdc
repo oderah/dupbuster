@@ -157,6 +157,17 @@ dupbuster/
 
 New code must land in these areas unless architecture is amended first.
 
+### 8.1 Scaffold (M1-01)
+
+- **RN version:** 0.85.3 bare workflow; `applicationId` / bundle `com.dupbuster`.
+- **Min OS:** `android/build.gradle` `minSdkVersion = 26`; iOS deployment **15.1** (Xcode project).
+- **Install/run:** `npm install` → `npm start`; `npm run android` / `npm run ios` (iOS needs `cd ios && bundle exec pod install` on macOS).
+- **Node:** `package.json` requires Node ≥ 22.11; use `nvm` if local Node is older.
+- **Sign-off:** `./build.sh` not yet present — use `npm run lint` and `npm test` until M4 adds unified build script.
+- **WSL Android builds:** Gradle/CMake in WSL require a **Linux** Android SDK (`sdk.dir` like `/home/<you>/Android/Sdk`) with NDK prebuilt `toolchains/llvm/prebuilt/linux-x86_64`. A Windows SDK mounted at `/mnt/c/...` only has `windows-x86_64` — native modules (RN New Architecture) fail with missing `clang`. **Do not** symlink `windows-x86_64` as `linux-x86_64`. Use Windows SDK only when building from **Windows** (PowerShell), with `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk`. Template: `android/local.properties.example`.
+- **WSL emulator + build:** Linux SDK at `~/Android/Sdk` for Gradle/NDK (`sdk.dir` in `local.properties`). Run `bash scripts/setup-wsl-adb.sh` to install ELF `scripts/adb-proxy` as `platform-tools/adb` (forwards to Windows `adb.exe`; CRLF-safe `devices` output). Use `npm run android` → `scripts/run-android-wsl.sh` (`assembleDebug` + `adb install`) because Gradle `installDebug` uses DDMLib on WSL port 5037 and cannot see the Windows emulator. Fallback: `npm run android:rn` (stock RN; needs DDMLib bridge fix). Do not use shell `alias adb` for Gradle.
+- **NDK version:** set via `ndkVersion` in `android/build.gradle` + `android/app/build.gradle`; do **not** use `ndk.dir` in `local.properties` (deprecated CXX5106).
+
 ---
 
 ## 9. Milestones and definition of done

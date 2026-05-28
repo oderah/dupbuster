@@ -17,11 +17,24 @@ If there is any conflict, follow the authority order above.
 - **Review before delete**: destructive actions require explicit keeper selection + two-step confirm
 - **Partial coverage honesty**: never claim full-device scan without grants
 
+## App scaffold (M1-01)
+
+Bare React Native **0.85.3** with `android/` and `ios/` at repo root. Application id / bundle: `com.dupbuster`. Min platforms: **Android API 26**, **iOS 15.1**.
+
+```bash
+npm install && npm start
+npm run android   # or npm run ios on macOS after pod install
+```
+
+Native ScanEngine code will live under `android/.../scanengine/` and `ios/ScanEngine/`.
+
+**WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
+
 ## Milestones
 
 Implementation proceeds in milestones as defined in `docs/implementation-plan.md`.
 
-- **M1**: Native ScanEngine spike (discovery, hashing, SQLite index, progress throttle, checkpoint, video fingerprinting)
+- **M1** (in progress): Native ScanEngine spike (discovery, hashing, SQLite index, progress throttle, checkpoint, video fingerprinting)
 - **M2**: React Native shell + UX catalog (can stub progress until bridge is live)
 - **M3**: Actions + integrity (two-step delete, TOCTOU, permission-revoke pause/resume)
 - **M4**: Background + release hardening (Android FGS, redaction gate, store checklist)
