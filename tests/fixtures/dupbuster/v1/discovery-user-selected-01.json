@@ -1,0 +1,44 @@
+{
+  "id": "discovery-user-selected-01",
+  "description": "Mode A SAF tree walk emits files under grant with media_type hints; denies out-of-tree URIs",
+  "platform": "android",
+  "input": {
+    "mode": "user_selected",
+    "treeGrant": "content://com.android.externalstorage.documents/tree/primary%3ADocuments",
+    "tree": {
+      "primary:Documents": [
+        {
+          "documentId": "primary:Documents/photos",
+          "displayName": "photos",
+          "mimeType": "vnd.android.document/directory",
+          "isDirectory": true
+        },
+        {
+          "documentId": "primary:Documents/readme.txt",
+          "displayName": "readme.txt",
+          "mimeType": "text/plain",
+          "sizeBytes": 12,
+          "isDirectory": false
+        }
+      ],
+      "primary:Documents/photos": [
+        {
+          "documentId": "primary:Documents/photos/a.jpg",
+          "displayName": "a.jpg",
+          "mimeType": "image/jpeg",
+          "sizeBytes": 1024,
+          "isDirectory": false
+        }
+      ]
+    }
+  },
+  "expect": {
+    "entriesEmitted": 2,
+    "entriesDenied": 0,
+    "displayNames": ["readme.txt", "a.jpg"],
+    "mediaTypeHints": {
+      "readme.txt": "text",
+      "a.jpg": "image"
+    }
+  }
+}

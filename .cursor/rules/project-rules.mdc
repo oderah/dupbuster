@@ -184,6 +184,15 @@ New code must land in these areas unless architecture is amended first.
 - **SAF:** Reject `..` in document IDs (AC-security-uri-01); grant boundary via `DocumentsContract` tree/document IDs — no string path concatenation.
 - **Tests:** `./gradlew :app:testDebugUnitTest`; iOS `DupbusterScanEngineTests` target in Xcode.
 
+### 8.4 DiscoveryEmitter mode A (M1-04)
+
+- **Android:** `com.dupbuster.scanengine.discovery.DiscoveryEmitter` — BFS over SAF tree via `DocumentsContract.buildChildDocumentsUriUsingTree` / `buildDocumentUriUsingTree`; inject `SafChildDocumentsQuery` in tests.
+- **iOS:** `DBDiscoveryEmitter` — recursive `NSFileManager` enumeration under security-scoped DocumentPicker folder URLs (`file://`); `DBScanRootModeUserSelected` only.
+- **Output:** `DiscoveredEntry` / `DBDiscoveredEntry` with `mediaTypeHint` wire values (`image`, `video`, `audio`, `document`, `text`, `other`); never bridge URIs/paths.
+- **Validation:** Every candidate URI validated with `UriValidator` / `DBUriValidator` + `DISCOVERY` provenance before emit; denied counted, not emitted.
+- **Batching:** `BATCH_SIZE` / 32 emitted files then yield; support `isCancelled` for pipeline cancel (M1-12).
+- **Mode B** (MediaStore / PHAsset) is M1-05 — do not implement platform discovery union in M1-04.
+
 ---
 
 ## 9. Milestones and definition of done

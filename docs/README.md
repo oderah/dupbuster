@@ -42,7 +42,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until M1-04+ / M3; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
+- Stubs reject scan/delete commands until pipeline wiring (M1-06+) / M3 delete; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
 
 ### UriValidator (M1-03)
 
@@ -55,6 +55,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Fail-closed → `PERMISSION_DENIED` (FR-SE-01 / FR-UN-03). Rejects user-pasted URIs, `file://`, SAF docIds containing `..`, and out-of-grant documents.
 - **Android unit tests:** `cd android && ./gradlew :app:testDebugUnitTest`
 - **iOS unit tests (macOS):** `xcodebuild test -project ios/Dupbuster.xcodeproj -scheme Dupbuster -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:DupbusterScanEngineTests` (after `pod install`)
+
+### DiscoveryEmitter mode A (M1-04)
+
+| Piece | Location |
+|-------|----------|
+| Android | `android/.../scanengine/discovery/DiscoveryEmitter.kt` (SAF BFS via `DocumentsContract`) |
+| iOS | `ios/ScanEngine/Discovery/DBDiscoveryEmitter.{h,mm}` (security-scoped `file://` folder) |
+| Fixture | `tests/fixtures/dupbuster/v1/discovery-user-selected-01.json` |
+
+- **Mode A only** (`user_selected`): SAF tree walk (Android) or DocumentPicker folder (iOS). Each file passes `UriValidator` with `DISCOVERY` provenance before emit.
+- Emits `DiscoveredEntry` / `DBDiscoveredEntry`: `contentUri`/`contentURL`, `displayName`, `sizeBytes`, `mtimeNs`, `mediaTypeHint`, `scanRootId`, `generation` — native-only until IndexWriter (M1-09).
+- Yields every **32** emitted files; honours cooperative cancel callback.
+- **Mode B** (MediaStore / PHAsset) is **M1-05**.
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
