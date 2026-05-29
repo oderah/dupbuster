@@ -159,6 +159,28 @@
   XCTAssertEqual(result.outcome, DBHashPipelineOutcomeSuccess);
 }
 
+- (void)testHash_textFile_returnsTextNfcLfProfile
+{
+  NSData *payload = [@"line1\r\nline2\n" dataUsingEncoding:NSUTF8StringEncoding];
+  DBFakeFileContentReader *reader = [[DBFakeFileContentReader alloc] init];
+  reader.payload = payload;
+  reader.logicalSizeBytes = payload.length;
+  DBHashPipeline *pipeline =
+      [[DBHashPipeline alloc] initWithFileContentReader:reader
+                                        sizeBucketIndex:[[DBInMemorySizeBucketIndex alloc] init]];
+
+  DBStagedFile *staged =
+      [self stagedWithSize:payload.length mediaTypeHint:DBMediaTypeHintText isSymlink:NO payload:payload];
+  DBHashPipelineResult *result =
+      [pipeline hashStagedFile:staged settings:[DBHashSettings defaultSettings]];
+
+  XCTAssertEqual(result.outcome, DBHashPipelineOutcomeSuccess);
+  XCTAssertEqualObjects(result.hashed.normalizationProfile, DBNormalizationProfileTextNfcLf);
+  XCTAssertEqualObjects(
+      result.hashed.hashValue,
+      @"2751a3a2f303ad21752038085e2b8c5f98ecff61a2e4ebbd43506a941725be80");
+}
+
 - (void)testHash_largeFileWithoutOptIn_returnsLargeSkipped
 {
   DBFakeFileContentReader *reader = [[DBFakeFileContentReader alloc] init];

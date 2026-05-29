@@ -1,0 +1,16 @@
+{
+  "id": "hash-text-nfc-lf-01",
+  "description": "HashPipeline TEXT_NFC_LF: CRLF normalized to LF before SHA-256 (AC-equiv-text-01)",
+  "platform": "both",
+  "input": {
+    "payloadUtf8": "line1\r\nline2\n",
+    "sizeBytes": 13,
+    "mediaTypeHint": "text"
+  },
+  "expect": {
+    "outcome": "success",
+    "normalizationProfile": "TEXT_NFC_LF",
+    "hashValue": "2751a3a2f303ad21752038085e2b8c5f98ecff61a2e4ebbd43506a941725be80",
+    "quickSampleHash": null
+  }
+}

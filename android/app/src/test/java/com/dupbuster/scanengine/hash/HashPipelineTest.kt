@@ -66,6 +66,66 @@ class HashPipelineTest {
   }
 
   @Test
+  fun hash_textFile_returnsTextNfcLfProfile() {
+    val payload = "line1\r\nline2\n".toByteArray(Charsets.UTF_8)
+    val pipeline =
+        HashPipeline(
+            context,
+            FakeContentReader(payload),
+            sizeBucketIndex = alwaysNeedsHashIndex(),
+        )
+    val result =
+        pipeline.hash(
+            staged(sizeBytes = payload.size.toLong(), mediaTypeHint = MediaTypeHint.TEXT),
+        )
+
+    val success = result as HashResult.Success
+    assertEquals(NormalizationProfile.TEXT_NFC_LF, success.hashed.normalizationProfile)
+    assertEquals(
+        "2751a3a2f303ad21752038085e2b8c5f98ecff61a2e4ebbd43506a941725be80",
+        success.hashed.hashValue,
+    )
+  }
+
+  @Test
+  fun hash_textCrlfAndLfOnly_sameHash() {
+    val crlf = "line1\r\nline2\n".toByteArray(Charsets.UTF_8)
+    val lfOnly = "line1\nline2\n".toByteArray(Charsets.UTF_8)
+    val index = alwaysNeedsHashIndex()
+    val pipelineCrlf = HashPipeline(context, FakeContentReader(crlf), sizeBucketIndex = index)
+    val pipelineLf = HashPipeline(context, FakeContentReader(lfOnly), sizeBucketIndex = index)
+
+    val crlfResult =
+        pipelineCrlf.hash(staged(crlf.size.toLong(), MediaTypeHint.TEXT)) as HashResult.Success
+    val lfResult =
+        pipelineLf.hash(staged(lfOnly.size.toLong(), MediaTypeHint.TEXT)) as HashResult.Success
+
+    assertEquals(crlfResult.hashed.hashValue, lfResult.hashed.hashValue)
+  }
+
+  @Test
+  fun hash_textTrailingWhitespaceDiffers() {
+    val spaced = "hello  ".toByteArray(Charsets.UTF_8)
+    val plain = "hello".toByteArray(Charsets.UTF_8)
+    val index = alwaysNeedsHashIndex()
+    val pipelineSpaced =
+        HashPipeline(context, FakeContentReader(spaced), sizeBucketIndex = index)
+    val pipelinePlain =
+        HashPipeline(context, FakeContentReader(plain), sizeBucketIndex = index)
+
+    val spacedResult =
+        pipelineSpaced.hash(staged(spaced.size.toLong(), MediaTypeHint.TEXT)) as HashResult.Success
+    val plainResult =
+        pipelinePlain.hash(staged(plain.size.toLong(), MediaTypeHint.TEXT)) as HashResult.Success
+
+    assertEquals(
+        "518a621e78504a16eeece5702650757eefc828064f953c44df4c9cd6c66df978",
+        spacedResult.hashed.hashValue,
+    )
+    assertTrue(spacedResult.hashed.hashValue != plainResult.hashed.hashValue)
+  }
+
+  @Test
   fun hash_uniqueSize_skipsByteRead() {
     val pipeline =
         HashPipeline(

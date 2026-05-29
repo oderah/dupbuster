@@ -1,8 +1,10 @@
 #import "DBHashPipeline.h"
 
+#import "DBDiscoveredEntry.h"
 #import "DBHashConstants.h"
 #import "DBNormalizationProfile.h"
 #import "DBSha256Hasher.h"
+#import "DBTextNormalizer.h"
 #import "DBUnscannableReason.h"
 
 @implementation DBHashPipelineResult
@@ -83,36 +85,87 @@
     quickSampleHash = sample;
   }
 
-  NSInputStream *stream = [self.contentReader openReadForFileURL:fileURL];
-  if (stream == nil) {
-    result.outcome = DBHashPipelineOutcomeUnscannable;
-    result.unscannableReason = DBUnscannableReasonPermissionDenied;
-    return result;
-  }
+  NSString *profile =
+      [staged.mediaTypeHint isEqualToString:DBMediaTypeHintText]
+          ? DBNormalizationProfileTextNfcLf
+          : DBNormalizationProfileRawBytes;
 
-  NSString *fullDigest = nil;
-  DBStreamDigestOutcome digestOutcome =
-      [DBSha256Hasher hexDigestOfStream:stream
-                             bufferSize:DBHashReadBufferBytes
-                               deadline:deadline
-                              outDigest:&fullDigest];
-  if (digestOutcome == DBStreamDigestOutcomeTimeout) {
+  NSString *fullDigest = [self fullDigestForURL:fileURL profile:profile deadline:deadline];
+  if (fullDigest == nil) {
     result.outcome = DBHashPipelineOutcomeUnscannable;
-    result.unscannableReason = DBUnscannableReasonHashTimeout;
-    return result;
-  }
-  if (digestOutcome != DBStreamDigestOutcomeOk || fullDigest == nil) {
-    result.outcome = DBHashPipelineOutcomeUnscannable;
-    result.unscannableReason = DBUnscannableReasonPermissionDenied;
+    result.unscannableReason =
+        ([NSDate.date compare:deadline] == NSOrderedDescending)
+            ? DBUnscannableReasonHashTimeout
+            : DBUnscannableReasonPermissionDenied;
     return result;
   }
 
   result.outcome = DBHashPipelineOutcomeSuccess;
   result.hashed = [[DBHashedFile alloc] initWithStaged:staged
                                              hashValue:fullDigest
-                                  normalizationProfile:DBNormalizationProfileRawBytes
+                                  normalizationProfile:profile
                                        quickSampleHash:quickSampleHash];
   return result;
+}
+
+- (nullable NSString *)fullDigestForURL:(NSURL *)fileURL
+                               profile:(NSString *)profile
+                              deadline:(NSDate *)deadline
+{
+  if (![profile isEqualToString:DBNormalizationProfileTextNfcLf]) {
+    NSInputStream *stream = [self.contentReader openReadForFileURL:fileURL];
+    if (stream == nil) {
+      return nil;
+    }
+    NSString *digest = nil;
+    DBStreamDigestOutcome digestOutcome =
+        [DBSha256Hasher hexDigestOfStream:stream
+                               bufferSize:DBHashReadBufferBytes
+                                 deadline:deadline
+                                outDigest:&digest];
+    if (digestOutcome != DBStreamDigestOutcomeOk) {
+      return nil;
+    }
+    return digest;
+  }
+
+  NSData *raw = [self readAllBytesForURL:fileURL deadline:deadline];
+  if (raw == nil) {
+    return nil;
+  }
+  NSData *normalized = [DBTextNormalizer normalizedUtf8FromRaw:raw];
+  if (normalized == nil) {
+    return nil;
+  }
+  return [DBSha256Hasher hexDigestOfData:normalized];
+}
+
+- (nullable NSData *)readAllBytesForURL:(NSURL *)fileURL deadline:(NSDate *)deadline
+{
+  NSInputStream *stream = [self.contentReader openReadForFileURL:fileURL];
+  if (stream == nil) {
+    return nil;
+  }
+  [stream open];
+  NSMutableData *accumulated = [NSMutableData data];
+  uint8_t buffer[DBHashReadBufferBytes];
+  while (true) {
+    if ([NSDate.date compare:deadline] == NSOrderedDescending) {
+      [stream close];
+      return nil;
+    }
+    NSInteger read = [stream read:buffer maxLength:sizeof(buffer)];
+    if (read < 0) {
+      [stream close];
+      return nil;
+    }
+    if (read == 0) {
+      break;
+    }
+    [accumulated appendBytes:buffer length:(NSUInteger)read];
+  }
+  [stream close];
+  return accumulated;
 }
 
 - (nullable NSString *)computeQuickSampleForURL:(NSURL *)fileURL

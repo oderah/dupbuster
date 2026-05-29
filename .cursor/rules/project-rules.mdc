@@ -214,12 +214,20 @@ New code must land in these areas unless architecture is amended first.
 
 - **Android:** `com.dupbuster.scanengine.hash.HashPipeline` — `InMemorySizeBucketIndex`, `Sha256Hasher`, inject `FileContentReader` in tests.
 - **iOS:** `DBHashPipeline` + `DBSha256Hasher` (CommonCrypto); inject `DBFileContentReading` in tests.
-- **Profiles in scope:** `RAW_BYTES`, `EMPTY:0` only — `TEXT_NFC_LF` is M1-08; `VIDEO_CONTENT_V1` is M1-13+.
+- **Profiles in scope:** `RAW_BYTES`, `EMPTY:0` — `TEXT_NFC_LF` is §8.8; `VIDEO_CONTENT_V1` is M1-13+.
 - **Size bucket:** unique non-video sizes skip byte reads; video and zero-byte always hash; second file with same size triggers `NEEDS_HASH` (backfill prior skip is IndexWriter/orchestrator concern).
 - **Caps:** 2 GB default skip (`LARGE_SKIPPED`) unless `HashSettings.largeFilesOptIn`; 120 s hash timeout → `HASH_TIMEOUT`.
 - **Quick sample:** files > 50 MB store `quickSampleHash` (SHA-256 of first+last 64 KiB).
 - **Symlinks:** `HashResult.SymlinkNode` / `DBHashPipelineOutcomeSymlinkNode` — no content read.
 - **Tests:** inject content readers; fixture `hash-raw-bytes-01.json`.
+
+### 8.8 Text normalization (M1-08)
+
+- **Android:** `com.dupbuster.scanengine.hash.TextNormalizer` — BOM strip, strict UTF-8, `Normalizer.Form.NFC`, CRLF→LF; used by `HashPipeline` when `MediaTypeHint.TEXT`.
+- **iOS:** `DBTextNormalizer` — same rules via `precomposedStringWithCanonicalMapping`; `DBHashPipeline` when `DBMediaTypeHintText`.
+- **Profile:** `TEXT_NFC_LF` on `HashedFile.normalizationProfile`; non-text paths unchanged (`RAW_BYTES`).
+- **Invalid UTF-8:** fail closed → `PERMISSION_DENIED` on hash path (no silent RAW_BYTES fallback).
+- **Tests:** `TextNormalizerTest` / `DBTextNormalizerTests`; pipeline tests for AC-equiv-text-01–04; fixture `hash-text-nfc-lf-01.json`.
 
 ---
 

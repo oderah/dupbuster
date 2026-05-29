@@ -106,7 +106,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Stages: size-bucket skip (unique size) → quick sample (> 50 MB: first+last 64 KiB SHA-256) → full `RAW_BYTES` stream (1 MiB buffer, 120 s timeout).
 - `EMPTY:0` for zero-byte files; video exempt from size-bucket skip (full `VIDEO_CONTENT_V1` in M1-13+).
 - `LARGE_SKIPPED` when size > 2 GB without `largeFilesOptIn`; symlink nodes indexed without following.
-- Output: `HashedFile` / `DBHashedFile` — native-only until IndexWriter (M1-09). `TEXT_NFC_LF` is M1-08.
+- Output: `HashedFile` / `DBHashedFile` — native-only until IndexWriter (M1-09).
+
+### Text normalization (M1-08)
+
+| Piece | Location |
+|-------|----------|
+| Android | `TextNormalizer.kt`; `HashPipeline` uses `TEXT_NFC_LF` when `mediaTypeHint` is `text` |
+| iOS | `DBTextNormalizer`; `DBHashPipeline` routes `DBMediaTypeHintText` |
+| Fixture | `tests/fixtures/dupbuster/v1/hash-text-nfc-lf-01.json` |
+
+- Pipeline: UTF-8 decode (strict) → strip BOM → NFC → CRLF→LF → SHA-256; **no** trailing-whitespace trim (AC-equiv-text-04).
+- Quick sample (> 50 MB) remains on raw bytes; invalid UTF-8 → unscannable (same as read failure).
+- Covers AC-equiv-text-01–04 in native unit tests.
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

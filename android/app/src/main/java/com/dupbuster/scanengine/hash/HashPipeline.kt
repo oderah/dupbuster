@@ -1,13 +1,15 @@
 package com.dupbuster.scanengine.hash
 
 import android.content.Context
+import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.security.UnscannableReason
 import com.dupbuster.scanengine.stat.StagedFile
+import java.io.ByteArrayOutputStream
 import kotlin.math.min
 
 /**
- * Size bucket → quick sample (> 50 MB) → full SHA-256 `RAW_BYTES` (architecture §4.1).
- * Text `TEXT_NFC_LF` and video `VIDEO_CONTENT_V1` are later milestones (M1-08, M1-13+).
+ * Size bucket → quick sample (> 50 MB) → full SHA-256 (`RAW_BYTES` or `TEXT_NFC_LF`).
+ * Video `VIDEO_CONTENT_V1` is M1-13+.
  */
 class HashPipeline(
     context: Context,
@@ -60,18 +62,26 @@ class HashPipeline(
           null
         }
 
+    val profile =
+        if (staged.mediaTypeHint == MediaTypeHint.TEXT) {
+          NormalizationProfile.TEXT_NFC_LF
+        } else {
+          NormalizationProfile.RAW_BYTES
+        }
+
     val fullHash =
-        when (val digest = digestFull(staged, deadlineMs)) {
-          is StreamDigestOutcome.Ok -> digest.hexDigest
-          StreamDigestOutcome.Timeout -> return HashResult.Unscannable(UnscannableReason.HASH_TIMEOUT)
-          StreamDigestOutcome.IoFailure -> return HashResult.Unscannable(UnscannableReason.PERMISSION_DENIED)
+        when (val digest = digestFull(staged, profile, deadlineMs)) {
+          is FullDigestOutcome.Ok -> digest.hexDigest
+          FullDigestOutcome.Timeout -> return HashResult.Unscannable(UnscannableReason.HASH_TIMEOUT)
+          FullDigestOutcome.IoFailure -> return HashResult.Unscannable(UnscannableReason.PERMISSION_DENIED)
+          FullDigestOutcome.InvalidUtf8 -> return HashResult.Unscannable(UnscannableReason.PERMISSION_DENIED)
         }
 
     return HashResult.Success(
         HashedFile(
             staged = staged,
             hashValue = fullHash,
-            normalizationProfile = NormalizationProfile.RAW_BYTES,
+            normalizationProfile = profile,
             quickSampleHash = quickSampleHash,
         ),
     )
@@ -94,16 +104,68 @@ class HashPipeline(
     return QuickSampleOutcome.Ok(Sha256Hasher.digestQuickSample(first, last))
   }
 
-  private fun digestFull(staged: StagedFile, deadlineMs: Long): StreamDigestOutcome {
+  private fun digestFull(
+      staged: StagedFile,
+      profile: String,
+      deadlineMs: Long,
+  ): FullDigestOutcome {
+    if (profile != NormalizationProfile.TEXT_NFC_LF) {
+      return when (val opened = contentReader.openRead(staged.discovered.contentUri)) {
+        ContentOpenOutcome.IoFailure -> FullDigestOutcome.IoFailure
+        is ContentOpenOutcome.Ok ->
+            when (val digest = opened.stream.use { Sha256Hasher.digestStream(it, deadlineMs = deadlineMs) }) {
+              is StreamDigestOutcome.Ok -> FullDigestOutcome.Ok(digest.hexDigest)
+              StreamDigestOutcome.Timeout -> FullDigestOutcome.Timeout
+              StreamDigestOutcome.IoFailure -> FullDigestOutcome.IoFailure
+            }
+      }
+    }
+
+    val raw = readAllBytes(staged, deadlineMs) ?: return FullDigestOutcome.IoFailure
+    if (System.currentTimeMillis() > deadlineMs) {
+      return FullDigestOutcome.Timeout
+    }
+    return when (val normalized = TextNormalizer.normalize(raw)) {
+      is TextNormalizer.Outcome.Ok ->
+          FullDigestOutcome.Ok(Sha256Hasher.digestBytes(normalized.normalizedUtf8))
+      TextNormalizer.Outcome.InvalidUtf8 -> FullDigestOutcome.InvalidUtf8
+    }
+  }
+
+  private fun readAllBytes(staged: StagedFile, deadlineMs: Long): ByteArray? {
     return when (val opened = contentReader.openRead(staged.discovered.contentUri)) {
-      ContentOpenOutcome.IoFailure -> StreamDigestOutcome.IoFailure
+      ContentOpenOutcome.IoFailure -> null
       is ContentOpenOutcome.Ok ->
           opened.stream.use { stream ->
-            Sha256Hasher.digestStream(stream, deadlineMs = deadlineMs)
+            val buffer = ByteArray(HashConstants.HASH_READ_BUFFER_BYTES)
+            val out = ByteArrayOutputStream()
+            while (true) {
+              if (System.currentTimeMillis() > deadlineMs) {
+                return null
+              }
+              val read = stream.read(buffer)
+              if (read < 0) {
+                break
+              }
+              if (read > 0) {
+                out.write(buffer, 0, read)
+              }
+            }
+            out.toByteArray()
           }
     }
   }
 
+}
+
+private sealed class FullDigestOutcome {
+  data class Ok(val hexDigest: String) : FullDigestOutcome()
+
+  data object Timeout : FullDigestOutcome()
+
+  data object IoFailure : FullDigestOutcome()
+
+  data object InvalidUtf8 : FullDigestOutcome()
 }
 
 private sealed class QuickSampleOutcome {
