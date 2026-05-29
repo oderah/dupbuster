@@ -1,0 +1,33 @@
+{
+  "id": "stat-content-uri-01",
+  "description": "StatStage re-reads size/mtime/inode/device_id after UriValidator; denies out-of-grant URIs",
+  "platform": "android",
+  "input": {
+    "grant": "content://com.android.externalstorage.documents/tree/primary%3ADocuments",
+    "entry": {
+      "contentUri": "content://com.android.externalstorage.documents/document/primary%3ADocuments%2Freadme.txt",
+      "displayName": "readme.txt",
+      "mediaTypeHint": "text",
+      "discoverySizeBytes": 12,
+      "discoveryMtimeNs": 1000
+    },
+    "fstat": {
+      "sizeBytes": 4096,
+      "mtimeNs": 2000000000,
+      "inode": 42,
+      "deviceId": 7,
+      "isSymlink": false
+    }
+  },
+  "expect": {
+    "outcome": "success",
+    "staged": {
+      "sizeBytes": 4096,
+      "mtimeNs": 2000000000,
+      "inode": 42,
+      "deviceId": 7,
+      "isSymlink": false,
+      "mediaTypeHint": "text"
+    }
+  }
+}

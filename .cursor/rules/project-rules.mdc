@@ -201,6 +201,15 @@ New code must land in these areas unless architecture is amended first.
 - **Validation:** `UriValidator` / `DBUriValidator` with `PLATFORM_DISCOVERY` / `DBScanRootModePlatformDiscovery` + `DISCOVERY` provenance.
 - **Tests:** inject `MediaStoreDiscoveryQuery` (Android); inject `DBPhAssetDiscoverySource` (iOS). Fixture `discovery-platform-discovery-01.json`.
 
+### 8.6 StatStage (M1-06)
+
+- **Android:** `com.dupbuster.scanengine.stat.StatStage` — `UriValidator` gate then `ContentResolverFileStatReader` (`openFileDescriptor` + `Os.fstat`); inject `FileStatReader` in tests.
+- **iOS:** `DBStatStage` — validates `file://` or PHAsset localIdentifier, then `DBFileStatReader` (`lstat` for scoped paths; PHAsset mtime only, null inode/device).
+- **Output:** `StagedFile` / `DBStagedFile` with fresh size/mtime/inode/device_id/is_symlink + discovery metadata. Never bridge stat fields.
+- **Symlinks:** iOS uses `lstat` only; Android best-effort via proc fd readlink. Full symlink fixture matrix is M1-17.
+- **Video metadata** (duration_ms, width, height): M1-13+, not M1-06.
+- **Tests:** inject `FileStatReader` (Android) / `DBFileStatReading` (iOS). Fixture `stat-content-uri-01.json`.
+
 ---
 
 ## 9. Milestones and definition of done

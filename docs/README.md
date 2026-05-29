@@ -42,7 +42,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until pipeline wiring (M1-06+) / M3 delete; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
+- Stubs reject scan/delete commands until pipeline wiring (M1-07+) / M3 delete; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
 
 ### UriValidator (M1-03)
 
@@ -80,6 +80,20 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Android grant marker: `PlatformDiscoveryGrant.MARKER_URI` (`content://dupbuster/scan-root/platform-discovery`). iOS platform grant typically `uriGrant` `*`.
 - PHAsset rows set `phAssetLocalIdentifier` on `DBDiscoveredEntry` (no `contentURL`); MediaStore rows use `contentUri` as in Mode A.
 - No `/sdcard` crawl without grants (requirements §5.1 mode B).
+
+### StatStage (M1-06)
+
+| Piece | Location |
+|-------|----------|
+| Android | `StatStage.kt` + `ContentResolverFileStatReader` (`openFileDescriptor` + `Os.fstat`) |
+| iOS | `DBStatStage` + `DBFileStatReader` (`lstat` for `file://`; PHAsset mtime via Photos.framework) |
+| Fixture | `tests/fixtures/dupbuster/v1/stat-content-uri-01.json` |
+
+- Runs **after** UriValidator on each discovered file; re-reads authoritative size/mtime/inode/device_id (FR-SI-01 TOCTOU baseline).
+- Android: `st_ino` / `st_dev` from `Os.fstat`; best-effort symlink flag via `/proc/self/fd` readlink.
+- iOS `file://`: `lstat` only (no symlink follow); PHAsset rows have null inode/device_id (hard links N/A in photo library).
+- Video duration/width/height deferred to M1-13+.
+- Output: `StagedFile` / `DBStagedFile` — native-only until IndexWriter (M1-09).
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
