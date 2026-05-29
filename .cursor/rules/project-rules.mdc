@@ -310,6 +310,14 @@ New code must land in these areas unless architecture is amended first.
 - **`match_kind`:** Already written by `Grouper` / `DBGrouper` (`EXACT_BYTES` / `SAME_CONTENT_VIDEO`); migration adds column with default `EXACT_BYTES` for legacy rows then clears groups for rescan.
 - **Tests:** `CatalogMigratorTest`, `IndexWriterTest` (video partial); iOS `DBCatalogMigratorTests`, `DBIndexWriterTests`; fixtures `index-schema-migration-01.json`, `security-decode-01.json`.
 
+### Design tokens (M2-01)
+
+- **`src/tokens/tokens.ts`:** Single source for EN copy (`partial.*`, `denied.*`, `notification.*`, `keeper.*`, `settings.*`, `reclaimable.*`, `rescan.*`, `unscan.*`, `coverage.footer`), architecture `a11y.*`, match-kind UI (`match.*`, `scan.phase.videoContent`, `keeper.education.videoContent`), and design layers (color/spacing/radius/typography/elevation, `component.touchTargetMin=44`, `platform.notification.channelId`).
+- **Placeholders:** Use `formatToken(template, params)` for `{count}`, `{size}`, `{percent}`, `{filesProcessed}`, `{groupsFound}`, `{n}` — do not hand-roll replace in components.
+- **Platform CTAs:** `partial.cta.expandAndroid` vs `partial.cta.expandIos` (requirements §9 split).
+- **Match-kind copy:** Architecture §9.3 names `match.*` / `keeper.education.videoContent` without prose in requirements — literal values live in `tokens.ts`; change only with doc + `__tests__/tokens.test.ts` update.
+- **Tests:** `npm test -- --testPathPattern=tokens` asserts requirements §9 + architecture §9.3 verbatim strings.
+
 ---
 
 ## 9. Milestones and definition of done
