@@ -9,7 +9,7 @@ import com.dupbuster.scanengine.stat.StagedFile
 
 /**
  * SQLite CRUD for the merged catalog (architecture §5 / FR-IX-*).
- * Duplicate grouping writes are M1-10; this module persists discovery → hash outcomes only.
+ * Persists discovery → hash outcomes; [Grouper] writes duplicate_group/member after hashing.
  */
 class IndexWriter(private val database: CatalogDatabase) {
 

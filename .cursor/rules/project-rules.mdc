@@ -236,7 +236,17 @@ New code must land in these areas unless architecture is amended first.
 - **Schema:** architecture §5.2 tables; fresh install `schema_version = 2`, `full_rescan_required = 0` in `meta`. v1→v2 migration is M1-15.
 - **IndexWriter:** upsert hashed/unscannable/symlink/size-bucket-skip rows; hard-link alias via `inode`+`device_id` (FR-IX-04); generation purge (FR-IX-03); fingerprint dedupe by `(hash_algo, hash_value, normalization_profile)`.
 - **Bridge:** `getCatalogMeta` returns `{ schemaVersion, fullRescanRequired }` from the catalog DB (not stub zeros).
-- **Tests:** `IndexWriterTest` / `DBIndexWriterTests`; fixture `index-hashed-file-01.json`. Grouper + `duplicate_group` writes are M1-10.
+- **Tests:** `IndexWriterTest` / `DBIndexWriterTests`; fixture `index-hashed-file-01.json`.
+
+### Grouper (M1-10)
+
+- **Android:** `com.dupbuster.scanengine.index.Grouper`, `MatchKind` — `rebuildDuplicateGroups()` after hashing.
+- **iOS:** `DBGrouper`, `DBMatchKind` under `ScanEngine/Index/`.
+- **Grouping:** ≥2 `file_entry` rows per `fingerprint_id` (non-symlink, scannable); writes `duplicate_group` + `duplicate_member` (`is_keeper=0`).
+- **match_kind:** `EXACT_BYTES` for `RAW_BYTES` / `TEXT_NFC_LF` / `EMPTY:0`; `SAME_CONTENT_VIDEO` for `VIDEO_CONTENT_V1` (fingerprinter M1-13).
+- **Precedence:** file entries in an `EXACT_BYTES` group are excluded from `SAME_CONTENT_VIDEO` groups (AC-equiv-video-xres-04).
+- **Reclaimable:** scan-time estimate `sum(size) − max(size)` per group (FR-AC-06 preview); updated on keeper selection in M3.
+- **Tests:** `GrouperTest` / `DBGrouperTests`; fixture `index-duplicate-group-01.json`. Progress throttle is M1-11.
 
 ---
 

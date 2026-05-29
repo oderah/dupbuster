@@ -1,0 +1,123 @@
+#import <XCTest/XCTest.h>
+
+#import "DBCatalogDatabase.h"
+#import "DBGrouper.h"
+#import "DBDiscoveredEntry.h"
+#import "DBFileStat.h"
+#import "DBHashedFile.h"
+#import "DBIndexWriter.h"
+#import "DBMatchKind.h"
+#import "DBMediaTypeHintResolver.h"
+#import "DBNormalizationProfile.h"
+#import "DBStagedFile.h"
+
+@interface DBGrouperTests : XCTestCase
+@property (nonatomic, strong) DBCatalogDatabase *database;
+@property (nonatomic, strong) DBIndexWriter *writer;
+@property (nonatomic, strong) DBGrouper *grouper;
+@property (nonatomic, assign) NSInteger rootId;
+@end
+
+@implementation DBGrouperTests
+
+- (void)setUp
+{
+  [super setUp];
+  self.database = [DBCatalogDatabase inMemoryDatabase];
+  NSError *error = nil;
+  XCTAssertTrue([self.database openWithError:&error], @"%@", error);
+  self.writer = [[DBIndexWriter alloc] initWithDatabase:self.database];
+  self.grouper = [[DBGrouper alloc] initWithDatabase:self.database];
+  self.rootId = [self.writer insertScanRootWithUriOrGrant:@"file:///docs"
+                                                     mode:@"user_selected"
+                                           platformReason:nil];
+}
+
+- (void)tearDown
+{
+  [self.database close];
+  [super tearDown];
+}
+
+- (void)testRebuildDuplicateGroups_twoFilesSameFingerprint
+{
+  [self upsertHashed:@"a" hash:@"abc123" size:100 profile:DBNormalizationProfileRawBytes];
+  [self upsertHashed:@"b" hash:@"abc123" size:200 profile:DBNormalizationProfileRawBytes];
+
+  DBGrouperRebuildResult *result = [self.grouper rebuildDuplicateGroups];
+
+  XCTAssertEqual(result.groupsCreated, 1);
+  XCTAssertEqual([self.grouper duplicateGroupCount], 1);
+  XCTAssertEqual(result.totalReclaimableBytesEst, 100);
+  NSInteger groupId = [self.grouper firstDuplicateGroupId];
+  XCTAssertEqual([self.grouper memberCountForGroupId:groupId], 2);
+  XCTAssertEqual([self.grouper reclaimableBytesForGroupId:groupId], 100);
+  XCTAssertEqualObjects([self.grouper matchKindForGroupId:groupId], DBMatchKindExactBytes);
+}
+
+- (void)testRebuildDuplicateGroups_uniqueHashes_noGroups
+{
+  [self upsertHashed:@"a" hash:@"h1" size:100 profile:DBNormalizationProfileRawBytes];
+  [self upsertHashed:@"b" hash:@"h2" size:100 profile:DBNormalizationProfileRawBytes];
+
+  DBGrouperRebuildResult *result = [self.grouper rebuildDuplicateGroups];
+
+  XCTAssertEqual(result.groupsCreated, 0);
+  XCTAssertEqual([self.grouper duplicateGroupCount], 0);
+}
+
+- (void)testRebuildDuplicateGroups_videoProfile_sameContentVideo
+{
+  [self upsertHashed:@"v1" hash:@"vid" size:100 profile:DBNormalizationProfileVideoContentV1];
+  [self upsertHashed:@"v2" hash:@"vid" size:100 profile:DBNormalizationProfileVideoContentV1];
+
+  [self.grouper rebuildDuplicateGroups];
+
+  NSInteger groupId = [self.grouper firstDuplicateGroupId];
+  XCTAssertEqualObjects([self.grouper matchKindForGroupId:groupId], DBMatchKindSameContentVideo);
+}
+
+- (void)testEstimateReclaimableBytes
+{
+  XCTAssertEqual([DBGrouper estimateReclaimableBytesForSizes:@[@100]], 0);
+  XCTAssertEqual([DBGrouper estimateReclaimableBytesForSizes:@[@100, @200]], 100);
+  XCTAssertEqual([DBGrouper estimateReclaimableBytesForSizes:@[@100, @200, @300]], 300);
+}
+
+- (void)upsertHashed:(NSString *)suffix
+                 hash:(NSString *)hash
+                 size:(int64_t)size
+              profile:(NSString *)profile
+{
+  NSString *uri = [NSString stringWithFormat:@"file:///doc/%@", suffix];
+  DBStagedFile *staged = [self stagedWithUri:uri sizeBytes:size];
+  DBHashedFile *hashed =
+      [[DBHashedFile alloc] initWithStaged:staged
+                                 hashValue:hash
+                      normalizationProfile:profile
+                           quickSampleHash:nil];
+  [self.writer upsertHashedFile:hashed generation:1];
+}
+
+- (DBStagedFile *)stagedWithUri:(NSString *)uri sizeBytes:(int64_t)sizeBytes
+{
+  NSURL *url = [NSURL URLWithString:uri];
+  DBDiscoveredEntry *entry =
+      [[DBDiscoveredEntry alloc] initWithContentURL:url
+                             phAssetLocalIdentifier:nil
+                                         scanRootId:self.rootId
+                                         generation:1
+                                        displayName:@"file"
+                                      mediaTypeHint:DBMediaTypeHintOther
+                                          sizeBytes:sizeBytes
+                                            mtimeNs:1000];
+  DBFileStat *stat =
+      [[DBFileStat alloc] initWithSizeBytes:sizeBytes
+                                    mtimeNs:1000
+                                      inode:nil
+                                   deviceId:nil
+                                 isSymlink:NO];
+  return [[DBStagedFile alloc] initWithDiscovered:entry fileStat:stat];
+}
+
+@end

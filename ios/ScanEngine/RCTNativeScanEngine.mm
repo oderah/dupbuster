@@ -21,7 +21,7 @@ static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED"
            reject:(RCTPromiseRejectBlock)reject
 {
   reject(kScanEngineNotImplemented,
-         @"startScan is not implemented until scan orchestrator wires Grouper (M1-10+)",
+         @"startScan is not implemented until scan orchestrator wires progress throttle (M1-11+)",
          nil);
 }
 

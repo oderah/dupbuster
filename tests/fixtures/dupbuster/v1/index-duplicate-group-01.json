@@ -1,0 +1,28 @@
+{
+  "id": "index-duplicate-group-01",
+  "description": "Grouper creates EXACT_BYTES duplicate_group with two members (M1-10)",
+  "platform": "both",
+  "input": {
+    "files": [
+      {
+        "uriOrPath": "content://test/document/a.bin",
+        "sizeBytes": 100,
+        "hashValue": "abc123",
+        "normalizationProfile": "RAW_BYTES"
+      },
+      {
+        "uriOrPath": "content://test/document/b.bin",
+        "sizeBytes": 200,
+        "hashValue": "abc123",
+        "normalizationProfile": "RAW_BYTES"
+      }
+    ],
+    "generation": 1
+  },
+  "expect": {
+    "duplicateGroupCount": 1,
+    "memberCount": 2,
+    "matchKind": "EXACT_BYTES",
+    "reclaimableBytesEst": 100
+  }
+}
