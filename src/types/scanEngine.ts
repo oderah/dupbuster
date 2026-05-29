@@ -5,6 +5,8 @@ export type {
   CatalogMeta,
   DeleteDuplicatesCommand,
   DeleteDuplicatesResult,
+  MatchKind,
+  MediaTypeHint,
   ScanErrorEvent,
   ScanPhase,
   ScanProgressContentKind,
@@ -17,6 +19,9 @@ export type {
 } from '../native/scanEngineBridge.types';
 
 export {
+  DUPLICATE_GROUP_THUMBNAIL_GRID_MAX,
+  MATCH_KINDS,
+  MEDIA_TYPE_HINTS,
   TERMINAL_SCAN_PHASES,
   UNSCANNABLE_REASONS,
 } from '../native/scanEngineBridge.types';

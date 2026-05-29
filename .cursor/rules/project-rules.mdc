@@ -347,6 +347,19 @@ New code must land in these areas unless architecture is amended first.
 - **Bridge:** Counts come from native catalog aggregation in M2-07 — component accepts pre-aggregated props only (no paths/reasons over bridge per event).
 - **Tests:** `npm test -- --testPathPattern='UnscannableSummary|unscannableSummaryDisplay'` + tokens unscan reason tests; AC-unscan-01/03/04.
 
+### DuplicateGroupListItem + detail (M2-05)
+
+- **`src/components/DuplicateGroupListItem.tsx`:** List-row summary with 2×2 thumbnail grid (max 4 cells, overflow `+{count}` when `memberCount > 4`), match-kind label, media-type summary, reclaimable line (US-09).
+- **`src/components/ThumbnailGrid.tsx`:** Shared thumbnail/overflow grid; placeholder label from `group.mediaType.*` when `thumbnailUri` absent.
+- **`src/components/duplicateGroupDisplay.ts`:** Slot builder, match-kind/media-type labels, reclaimable formatting, `a11y.group.*` accessibility labels (AC-a11y-match-01).
+- **`src/screens/DuplicateGroupDetailScreen.tsx`:** Full member grid + member list with display name, media type, size; presentational only until M2-07 catalog wiring.
+- **`src/types/duplicateGroup.ts`:** `DuplicateGroupSummary`, `DuplicateGroupDetail`, `DuplicateGroupMember`, thumbnail slot types.
+- **Types:** `MatchKind`, `MediaTypeHint`, `MATCH_KINDS`, `MEDIA_TYPE_HINTS`, `DUPLICATE_GROUP_THUMBNAIL_GRID_MAX` on bridge types module.
+- **Tokens:** `group.overflow`, `group.mediaType.*`, `group.memberSize`; match-kind copy remains `match.*` / `a11y.group.*`.
+- **Deferred:** `MatchKindBadge` (M2-12), `ContentMatchNotice` (M2-13), `KeeperSelector` (M2-06) — detail screen leaves hooks for later composition.
+- **Bridge:** Thumbnail URIs and member metadata from native catalog query in M2-07 — not over scan progress bridge.
+- **Tests:** `npm test -- --testPathPattern='DuplicateGroup|duplicateGroupDisplay'` + tokens group media-type tests; AC-a11y-match-01, US-09.
+
 ---
 
 ## 9. Milestones and definition of done

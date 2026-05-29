@@ -173,6 +173,21 @@ export const tokens = {
     },
   },
 
+  /** Duplicate group list/detail copy (US-09 / architecture §9.1). */
+  group: {
+    overflow: '+{count}',
+    mediaType: {
+      image: 'Photo',
+      video: 'Video',
+      audio: 'Audio',
+      document: 'Document',
+      text: 'Text',
+      other: 'File',
+      mixed: 'Mixed file types',
+    },
+    memberSize: '{size}',
+  },
+
   scan: {
     phase: {
       idle: 'Ready',

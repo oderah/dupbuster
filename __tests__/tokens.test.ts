@@ -104,6 +104,14 @@ describe('tokens a11y freeze (architecture §9.3)', () => {
     );
     expect(tokens.a11y.path.sameFile).toBe('Same file, {n} locations');
   });
+
+  it('group media type and overflow tokens are frozen', () => {
+    expect(tokens.group.overflow).toBe('+{count}');
+    expect(tokens.group.mediaType.image).toBe('Photo');
+    expect(tokens.group.mediaType.video).toBe('Video');
+    expect(tokens.group.mediaType.mixed).toBe('Mixed file types');
+    expect(tokens.group.memberSize).toBe('{size}');
+  });
 });
 
 describe('tokens platform constants', () => {

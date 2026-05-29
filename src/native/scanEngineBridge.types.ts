@@ -91,3 +91,32 @@ export const TERMINAL_SCAN_PHASES = [
   'cancelled',
   'error',
 ] as const satisfies readonly ScanPhase[];
+
+/** `duplicate_group.match_kind` values (architecture §5.2). */
+export type MatchKind = 'EXACT_BYTES' | 'SAME_CONTENT_VIDEO';
+
+export const MATCH_KINDS = [
+  'EXACT_BYTES',
+  'SAME_CONTENT_VIDEO',
+] as const satisfies readonly MatchKind[];
+
+/** Discovery media hint wire values (architecture §4.1 / M1-04). */
+export type MediaTypeHint =
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'text'
+  | 'other';
+
+export const MEDIA_TYPE_HINTS = [
+  'image',
+  'video',
+  'audio',
+  'document',
+  'text',
+  'other',
+] as const satisfies readonly MediaTypeHint[];
+
+/** Max visible thumbnail cells in DuplicateGroupListItem (architecture §9.1). */
+export const DUPLICATE_GROUP_THUMBNAIL_GRID_MAX = 4;
