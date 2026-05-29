@@ -73,15 +73,15 @@ gantt
 
 ### 3.2 M1 exit gate
 
-- [ ] All fixture matrix rows pass native unit tests offline (no RN bridge)
-- [ ] Progress bridge emits ≤ 4 events/s under 10k synthetic load (AC-integrity-progress-01)
-- [ ] Hashing-phase progress supports `contentKind=video_content` (AC-integrity-progress-02) and contains no paths/hashes/bytes
-- [ ] Video pipeline exception: different-size videos still run VIDEO_CONTENT_V1 (AC-pipeline-video-01)
-- [ ] Video equivalence suite runs green on reference devices subset (AC-equiv-video-xres-01/03/04/08)
-- [ ] SQLite schema matches architecture doc; `schema_version` in meta table
-- [ ] Text, document, image, A/V, binary, empty, symlink fixtures validated
-- [ ] VIDEO_DECODE_FAILED handling covered in native fixtures (AC-security-decode-01/02)
-- [ ] Multi-stage pipeline: size skip, 50 MB+ sample, 2 GB cap, 120 s timeout
+- [x] All fixture matrix rows pass native unit tests offline (no RN bridge)
+- [x] Progress bridge emits ≤ 4 events/s under 10k synthetic load (AC-integrity-progress-01)
+- [x] Hashing-phase progress supports `contentKind=video_content` (AC-integrity-progress-02) and contains no paths/hashes/bytes
+- [x] Video pipeline exception: different-size videos still run VIDEO_CONTENT_V1 (AC-pipeline-video-01)
+- [x] Video equivalence suite runs green on reference devices subset (AC-equiv-video-xres-01/03/04/08)
+- [x] SQLite schema matches architecture doc; `schema_version` in meta table
+- [x] Text, document, image, A/V, binary, empty, symlink fixtures validated
+- [x] VIDEO_DECODE_FAILED handling covered in native fixtures (AC-security-decode-01/02)
+- [x] Multi-stage pipeline: size skip, 50 MB+ sample, 2 GB cap, 120 s timeout
 
 ### 3.3 M1 parallel authorization
 

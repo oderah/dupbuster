@@ -9,7 +9,9 @@ import com.dupbuster.scanengine.security.UnscannableReason
 import com.dupbuster.scanengine.stat.StagedFile
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.time.Duration
 import org.junit.Assert.assertEquals
+import org.robolectric.shadows.ShadowSystemClock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -302,6 +304,47 @@ class HashPipelineTest {
     val success = result as HashResult.Success
     assertNotNull(success.hashed.quickSampleHash)
     assertEquals(64, success.hashed.quickSampleHash!!.length)
+  }
+
+  @Test
+  fun hash_exceedsHashDeadline_returnsHashTimeout() {
+    val pipeline =
+        HashPipeline(
+            context,
+            object : FileContentReader {
+              override fun openRead(uri: Uri): ContentOpenOutcome {
+                val stream =
+                    object : InputStream() {
+                      override fun read(): Int {
+                        ShadowSystemClock.advanceBy(
+                            Duration.ofMillis(HashConstants.HASH_TIMEOUT_MS + 1),
+                        )
+                        return 0x41
+                      }
+
+                      override fun read(b: ByteArray, off: Int, len: Int): Int {
+                        if (len == 0) {
+                          return 0
+                        }
+                        ShadowSystemClock.advanceBy(
+                            Duration.ofMillis(HashConstants.HASH_TIMEOUT_MS + 1),
+                        )
+                        b[off] = 0x41
+                        return 1
+                      }
+                    }
+                return ContentOpenOutcome.Ok(stream)
+              }
+
+              override fun readRange(uri: Uri, offset: Long, length: Int): ByteArray? = null
+            },
+            sizeBucketIndex = alwaysNeedsHashIndex(),
+        )
+
+    val result = pipeline.hash(staged(sizeBytes = HashConstants.HASH_READ_BUFFER_BYTES.toLong() * 2))
+
+    val unscannable = result as HashResult.Unscannable
+    assertEquals(UnscannableReason.HASH_TIMEOUT, unscannable.reason)
   }
 
   @Test

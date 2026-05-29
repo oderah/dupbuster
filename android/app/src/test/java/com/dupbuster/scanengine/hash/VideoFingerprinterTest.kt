@@ -76,6 +76,18 @@ class VideoFingerprinterTest {
   }
 
   @Test
+  fun fingerprint_exceedsWallClockBudget_returnsVideoDecodeFailed_acSecurityDecode02() {
+    val fingerprinter = VideoFingerprinter(FakeFrameExtractor())
+    val startedAt =
+        System.currentTimeMillis() - VideoConstants.FINGERPRINT_TIMEOUT_MS - 1_000
+
+    val result = fingerprinter.fingerprint(staged(), startedAtMs = startedAt)
+
+    val unscannable = result as VideoFingerprinter.Outcome.Unscannable
+    assertEquals(UnscannableReason.VIDEO_DECODE_FAILED, unscannable.reason)
+  }
+
+  @Test
   fun fingerprint_overBudgetWithoutOptIn_returnsVideoDecodeFailed() {
     val fingerprinter = VideoFingerprinter(FakeFrameExtractor())
     val overBudget = VideoConstants.FINGERPRINT_BUDGET_BYTES + 1
