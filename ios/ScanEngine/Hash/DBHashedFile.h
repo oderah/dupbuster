@@ -10,11 +10,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *hashValue;
 @property (nonatomic, copy) NSString *normalizationProfile;
 @property (nonatomic, copy, nullable) NSString *quickSampleHash;
+@property (nonatomic, copy, nullable) NSData *frameHashesBlob;
 
 - (instancetype)initWithStaged:(DBStagedFile *)staged
                      hashValue:(NSString *)hashValue
           normalizationProfile:(NSString *)normalizationProfile
-               quickSampleHash:(nullable NSString *)quickSampleHash;
+               quickSampleHash:(nullable NSString *)quickSampleHash
+              frameHashesBlob:(nullable NSData *)frameHashesBlob;
 
 @end
 

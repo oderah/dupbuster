@@ -5,4 +5,5 @@ object UnscannableReason {
   const val PERMISSION_DENIED: String = "PERMISSION_DENIED"
   const val LARGE_SKIPPED: String = "LARGE_SKIPPED"
   const val HASH_TIMEOUT: String = "HASH_TIMEOUT"
+  const val VIDEO_DECODE_FAILED: String = "VIDEO_DECODE_FAILED"
 }

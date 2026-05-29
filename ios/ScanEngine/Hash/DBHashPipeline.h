@@ -9,6 +9,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, DBHashPipelineOutcome) {
   DBHashPipelineOutcomeSuccess = 0,
+  DBHashPipelineOutcomeVideoSuccess = 4,
+  DBHashPipelineOutcomeVideoPartialSuccess = 5,
   DBHashPipelineOutcomeSizeBucketSkipped = 1,
   DBHashPipelineOutcomeSymlinkNode = 2,
   DBHashPipelineOutcomeUnscannable = 3,
@@ -18,18 +20,26 @@ typedef NS_ENUM(NSInteger, DBHashPipelineOutcome) {
 
 @property (nonatomic, assign) DBHashPipelineOutcome outcome;
 @property (nonatomic, strong, nullable) DBHashedFile *hashed;
+@property (nonatomic, strong, nullable) DBHashedFile *rawBytesHashed;
+@property (nonatomic, strong, nullable) DBHashedFile *videoContentHashed;
 @property (nonatomic, strong, nullable) DBStagedFile *staged;
 @property (nonatomic, copy, nullable) NSString *unscannableReason;
 
 @end
 
+@class DBVideoFingerprinter;
+
 /**
- * Size bucket → quick sample (> 50 MB) → full SHA-256 `RAW_BYTES` (architecture §4.1).
+ * Size bucket → quick sample (> 50 MB) → full SHA-256; video also runs VIDEO_CONTENT_V1 (M1-13).
  */
 @interface DBHashPipeline : NSObject
 
 - (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
                           sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex;
+
+- (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
+                          sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                       videoFingerprinter:(nullable DBVideoFingerprinter *)videoFingerprinter;
 
 - (DBHashPipelineResult *)hashStagedFile:(DBStagedFile *)staged
                                 settings:(DBHashSettings *)settings;

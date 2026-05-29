@@ -41,6 +41,7 @@ NSString *const DBCatalogMetaFullRescanRequired = @"full_rescan_required";
     @"duration_ms INTEGER,"
     @"video_width INTEGER,"
     @"video_height INTEGER,"
+    @"raw_content_fingerprint_id INTEGER REFERENCES fingerprint(id),"
     @"UNIQUE(root_id, uri_or_path))",
     @"CREATE TABLE IF NOT EXISTS file_path ("
     @"id INTEGER PRIMARY KEY AUTOINCREMENT,"

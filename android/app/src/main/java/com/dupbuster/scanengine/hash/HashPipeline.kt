@@ -9,12 +9,13 @@ import kotlin.math.min
 
 /**
  * Size bucket → quick sample (> 50 MB) → full SHA-256 (`RAW_BYTES` or `TEXT_NFC_LF`).
- * Video `VIDEO_CONTENT_V1` is M1-13+.
+ * Video files also run `VIDEO_CONTENT_V1` in parallel via [VideoFingerprinter] (M1-13).
  */
 class HashPipeline(
     context: Context,
     private val contentReader: FileContentReader = ContentResolverFileContentReader(context),
     private val sizeBucketIndex: SizeBucketIndex = InMemorySizeBucketIndex(),
+    private val videoFingerprinter: VideoFingerprinter? = null,
 ) {
 
   fun hash(
@@ -77,14 +78,36 @@ class HashPipeline(
           FullDigestOutcome.InvalidUtf8 -> return HashResult.Unscannable(UnscannableReason.PERMISSION_DENIED)
         }
 
-    return HashResult.Success(
+    val rawHashed =
         HashedFile(
             staged = staged,
             hashValue = fullHash,
             normalizationProfile = profile,
             quickSampleHash = quickSampleHash,
-        ),
-    )
+        )
+
+    if (staged.mediaTypeHint != MediaTypeHint.VIDEO || videoFingerprinter == null) {
+      return HashResult.Success(rawHashed)
+    }
+
+    return when (val videoOutcome = videoFingerprinter.fingerprint(staged, settings)) {
+      is VideoFingerprinter.Outcome.Success -> {
+        val videoHashed =
+            HashedFile(
+                staged = staged,
+                hashValue = videoOutcome.fingerprint.hashValue,
+                normalizationProfile = NormalizationProfile.VIDEO_CONTENT_V1,
+                quickSampleHash = null,
+                frameHashesBlob = videoOutcome.fingerprint.frameHashesBlob,
+            )
+        HashResult.VideoSuccess(rawBytes = rawHashed, videoContent = videoHashed)
+      }
+      is VideoFingerprinter.Outcome.Unscannable ->
+          HashResult.VideoPartialSuccess(
+              rawBytes = rawHashed,
+              videoUnscannableReason = videoOutcome.reason,
+          )
+    }
   }
 
   private fun computeQuickSample(staged: StagedFile, deadlineMs: Long): QuickSampleOutcome {

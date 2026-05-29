@@ -14,4 +14,7 @@ data class StagedFile(
     val deviceId: Long?,
     val isSymlink: Boolean,
     val mediaTypeHint: MediaTypeHint,
+    val durationMs: Long = 0L,
+    val videoWidth: Int = 0,
+    val videoHeight: Int = 0,
 )

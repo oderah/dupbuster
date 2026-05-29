@@ -265,6 +265,17 @@ New code must land in these areas unless architecture is amended first.
 - **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests`; fixture `integrity-resume-01.json` (native resume data layer; full AC-integrity-resume-01 UI prompt is M3).
 - **Orchestrator:** Pipeline wiring (`startScan` → stages → throttled `onScanProgress`) is post–M1-12; store is ready for orchestrator consumption.
 
+### VideoFingerprinter (M1-13)
+
+- **Android:** `com.dupbuster.scanengine.hash.VideoFingerprinter`, `DHash`, `VideoContentMatcher`, `VideoFingerprintCodec`; injectable `VideoFrameExtractor`; `AndroidVideoMetadataReader` on StatStage for video rows.
+- **iOS:** `DBVideoFingerprinter`, `DBDHash`, `DBVideoContentMatcher`, `DBVideoFingerprint` under `ScanEngine/Hash/`.
+- **Pipeline:** Video files hash `RAW_BYTES` + `VIDEO_CONTENT_V1` in parallel (`HashResult.VideoSuccess` / `DBHashPipelineOutcomeVideoSuccess`); >500 MB without opt-in skips content fingerprint (`VideoPartialSuccess`).
+- **Caps:** 90 s wall-clock, 500 MB budget (2 GB with `largeFilesOptIn`), 5-frame dHash at 2/25/50/75/98% (single frame <3 s), Hamming ≤8 default, duration gate (2% and <1 s delta).
+- **Index:** `fingerprint_id` = VIDEO_CONTENT_V1, `raw_content_fingerprint_id` = RAW_BYTES on `file_entry`; `frame_hashes_blob` on fingerprint row (debug-only egress).
+- **Grouper:** EXACT_BYTES via `raw_content_fingerprint_id`; SAME_CONTENT_VIDEO via `fingerprint_id` profile; fuzzy Hamming clustering for M1-18 fixture suite uses `VideoContentMatcher`.
+- **Tests:** `DHashTest`, `VideoFingerprinterTest`, `VideoContentMatcherTest`, `VideoFingerprintCodecTest` / iOS `DBVideoFingerprinterTests`, `DBVideoContentMatcherTests`; fixture `hash-video-content-01.json`.
+- **Platform decoders:** Production `MediaCodec` / `AVAssetReader` frame extractors are wired when scan orchestrator lands; M1-13 ships algorithm + injectable extractor + unit tests.
+
 ---
 
 ## 9. Milestones and definition of done

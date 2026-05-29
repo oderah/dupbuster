@@ -58,10 +58,70 @@ class IndexWriter(private val database: CatalogDatabase) {
   fun persistHashResult(result: HashResult, staged: StagedFile, generation: Int): Long {
     return when (result) {
       is HashResult.Success -> upsertHashed(result.hashed, generation)
+      is HashResult.VideoSuccess ->
+          upsertVideoDualHashed(
+              rawBytes = result.rawBytes,
+              videoContent = result.videoContent,
+              generation = generation,
+          )
+      is HashResult.VideoPartialSuccess ->
+          upsertVideoPartialHashed(
+              rawBytes = result.rawBytes,
+              videoUnscannableReason = result.videoUnscannableReason,
+              generation = generation,
+          )
       is HashResult.SizeBucketSkipped -> upsertSizeBucketSkipped(result.staged, generation)
       is HashResult.SymlinkNode -> upsertSymlink(result.staged, generation)
       is HashResult.Unscannable -> upsertUnscannable(result.reason, staged, generation)
     }
+  }
+
+  /** Video two-path persist: `fingerprint_id` = VIDEO_CONTENT_V1, `raw_content_fingerprint_id` = RAW_BYTES. */
+  fun upsertVideoDualHashed(
+      rawBytes: HashedFile,
+      videoContent: HashedFile,
+      generation: Int,
+  ): Long {
+    val rawFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = rawBytes.hashValue,
+            normalizationProfile = rawBytes.normalizationProfile,
+        )
+    val videoFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = videoContent.hashValue,
+            normalizationProfile = videoContent.normalizationProfile,
+            frameHashesBlob = videoContent.frameHashesBlob,
+        )
+    return upsertFileEntry(
+        staged = rawBytes.staged,
+        generation = generation,
+        fingerprintId = videoFingerprintId,
+        rawContentFingerprintId = rawFingerprintId,
+        unscannableReason = null,
+        isSymlink = false,
+    )
+  }
+
+  /** RAW_BYTES indexed; video content fingerprint failed (budget/decode/timeout). */
+  fun upsertVideoPartialHashed(
+      rawBytes: HashedFile,
+      @Suppress("UNUSED_PARAMETER") videoUnscannableReason: String,
+      generation: Int,
+  ): Long {
+    val rawFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = rawBytes.hashValue,
+            normalizationProfile = rawBytes.normalizationProfile,
+        )
+    return upsertFileEntry(
+        staged = rawBytes.staged,
+        generation = generation,
+        fingerprintId = rawFingerprintId,
+        rawContentFingerprintId = null,
+        unscannableReason = null,
+        isSymlink = false,
+    )
   }
 
   fun upsertHashed(hashed: HashedFile, generation: Int): Long {
@@ -70,11 +130,13 @@ class IndexWriter(private val database: CatalogDatabase) {
         getOrCreateFingerprint(
             hashValue = hashed.hashValue,
             normalizationProfile = hashed.normalizationProfile,
+            frameHashesBlob = hashed.frameHashesBlob,
         )
     return upsertFileEntry(
         staged = staged,
         generation = generation,
         fingerprintId = fingerprintId,
+        rawContentFingerprintId = null,
         unscannableReason = null,
         isSymlink = false,
     )
@@ -85,6 +147,7 @@ class IndexWriter(private val database: CatalogDatabase) {
           staged = staged,
           generation = generation,
           fingerprintId = null,
+          rawContentFingerprintId = null,
           unscannableReason = null,
           isSymlink = false,
       )
@@ -94,6 +157,7 @@ class IndexWriter(private val database: CatalogDatabase) {
           staged = staged,
           generation = generation,
           fingerprintId = null,
+          rawContentFingerprintId = null,
           unscannableReason = null,
           isSymlink = true,
       )
@@ -103,6 +167,7 @@ class IndexWriter(private val database: CatalogDatabase) {
           staged = staged,
           generation = generation,
           fingerprintId = null,
+          rawContentFingerprintId = null,
           unscannableReason = reason,
           isSymlink = staged.isSymlink,
       )
@@ -173,6 +238,7 @@ class IndexWriter(private val database: CatalogDatabase) {
       staged: StagedFile,
       generation: Int,
       fingerprintId: Long?,
+      rawContentFingerprintId: Long?,
       unscannableReason: String?,
       isSymlink: Boolean,
   ): Long {
@@ -193,6 +259,7 @@ class IndexWriter(private val database: CatalogDatabase) {
               staged = staged,
               generation = generation,
               fingerprintId = fingerprintId,
+              rawContentFingerprintId = rawContentFingerprintId,
               unscannableReason = unscannableReason,
               isSymlink = isSymlink,
           )
@@ -211,6 +278,7 @@ class IndexWriter(private val database: CatalogDatabase) {
                 staged = staged,
                 generation = generation,
                 fingerprintId = fingerprintId,
+                rawContentFingerprintId = rawContentFingerprintId,
                 unscannableReason = unscannableReason,
                 isSymlink = isSymlink,
             )
@@ -220,6 +288,7 @@ class IndexWriter(private val database: CatalogDatabase) {
                 staged = staged,
                 generation = generation,
                 fingerprintId = fingerprintId,
+                rawContentFingerprintId = rawContentFingerprintId,
                 unscannableReason = unscannableReason,
                 isSymlink = isSymlink,
             )
@@ -235,6 +304,7 @@ class IndexWriter(private val database: CatalogDatabase) {
       hashValue: String,
       normalizationProfile: String,
       computedAtMs: Long = System.currentTimeMillis(),
+      frameHashesBlob: ByteArray? = null,
   ): Long {
     findFingerprintId(hashValue, normalizationProfile)?.let {
       return it
@@ -245,6 +315,9 @@ class IndexWriter(private val database: CatalogDatabase) {
           put("hash_value", hashValue)
           put("normalization_profile", normalizationProfile)
           put("computed_at", computedAtMs)
+          if (frameHashesBlob != null) {
+            put("frame_hashes_blob", frameHashesBlob)
+          }
         }
     return database.writable().insert("fingerprint", null, values)
   }
@@ -253,6 +326,7 @@ class IndexWriter(private val database: CatalogDatabase) {
       staged: StagedFile,
       generation: Int,
       fingerprintId: Long?,
+      rawContentFingerprintId: Long?,
       unscannableReason: String?,
       isSymlink: Boolean,
   ): Long {
@@ -270,6 +344,18 @@ class IndexWriter(private val database: CatalogDatabase) {
           put("unscannable_reason", unscannableReason)
           put("inode", staged.inode)
           put("device_id", staged.deviceId)
+          if (staged.durationMs > 0) {
+            put("duration_ms", staged.durationMs)
+          }
+          if (staged.videoWidth > 0) {
+            put("video_width", staged.videoWidth)
+          }
+          if (staged.videoHeight > 0) {
+            put("video_height", staged.videoHeight)
+          }
+          if (rawContentFingerprintId != null) {
+            put("raw_content_fingerprint_id", rawContentFingerprintId)
+          }
         }
     return database.writable().insert("file_entry", null, values)
   }
@@ -279,6 +365,7 @@ class IndexWriter(private val database: CatalogDatabase) {
       staged: StagedFile,
       generation: Int,
       fingerprintId: Long?,
+      rawContentFingerprintId: Long?,
       unscannableReason: String?,
       isSymlink: Boolean,
   ): Long {
@@ -295,6 +382,24 @@ class IndexWriter(private val database: CatalogDatabase) {
           put("unscannable_reason", unscannableReason)
           put("inode", staged.inode)
           put("device_id", staged.deviceId)
+          if (staged.durationMs > 0) {
+            put("duration_ms", staged.durationMs)
+          } else {
+            putNull("duration_ms")
+          }
+          if (staged.videoWidth > 0) {
+            put("video_width", staged.videoWidth)
+          } else {
+            putNull("video_width")
+          }
+          if (staged.videoHeight > 0) {
+            put("video_height", staged.videoHeight)
+          } else {
+            putNull("video_height")
+          }
+          if (rawContentFingerprintId != null) {
+            put("raw_content_fingerprint_id", rawContentFingerprintId)
+          }
         }
     database
         .writable()

@@ -6,5 +6,6 @@ NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT NSString *const DBUnscannableReasonPermissionDenied;
 FOUNDATION_EXPORT NSString *const DBUnscannableReasonLargeSkipped;
 FOUNDATION_EXPORT NSString *const DBUnscannableReasonHashTimeout;
+FOUNDATION_EXPORT NSString *const DBUnscannableReasonVideoDecodeFailed;
 
 NS_ASSUME_NONNULL_END

@@ -6,6 +6,7 @@
 #import "DBSha256Hasher.h"
 #import "DBTextNormalizer.h"
 #import "DBUnscannableReason.h"
+#import "DBVideoFingerprinter.h"
 
 @implementation DBHashPipelineResult
 @end
@@ -13,6 +14,7 @@
 @interface DBHashPipeline ()
 @property (nonatomic, strong) id<DBFileContentReading> contentReader;
 @property (nonatomic, strong) id<DBSizeBucketIndexing> sizeBucketIndex;
+@property (nonatomic, strong, nullable) DBVideoFingerprinter *videoFingerprinter;
 @end
 
 @implementation DBHashPipeline
@@ -20,10 +22,20 @@
 - (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
                           sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
 {
+  return [self initWithFileContentReader:contentReader
+                         sizeBucketIndex:sizeBucketIndex
+                      videoFingerprinter:nil];
+}
+
+- (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
+                          sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                       videoFingerprinter:(DBVideoFingerprinter *)videoFingerprinter
+{
   self = [super init];
   if (self) {
     _contentReader = contentReader;
     _sizeBucketIndex = sizeBucketIndex;
+    _videoFingerprinter = videoFingerprinter;
   }
   return self;
 }
@@ -101,10 +113,34 @@
   }
 
   result.outcome = DBHashPipelineOutcomeSuccess;
-  result.hashed = [[DBHashedFile alloc] initWithStaged:staged
-                                             hashValue:fullDigest
-                                  normalizationProfile:profile
-                                       quickSampleHash:quickSampleHash];
+  DBHashedFile *rawHashed =
+      [[DBHashedFile alloc] initWithStaged:staged
+                                 hashValue:fullDigest
+                      normalizationProfile:profile
+                           quickSampleHash:quickSampleHash
+                          frameHashesBlob:nil];
+  if (![staged.mediaTypeHint isEqualToString:DBMediaTypeHintVideo] || self.videoFingerprinter == nil) {
+    result.hashed = rawHashed;
+    return result;
+  }
+
+  DBVideoFingerprinterResult *videoResult = [self.videoFingerprinter fingerprintStaged:staged settings:settings];
+  if (videoResult.outcome == DBVideoFingerprinterOutcomeSuccess) {
+    DBHashedFile *videoHashed =
+        [[DBHashedFile alloc] initWithStaged:staged
+                                   hashValue:videoResult.fingerprint.hashValue
+                        normalizationProfile:DBNormalizationProfileVideoContentV1
+                             quickSampleHash:nil
+                            frameHashesBlob:videoResult.fingerprint.frameHashesBlob];
+    result.outcome = DBHashPipelineOutcomeVideoSuccess;
+    result.rawBytesHashed = rawHashed;
+    result.videoContentHashed = videoHashed;
+    return result;
+  }
+
+  result.outcome = DBHashPipelineOutcomeVideoPartialSuccess;
+  result.rawBytesHashed = rawHashed;
+  result.unscannableReason = videoResult.unscannableReason;
   return result;
 }
 

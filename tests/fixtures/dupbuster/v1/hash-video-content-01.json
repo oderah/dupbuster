@@ -1,0 +1,17 @@
+{
+  "id": "hash-video-content-01",
+  "description": "VIDEO_CONTENT_V1 fingerprinter produces 5-frame dHash blob + duration metadata under caps (M1-13)",
+  "platform": "both",
+  "input": {
+    "durationMs": 10000,
+    "frameCount": 5,
+    "samplePositions": [0.02, 0.25, 0.5, 0.75, 0.98]
+  },
+  "expect": {
+    "normalizationProfile": "VIDEO_CONTENT_V1",
+    "frameHashesBlobBytes": 40,
+    "hammingThresholdDefault": 8,
+    "minMatchingFramePairs": 3,
+    "durationGateMinMs": 1000
+  }
+}

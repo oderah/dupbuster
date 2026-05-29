@@ -172,6 +172,20 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests` — native resume store (full restart prompt AC is M3).
 - Scan pipeline orchestrator + `startScan` wiring follows in a later M1 task.
 
+### VideoFingerprinter (M1-13)
+
+| Piece | Location |
+|-------|----------|
+| Android | `scanengine/hash/VideoFingerprinter.kt`, `DHash.kt`, `VideoContentMatcher.kt` |
+| iOS | `ScanEngine/Hash/DBVideoFingerprinter`, `DBDHash`, `DBVideoContentMatcher` |
+| Fixture | `tests/fixtures/dupbuster/v1/hash-video-content-01.json` |
+
+- 5-frame dHash (`VIDEO_CONTENT_V1`) in parallel with `RAW_BYTES` for video media type.
+- Duration gate + Hamming matcher (≤8 default, ≥3/5 frame pairs) for `SAME_CONTENT_VIDEO` grouping (M1-18 equiv fixtures).
+- Resource caps: 90 s, 500 MB budget (2 GB opt-in), single-frame path for clips <3 s.
+- Dual fingerprint columns on `file_entry`: `fingerprint_id` (video content), `raw_content_fingerprint_id` (exact bytes).
+- **Tests:** Android hash video suite + iOS `DBVideoFingerprinterTests` / `DBVideoContentMatcherTests`.
+
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
 ## Milestones

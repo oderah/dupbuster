@@ -53,6 +53,7 @@ object CatalogSchema {
             duration_ms INTEGER,
             video_width INTEGER,
             video_height INTEGER,
+            raw_content_fingerprint_id INTEGER REFERENCES fingerprint(id),
             UNIQUE(root_id, uri_or_path)
           )
           """

@@ -15,6 +15,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *deviceId;
 @property (nonatomic, assign) BOOL isSymlink;
 @property (nonatomic, copy) DBMediaTypeHint mediaTypeHint;
+@property (nonatomic, assign) int64_t durationMs;
+@property (nonatomic, assign) NSInteger videoWidth;
+@property (nonatomic, assign) NSInteger videoHeight;
 
 - (instancetype)initWithDiscovered:(DBDiscoveredEntry *)discovered
                          fileStat:(DBFileStat *)fileStat;

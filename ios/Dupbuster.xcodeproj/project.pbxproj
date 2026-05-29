@@ -82,6 +82,18 @@
 		D4F8A2E42B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */; };
 		D4F8A2E52B681B0000A75B9A /* DBCheckpointStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */; };
 		D4F8A2E62B681B0000A75B9A /* DBCheckpointStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */; };
+		D4F8A3012B681C0000A75B9A /* DBVideoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3112B681C0000A75B9A /* DBVideoConstants.m */; };
+		D4F8A3022B681C0000A75B9A /* DBDHash.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3132B681C0000A75B9A /* DBDHash.m */; };
+		D4F8A3032B681C0000A75B9A /* DBVideoFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3152B681C0000A75B9A /* DBVideoFingerprint.m */; };
+		D4F8A3042B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3172B681C0000A75B9A /* DBVideoContentMatcher.m */; };
+		D4F8A3052B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */; };
+		D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */; };
+		D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */; };
+		D4F8A3082B681C0000A75B9A /* DBVideoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3112B681C0000A75B9A /* DBVideoConstants.m */; };
+		D4F8A3092B681C0000A75B9A /* DBDHash.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3132B681C0000A75B9A /* DBDHash.m */; };
+		D4F8A30A2B681C0000A75B9A /* DBVideoFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3152B681C0000A75B9A /* DBVideoFingerprint.m */; };
+		D4F8A30B2B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3172B681C0000A75B9A /* DBVideoContentMatcher.m */; };
+		D4F8A30C2B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */; };
 		D4F8A2E72B681B0000A75B9A /* DBScanRunStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EC2B681B0000A75B9A /* DBScanRunStatus.m */; };
 		D4F8A2E82B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */; };
 		D4F8A2E92B681B0000A75B9A /* DBCheckpointStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */; };
@@ -189,6 +201,19 @@
 		D4F8A2EF2B681B0000A75B9A /* DBCheckpointStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCheckpointStore.h; path = ScanEngine/Index/DBCheckpointStore.h; sourceTree = "<group>"; };
 		D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCheckpointStore.m; path = ScanEngine/Index/DBCheckpointStore.m; sourceTree = "<group>"; };
 		D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCheckpointStoreTests.m; path = ScanEngineTests/DBCheckpointStoreTests.m; sourceTree = "<group>"; };
+		D4F8A3102B681C0000A75B9A /* DBVideoConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoConstants.h; path = ScanEngine/Hash/DBVideoConstants.h; sourceTree = "<group>"; };
+		D4F8A3112B681C0000A75B9A /* DBVideoConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoConstants.m; path = ScanEngine/Hash/DBVideoConstants.m; sourceTree = "<group>"; };
+		D4F8A3122B681C0000A75B9A /* DBDHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDHash.h; path = ScanEngine/Hash/DBDHash.h; sourceTree = "<group>"; };
+		D4F8A3132B681C0000A75B9A /* DBDHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDHash.m; path = ScanEngine/Hash/DBDHash.m; sourceTree = "<group>"; };
+		D4F8A3142B681C0000A75B9A /* DBVideoFingerprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFingerprint.h; path = ScanEngine/Hash/DBVideoFingerprint.h; sourceTree = "<group>"; };
+		D4F8A3152B681C0000A75B9A /* DBVideoFingerprint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprint.m; path = ScanEngine/Hash/DBVideoFingerprint.m; sourceTree = "<group>"; };
+		D4F8A3162B681C0000A75B9A /* DBVideoContentMatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoContentMatcher.h; path = ScanEngine/Hash/DBVideoContentMatcher.h; sourceTree = "<group>"; };
+		D4F8A3172B681C0000A75B9A /* DBVideoContentMatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoContentMatcher.m; path = ScanEngine/Hash/DBVideoContentMatcher.m; sourceTree = "<group>"; };
+		D4F8A3182B681C0000A75B9A /* DBVideoFrameExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFrameExtractor.h; path = ScanEngine/Hash/DBVideoFrameExtractor.h; sourceTree = "<group>"; };
+		D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinter.m; path = ScanEngine/Hash/DBVideoFingerprinter.m; sourceTree = "<group>"; };
+		D4F8A31A2B681C0000A75B9A /* DBVideoFingerprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFingerprinter.h; path = ScanEngine/Hash/DBVideoFingerprinter.h; sourceTree = "<group>"; };
+		D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoContentMatcherTests.m; path = ScanEngineTests/DBVideoContentMatcherTests.m; sourceTree = "<group>"; };
+		D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinterTests.m; path = ScanEngineTests/DBVideoFingerprinterTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -302,6 +327,17 @@
 				D4F8A2792B68160000A75B9A /* DBHashPipeline.mm */,
 				D4F8A2932B68170000A75B9A /* DBTextNormalizer.h */,
 				D4F8A2942B68170000A75B9A /* DBTextNormalizer.m */,
+				D4F8A3102B681C0000A75B9A /* DBVideoConstants.h */,
+				D4F8A3112B681C0000A75B9A /* DBVideoConstants.m */,
+				D4F8A3122B681C0000A75B9A /* DBDHash.h */,
+				D4F8A3132B681C0000A75B9A /* DBDHash.m */,
+				D4F8A3142B681C0000A75B9A /* DBVideoFingerprint.h */,
+				D4F8A3152B681C0000A75B9A /* DBVideoFingerprint.m */,
+				D4F8A3162B681C0000A75B9A /* DBVideoContentMatcher.h */,
+				D4F8A3172B681C0000A75B9A /* DBVideoContentMatcher.m */,
+				D4F8A3182B681C0000A75B9A /* DBVideoFrameExtractor.h */,
+				D4F8A31A2B681C0000A75B9A /* DBVideoFingerprinter.h */,
+				D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */,
 			);
 			name = Hash;
 			sourceTree = "<group>";
@@ -378,6 +414,8 @@
 				D4F8A2C82B68190000A75B9A /* DBGrouperTests.m */,
 				D4F8A2D92B681A0000A75B9A /* DBProgressThrottleTests.m */,
 				D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */,
+				D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */,
+				D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -632,6 +670,13 @@
 				D4F8A2812B68160000A75B9A /* DBFileContentReader.mm in Sources */,
 				D4F8A2822B68160000A75B9A /* DBHashPipeline.mm in Sources */,
 				D4F8A2912B68170000A75B9A /* DBTextNormalizer.m in Sources */,
+				D4F8A3012B681C0000A75B9A /* DBVideoConstants.m in Sources */,
+				D4F8A3022B681C0000A75B9A /* DBDHash.m in Sources */,
+				D4F8A3032B681C0000A75B9A /* DBVideoFingerprint.m in Sources */,
+				D4F8A3042B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */,
+				D4F8A3052B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */,
+				D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */,
+				D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -661,6 +706,11 @@
 				D4F8A2742B68160000A75B9A /* DBFileContentReader.mm in Sources */,
 				D4F8A2772B68160000A75B9A /* DBHashPipeline.mm in Sources */,
 				D4F8A2902B68170000A75B9A /* DBTextNormalizer.m in Sources */,
+				D4F8A3082B681C0000A75B9A /* DBVideoConstants.m in Sources */,
+				D4F8A3092B681C0000A75B9A /* DBDHash.m in Sources */,
+				D4F8A30A2B681C0000A75B9A /* DBVideoFingerprint.m in Sources */,
+				D4F8A30B2B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */,
+				D4F8A30C2B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */,
 				D4F8A2B12B68180000A75B9A /* DBCatalogSchema.m in Sources */,
 				D4F8A2B32B68180000A75B9A /* DBCatalogMeta.m in Sources */,
 				D4F8A2B52B68180000A75B9A /* DBCatalogDatabase.m in Sources */,

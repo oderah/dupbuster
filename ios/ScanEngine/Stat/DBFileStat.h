@@ -10,12 +10,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, nullable) NSNumber *inode;
 @property (nonatomic, strong, nullable) NSNumber *deviceId;
 @property (nonatomic, assign) BOOL isSymlink;
+@property (nonatomic, assign) int64_t durationMs;
+@property (nonatomic, assign) NSInteger videoWidth;
+@property (nonatomic, assign) NSInteger videoHeight;
 
 - (instancetype)initWithSizeBytes:(int64_t)sizeBytes
                           mtimeNs:(int64_t)mtimeNs
                             inode:(nullable NSNumber *)inode
                          deviceId:(nullable NSNumber *)deviceId
-                        isSymlink:(BOOL)isSymlink;
+                        isSymlink:(BOOL)isSymlink
+                       durationMs:(int64_t)durationMs
+                       videoWidth:(NSInteger)videoWidth
+                      videoHeight:(NSInteger)videoHeight;
 
 @end
 

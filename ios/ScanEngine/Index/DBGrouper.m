@@ -41,16 +41,12 @@
   sqlite3_exec(db, "DELETE FROM duplicate_member", NULL, NULL, NULL);
   sqlite3_exec(db, "DELETE FROM duplicate_group", NULL, NULL, NULL);
 
-  NSArray *candidates = [self loadGroupCandidates];
+  NSArray *exactCandidates = [self loadExactBytesCandidates];
   NSMutableSet<NSNumber *> *exactBytesMemberIds = [NSMutableSet set];
   NSInteger groupsCreated = 0;
   int64_t totalReclaimable = 0;
 
-  for (NSDictionary *candidate in candidates) {
-    NSString *profile = candidate[@"profile"];
-    if (![[DBGrouper matchKindForNormalizationProfile:profile] isEqualToString:DBMatchKindExactBytes]) {
-      continue;
-    }
+  for (NSDictionary *candidate in exactCandidates) {
     NSInteger groupId = [self insertGroupWithCandidate:candidate matchKind:DBMatchKindExactBytes];
     if (groupId > 0) {
       groupsCreated++;
@@ -61,7 +57,8 @@
     }
   }
 
-  for (NSDictionary *candidate in candidates) {
+  NSArray *videoCandidates = [self loadVideoContentCandidates];
+  for (NSDictionary *candidate in videoCandidates) {
     NSString *profile = candidate[@"profile"];
     if (![[DBGrouper matchKindForNormalizationProfile:profile]
             isEqualToString:DBMatchKindSameContentVideo]) {
@@ -193,12 +190,23 @@
 
 #pragma mark - Private
 
-- (NSArray<NSDictionary *> *)loadGroupCandidates
+- (NSArray<NSDictionary *> *)loadExactBytesCandidates
 {
-  NSMutableDictionary<NSNumber *, DBGrouperFingerprintAggregate *> *byFingerprint =
-      [NSMutableDictionary dictionary];
-  sqlite3_stmt *stmt = NULL;
-  sqlite3 *db = _database.db;
+  const char *sql =
+      "SELECT COALESCE(fe.raw_content_fingerprint_id, fe.fingerprint_id), f.normalization_profile, "
+      "fe.id, fe.size "
+      "FROM file_entry fe "
+      "INNER JOIN fingerprint f ON f.id = COALESCE(fe.raw_content_fingerprint_id, fe.fingerprint_id) "
+      "WHERE fe.fingerprint_id IS NOT NULL "
+      "AND fe.is_symlink = 0 "
+      "AND fe.unscannable_reason IS NULL "
+      "AND f.normalization_profile != 'VIDEO_CONTENT_V1' "
+      "ORDER BY 1 ASC, fe.id ASC";
+  return [self aggregateCandidatesForSQL:sql];
+}
+
+- (NSArray<NSDictionary *> *)loadVideoContentCandidates
+{
   const char *sql =
       "SELECT fe.fingerprint_id, f.normalization_profile, fe.id, fe.size "
       "FROM file_entry fe "
@@ -206,7 +214,17 @@
       "WHERE fe.fingerprint_id IS NOT NULL "
       "AND fe.is_symlink = 0 "
       "AND fe.unscannable_reason IS NULL "
+      "AND f.normalization_profile = 'VIDEO_CONTENT_V1' "
       "ORDER BY fe.fingerprint_id ASC, fe.id ASC";
+  return [self aggregateCandidatesForSQL:sql];
+}
+
+- (NSArray<NSDictionary *> *)aggregateCandidatesForSQL:(const char *)sql
+{
+  NSMutableDictionary<NSNumber *, DBGrouperFingerprintAggregate *> *byFingerprint =
+      [NSMutableDictionary dictionary];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
   sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     NSInteger fingerprintId = sqlite3_column_int64(stmt, 0);

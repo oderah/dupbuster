@@ -23,13 +23,11 @@ class Grouper(private val database: CatalogDatabase) {
       db.delete("duplicate_member", null, null)
       db.delete("duplicate_group", null, null)
 
-      val candidates = loadGroupCandidates(db)
       val exactBytesMemberIds = mutableSetOf<Long>()
       var groupsCreated = 0
       var totalReclaimable = 0L
 
-      val exactCandidates =
-          candidates.filter { matchKindForProfile(it.normalizationProfile) == MatchKind.EXACT_BYTES }
+      val exactCandidates = loadExactBytesCandidates(db)
       for (candidate in exactCandidates) {
         val groupId = insertGroup(db, candidate, MatchKind.EXACT_BYTES)
         if (groupId != null) {
@@ -39,10 +37,7 @@ class Grouper(private val database: CatalogDatabase) {
         }
       }
 
-      val videoCandidates =
-          candidates.filter {
-            matchKindForProfile(it.normalizationProfile) == MatchKind.SAME_CONTENT_VIDEO
-          }
+      val videoCandidates = loadVideoContentCandidates(db)
       for (candidate in videoCandidates) {
         val filteredIds = candidate.fileEntryIds.filter { it !in exactBytesMemberIds }
         if (filteredIds.size < 2) {
@@ -160,7 +155,24 @@ class Grouper(private val database: CatalogDatabase) {
       val reclaimableBytesEst: Long,
   )
 
-  private fun loadGroupCandidates(db: SQLiteDatabase): List<FingerprintGroupCandidate> {
+  private fun loadExactBytesCandidates(db: SQLiteDatabase): List<FingerprintGroupCandidate> {
+    val sql =
+        """
+        SELECT COALESCE(fe.raw_content_fingerprint_id, fe.fingerprint_id) AS group_fp_id,
+               f.normalization_profile, fe.id, fe.size
+        FROM file_entry fe
+        INNER JOIN fingerprint f ON f.id = COALESCE(fe.raw_content_fingerprint_id, fe.fingerprint_id)
+        WHERE fe.fingerprint_id IS NOT NULL
+          AND fe.is_symlink = 0
+          AND fe.unscannable_reason IS NULL
+          AND f.normalization_profile != '${NormalizationProfile.VIDEO_CONTENT_V1}'
+        ORDER BY group_fp_id ASC, fe.id ASC
+        """
+            .trimIndent()
+    return aggregateCandidates(db, sql)
+  }
+
+  private fun loadVideoContentCandidates(db: SQLiteDatabase): List<FingerprintGroupCandidate> {
     val sql =
         """
         SELECT fe.fingerprint_id, f.normalization_profile, fe.id, fe.size
@@ -169,9 +181,14 @@ class Grouper(private val database: CatalogDatabase) {
         WHERE fe.fingerprint_id IS NOT NULL
           AND fe.is_symlink = 0
           AND fe.unscannable_reason IS NULL
+          AND f.normalization_profile = '${NormalizationProfile.VIDEO_CONTENT_V1}'
         ORDER BY fe.fingerprint_id ASC, fe.id ASC
         """
             .trimIndent()
+    return aggregateCandidates(db, sql)
+  }
+
+  private fun aggregateCandidates(db: SQLiteDatabase, sql: String): List<FingerprintGroupCandidate> {
     val byFingerprint = linkedMapOf<Long, MutableFingerprintAggregate>()
     db.rawQuery(sql, null).use { cursor ->
       while (cursor.moveToNext()) {

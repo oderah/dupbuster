@@ -13,6 +13,9 @@
     _deviceId = fileStat.deviceId;
     _isSymlink = fileStat.isSymlink;
     _mediaTypeHint = [discovered.mediaTypeHint copy];
+    _durationMs = fileStat.durationMs;
+    _videoWidth = fileStat.videoWidth;
+    _videoHeight = fileStat.videoHeight;
   }
   return self;
 }

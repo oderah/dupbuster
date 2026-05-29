@@ -6,6 +6,22 @@ import com.dupbuster.scanengine.stat.StagedFile
 sealed class HashResult {
   data class Success(val hashed: HashedFile) : HashResult()
 
+  /**
+   * Video two-path hash: [rawBytes] (`RAW_BYTES`) + [videoContent] (`VIDEO_CONTENT_V1`) in parallel (FR-FP-07).
+   */
+  data class VideoSuccess(
+      val rawBytes: HashedFile,
+      val videoContent: HashedFile,
+  ) : HashResult()
+
+  /**
+   * RAW_BYTES succeeded; video content fingerprint failed (e.g. > 500 MB budget without opt-in).
+   */
+  data class VideoPartialSuccess(
+      val rawBytes: HashedFile,
+      val videoUnscannableReason: String,
+  ) : HashResult()
+
   /** Unique size in catalog — no byte read (FR-FP-02). Caller may backfill when size collides. */
   data class SizeBucketSkipped(val staged: StagedFile) : HashResult()
 
