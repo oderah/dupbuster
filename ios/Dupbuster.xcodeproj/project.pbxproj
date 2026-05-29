@@ -31,6 +31,25 @@
 		D4F8A24C2B68150000A75B9A /* DBFileStatReader.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2472B68150000A75B9A /* DBFileStatReader.mm */; };
 		D4F8A24D2B68150000A75B9A /* DBStatStage.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2492B68150000A75B9A /* DBStatStage.mm */; };
 		D4F8A24E2B68150000A75B9A /* DBStatStageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2502B68150000A75B9A /* DBStatStageTests.m */; };
+		D4F8A2602B68160000A75B9A /* DBUnscannableReason.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2622B68160000A75B9A /* DBUnscannableReason.m */; };
+		D4F8A2612B68160000A75B9A /* DBHashConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2642B68160000A75B9A /* DBHashConstants.m */; };
+		D4F8A2652B68160000A75B9A /* DBNormalizationProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2672B68160000A75B9A /* DBNormalizationProfile.m */; };
+		D4F8A2682B68160000A75B9A /* DBHashedFile.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A26A2B68160000A75B9A /* DBHashedFile.m */; };
+		D4F8A26B2B68160000A75B9A /* DBHashSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A26D2B68160000A75B9A /* DBHashSettings.m */; };
+		D4F8A26E2B68160000A75B9A /* DBSizeBucketIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2702B68160000A75B9A /* DBSizeBucketIndex.m */; };
+		D4F8A2712B68160000A75B9A /* DBSha256Hasher.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2732B68160000A75B9A /* DBSha256Hasher.mm */; };
+		D4F8A2742B68160000A75B9A /* DBFileContentReader.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2762B68160000A75B9A /* DBFileContentReader.mm */; };
+		D4F8A2772B68160000A75B9A /* DBHashPipeline.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2792B68160000A75B9A /* DBHashPipeline.mm */; };
+		D4F8A27A2B68160000A75B9A /* DBUnscannableReason.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2622B68160000A75B9A /* DBUnscannableReason.m */; };
+		D4F8A27B2B68160000A75B9A /* DBHashConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2642B68160000A75B9A /* DBHashConstants.m */; };
+		D4F8A27C2B68160000A75B9A /* DBNormalizationProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2672B68160000A75B9A /* DBNormalizationProfile.m */; };
+		D4F8A27D2B68160000A75B9A /* DBHashedFile.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A26A2B68160000A75B9A /* DBHashedFile.m */; };
+		D4F8A27E2B68160000A75B9A /* DBHashSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A26D2B68160000A75B9A /* DBHashSettings.m */; };
+		D4F8A27F2B68160000A75B9A /* DBSizeBucketIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2702B68160000A75B9A /* DBSizeBucketIndex.m */; };
+		D4F8A2802B68160000A75B9A /* DBSha256Hasher.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2732B68160000A75B9A /* DBSha256Hasher.mm */; };
+		D4F8A2812B68160000A75B9A /* DBFileContentReader.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2762B68160000A75B9A /* DBFileContentReader.mm */; };
+		D4F8A2822B68160000A75B9A /* DBHashPipeline.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2792B68160000A75B9A /* DBHashPipeline.mm */; };
+		D4F8A2832B68160000A75B9A /* DBHashPipelineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2852B68160000A75B9A /* DBHashPipelineTests.m */; };
 		D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */; };
@@ -80,6 +99,26 @@
 		D4F8A2492B68150000A75B9A /* DBStatStage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBStatStage.mm; path = ScanEngine/Stat/DBStatStage.mm; sourceTree = "<group>"; };
 		D4F8A2542B68150000A75B9A /* DBStatStage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBStatStage.h; path = ScanEngine/Stat/DBStatStage.h; sourceTree = "<group>"; };
 		D4F8A2502B68150000A75B9A /* DBStatStageTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBStatStageTests.m; path = ScanEngineTests/DBStatStageTests.m; sourceTree = "<group>"; };
+		D4F8A2632B68160000A75B9A /* DBUnscannableReason.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBUnscannableReason.h; path = ScanEngine/Security/DBUnscannableReason.h; sourceTree = "<group>"; };
+		D4F8A2622B68160000A75B9A /* DBUnscannableReason.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBUnscannableReason.m; path = ScanEngine/Security/DBUnscannableReason.m; sourceTree = "<group>"; };
+		D4F8A2662B68160000A75B9A /* DBHashConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBHashConstants.h; path = ScanEngine/Hash/DBHashConstants.h; sourceTree = "<group>"; };
+		D4F8A2642B68160000A75B9A /* DBHashConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBHashConstants.m; path = ScanEngine/Hash/DBHashConstants.m; sourceTree = "<group>"; };
+		D4F8A2692B68160000A75B9A /* DBNormalizationProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBNormalizationProfile.h; path = ScanEngine/Hash/DBNormalizationProfile.h; sourceTree = "<group>"; };
+		D4F8A2672B68160000A75B9A /* DBNormalizationProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBNormalizationProfile.m; path = ScanEngine/Hash/DBNormalizationProfile.m; sourceTree = "<group>"; };
+		D4F8A26B2B68160000A75B9A /* DBHashedFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBHashedFile.h; path = ScanEngine/Hash/DBHashedFile.h; sourceTree = "<group>"; };
+		D4F8A26A2B68160000A75B9A /* DBHashedFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBHashedFile.m; path = ScanEngine/Hash/DBHashedFile.m; sourceTree = "<group>"; };
+		D4F8A26C2B68160000A75B9A /* DBHashSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBHashSettings.h; path = ScanEngine/Hash/DBHashSettings.h; sourceTree = "<group>"; };
+		D4F8A26D2B68160000A75B9A /* DBHashSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBHashSettings.m; path = ScanEngine/Hash/DBHashSettings.m; sourceTree = "<group>"; };
+		D4F8A26F2B68160000A75B9A /* DBSizeBucketIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBSizeBucketIndex.h; path = ScanEngine/Hash/DBSizeBucketIndex.h; sourceTree = "<group>"; };
+		D4F8A2702B68160000A75B9A /* DBSizeBucketIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBSizeBucketIndex.m; path = ScanEngine/Hash/DBSizeBucketIndex.m; sourceTree = "<group>"; };
+		D4F8A2722B68160000A75B9A /* DBSha256Hasher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBSha256Hasher.h; path = ScanEngine/Hash/DBSha256Hasher.h; sourceTree = "<group>"; };
+		D4F8A2732B68160000A75B9A /* DBSha256Hasher.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBSha256Hasher.mm; path = ScanEngine/Hash/DBSha256Hasher.mm; sourceTree = "<group>"; };
+		D4F8A2752B68160000A75B9A /* DBFileContentReading.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBFileContentReading.h; path = ScanEngine/Hash/DBFileContentReading.h; sourceTree = "<group>"; };
+		D4F8A2782B68160000A75B9A /* DBFileContentReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBFileContentReader.h; path = ScanEngine/Hash/DBFileContentReader.h; sourceTree = "<group>"; };
+		D4F8A2762B68160000A75B9A /* DBFileContentReader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBFileContentReader.mm; path = ScanEngine/Hash/DBFileContentReader.mm; sourceTree = "<group>"; };
+		D4F8A2882B68160000A75B9A /* DBHashPipeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBHashPipeline.h; path = ScanEngine/Hash/DBHashPipeline.h; sourceTree = "<group>"; };
+		D4F8A2792B68160000A75B9A /* DBHashPipeline.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBHashPipeline.mm; path = ScanEngine/Hash/DBHashPipeline.mm; sourceTree = "<group>"; };
+		D4F8A2852B68160000A75B9A /* DBHashPipelineTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBHashPipelineTests.m; path = ScanEngineTests/DBHashPipelineTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -135,6 +174,7 @@
 				D4F8A2082B68120000A75B9A /* Security */,
 				D4F8A2262B68130000A75B9A /* Discovery */,
 				D4F8A2512B68150000A75B9A /* Stat */,
+				D4F8A2862B68160000A75B9A /* Hash */,
 			);
 			name = ScanEngine;
 			sourceTree = "<group>";
@@ -162,8 +202,34 @@
 			children = (
 				D4F8A2052B68120000A75B9A /* DBUriValidator.h */,
 				D4F8A2062B68120000A75B9A /* DBUriValidator.mm */,
+				D4F8A2632B68160000A75B9A /* DBUnscannableReason.h */,
+				D4F8A2622B68160000A75B9A /* DBUnscannableReason.m */,
 			);
 			name = Security;
+			sourceTree = "<group>";
+		};
+		D4F8A2862B68160000A75B9A /* Hash */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A2662B68160000A75B9A /* DBHashConstants.h */,
+				D4F8A2642B68160000A75B9A /* DBHashConstants.m */,
+				D4F8A2692B68160000A75B9A /* DBNormalizationProfile.h */,
+				D4F8A2672B68160000A75B9A /* DBNormalizationProfile.m */,
+				D4F8A26B2B68160000A75B9A /* DBHashedFile.h */,
+				D4F8A26A2B68160000A75B9A /* DBHashedFile.m */,
+				D4F8A26C2B68160000A75B9A /* DBHashSettings.h */,
+				D4F8A26D2B68160000A75B9A /* DBHashSettings.m */,
+				D4F8A26F2B68160000A75B9A /* DBSizeBucketIndex.h */,
+				D4F8A2702B68160000A75B9A /* DBSizeBucketIndex.m */,
+				D4F8A2722B68160000A75B9A /* DBSha256Hasher.h */,
+				D4F8A2732B68160000A75B9A /* DBSha256Hasher.mm */,
+				D4F8A2752B68160000A75B9A /* DBFileContentReading.h */,
+				D4F8A2782B68160000A75B9A /* DBFileContentReader.h */,
+				D4F8A2762B68160000A75B9A /* DBFileContentReader.mm */,
+				D4F8A2882B68160000A75B9A /* DBHashPipeline.h */,
+				D4F8A2792B68160000A75B9A /* DBHashPipeline.mm */,
+			);
+			name = Hash;
 			sourceTree = "<group>";
 		};
 		D4F8A2512B68150000A75B9A /* Stat */ = {
@@ -190,6 +256,7 @@
 				D4F8A2252B68130000A75B9A /* DBDiscoveryEmitterTests.m */,
 				D4F8A2312B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m */,
 				D4F8A2502B68150000A75B9A /* DBStatStageTests.m */,
+				D4F8A2852B68160000A75B9A /* DBHashPipelineTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -410,10 +477,20 @@
 				D4F8A2232B68130000A75B9A /* DBDiscoveryEmitterTests.m in Sources */,
 				D4F8A22F2B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m in Sources */,
 				D4F8A24E2B68150000A75B9A /* DBStatStageTests.m in Sources */,
+				D4F8A2832B68160000A75B9A /* DBHashPipelineTests.m in Sources */,
 				D4F8A24A2B68150000A75B9A /* DBFileStat.m in Sources */,
 				D4F8A24B2B68150000A75B9A /* DBStagedFile.m in Sources */,
 				D4F8A24C2B68150000A75B9A /* DBFileStatReader.mm in Sources */,
 				D4F8A24D2B68150000A75B9A /* DBStatStage.mm in Sources */,
+				D4F8A27A2B68160000A75B9A /* DBUnscannableReason.m in Sources */,
+				D4F8A27B2B68160000A75B9A /* DBHashConstants.m in Sources */,
+				D4F8A27C2B68160000A75B9A /* DBNormalizationProfile.m in Sources */,
+				D4F8A27D2B68160000A75B9A /* DBHashedFile.m in Sources */,
+				D4F8A27E2B68160000A75B9A /* DBHashSettings.m in Sources */,
+				D4F8A27F2B68160000A75B9A /* DBSizeBucketIndex.m in Sources */,
+				D4F8A2802B68160000A75B9A /* DBSha256Hasher.mm in Sources */,
+				D4F8A2812B68160000A75B9A /* DBFileContentReader.mm in Sources */,
+				D4F8A2822B68160000A75B9A /* DBHashPipeline.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -433,6 +510,15 @@
 				D4F8A2412B68150000A75B9A /* DBStagedFile.m in Sources */,
 				D4F8A2452B68150000A75B9A /* DBFileStatReader.mm in Sources */,
 				D4F8A2462B68150000A75B9A /* DBStatStage.mm in Sources */,
+				D4F8A2602B68160000A75B9A /* DBUnscannableReason.m in Sources */,
+				D4F8A2612B68160000A75B9A /* DBHashConstants.m in Sources */,
+				D4F8A2652B68160000A75B9A /* DBNormalizationProfile.m in Sources */,
+				D4F8A2682B68160000A75B9A /* DBHashedFile.m in Sources */,
+				D4F8A26B2B68160000A75B9A /* DBHashSettings.m in Sources */,
+				D4F8A26E2B68160000A75B9A /* DBSizeBucketIndex.m in Sources */,
+				D4F8A2712B68160000A75B9A /* DBSha256Hasher.mm in Sources */,
+				D4F8A2742B68160000A75B9A /* DBFileContentReader.mm in Sources */,
+				D4F8A2772B68160000A75B9A /* DBHashPipeline.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

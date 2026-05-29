@@ -95,6 +95,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Video duration/width/height deferred to M1-13+.
 - Output: `StagedFile` / `DBStagedFile` — native-only until IndexWriter (M1-09).
 
+### HashPipeline (M1-07)
+
+| Piece | Location |
+|-------|----------|
+| Android | `HashPipeline.kt` + `Sha256Hasher` + `ContentResolverFileContentReader` |
+| iOS | `DBHashPipeline` + `DBSha256Hasher` + `DBFileContentReader` |
+| Fixture | `tests/fixtures/dupbuster/v1/hash-raw-bytes-01.json` |
+
+- Stages: size-bucket skip (unique size) → quick sample (> 50 MB: first+last 64 KiB SHA-256) → full `RAW_BYTES` stream (1 MiB buffer, 120 s timeout).
+- `EMPTY:0` for zero-byte files; video exempt from size-bucket skip (full `VIDEO_CONTENT_V1` in M1-13+).
+- `LARGE_SKIPPED` when size > 2 GB without `largeFilesOptIn`; symlink nodes indexed without following.
+- Output: `HashedFile` / `DBHashedFile` — native-only until IndexWriter (M1-09). `TEXT_NFC_LF` is M1-08.
+
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
 ## Milestones

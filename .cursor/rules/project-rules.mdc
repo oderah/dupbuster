@@ -210,6 +210,17 @@ New code must land in these areas unless architecture is amended first.
 - **Video metadata** (duration_ms, width, height): M1-13+, not M1-06.
 - **Tests:** inject `FileStatReader` (Android) / `DBFileStatReading` (iOS). Fixture `stat-content-uri-01.json`.
 
+### 8.7 HashPipeline (M1-07)
+
+- **Android:** `com.dupbuster.scanengine.hash.HashPipeline` — `InMemorySizeBucketIndex`, `Sha256Hasher`, inject `FileContentReader` in tests.
+- **iOS:** `DBHashPipeline` + `DBSha256Hasher` (CommonCrypto); inject `DBFileContentReading` in tests.
+- **Profiles in scope:** `RAW_BYTES`, `EMPTY:0` only — `TEXT_NFC_LF` is M1-08; `VIDEO_CONTENT_V1` is M1-13+.
+- **Size bucket:** unique non-video sizes skip byte reads; video and zero-byte always hash; second file with same size triggers `NEEDS_HASH` (backfill prior skip is IndexWriter/orchestrator concern).
+- **Caps:** 2 GB default skip (`LARGE_SKIPPED`) unless `HashSettings.largeFilesOptIn`; 120 s hash timeout → `HASH_TIMEOUT`.
+- **Quick sample:** files > 50 MB store `quickSampleHash` (SHA-256 of first+last 64 KiB).
+- **Symlinks:** `HashResult.SymlinkNode` / `DBHashPipelineOutcomeSymlinkNode` — no content read.
+- **Tests:** inject content readers; fixture `hash-raw-bytes-01.json`.
+
 ---
 
 ## 9. Milestones and definition of done

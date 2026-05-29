@@ -1,0 +1,16 @@
+{
+  "id": "hash-raw-bytes-01",
+  "description": "HashPipeline RAW_BYTES SHA-256 for small payload (FR-FP-01 stage 4)",
+  "platform": "both",
+  "input": {
+    "payloadUtf8": "hello",
+    "sizeBytes": 5,
+    "mediaTypeHint": "other"
+  },
+  "expect": {
+    "outcome": "success",
+    "normalizationProfile": "RAW_BYTES",
+    "hashValue": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "quickSampleHash": null
+  }
+}

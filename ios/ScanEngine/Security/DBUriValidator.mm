@@ -1,6 +1,6 @@
 #import "DBUriValidator.h"
 
-NSString *const DBUnscannableReasonPermissionDenied = @"PERMISSION_DENIED";
+#import "DBUnscannableReason.h"
 
 @implementation DBScanRootGrant
 

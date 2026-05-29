@@ -17,7 +17,7 @@ static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED"
            reject:(RCTPromiseRejectBlock)reject
 {
   reject(kScanEngineNotImplemented,
-         @"startScan is not implemented until ScanEngine pipeline wires discovery+hash (M1-07+)",
+         @"startScan is not implemented until ScanEngine pipeline wires IndexWriter (M1-09+)",
          nil);
 }
 

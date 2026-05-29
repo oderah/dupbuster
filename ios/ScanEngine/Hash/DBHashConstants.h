@@ -1,0 +1,11 @@
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+FOUNDATION_EXPORT const int64_t DBHashSampleSizeThresholdBytes;
+FOUNDATION_EXPORT const NSUInteger DBHashSampleChunkBytes;
+FOUNDATION_EXPORT const NSUInteger DBHashReadBufferBytes;
+FOUNDATION_EXPORT const int64_t DBHashLargeFileCapBytes;
+FOUNDATION_EXPORT const NSTimeInterval DBHashTimeoutSeconds;
+
+NS_ASSUME_NONNULL_END

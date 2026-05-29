@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+#import "DBUnscannableReason.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 /** Matches bridge / schema `scan_root.mode`. */
@@ -47,7 +49,5 @@ typedef NS_ENUM(NSInteger, DBUriValidationOutcome) {
                              provenance:(DBUriProvenance)provenance;
 
 @end
-
-FOUNDATION_EXPORT NSString *const DBUnscannableReasonPermissionDenied;
 
 NS_ASSUME_NONNULL_END
