@@ -1,0 +1,50 @@
+{
+  "id": "equiv-video-xres-01",
+  "description": "1080p+720p+480p \u2192 one SAME_CONTENT_VIDEO group (\u22653)",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-01"
+  ],
+  "input": {
+    "members": [
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "durationMs": 60000,
+        "resolution": "720p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "durationMs": 60000,
+        "resolution": "480p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "matchKind": "SAME_CONTENT_VIDEO",
+    "memberCountMin": 3,
+    "contentMatchesAllPairs": true
+  }
+}

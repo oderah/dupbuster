@@ -50,7 +50,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 |-------|----------|
 | Android | `android/.../scanengine/security/UriValidator.kt` (+ `SafUriRules.kt`) |
 | iOS | `ios/ScanEngine/Security/DBUriValidator.{h,mm}` |
-| Fixture | `tests/fixtures/dupbuster/v1/security-uri-01.json` (AC-security-uri-01) |
+| Fixture | `tests/fixtures/dupbuster/v1/security/security-uri-01.json` (AC-security-uri-01) |
 
 - Fail-closed → `PERMISSION_DENIED` (FR-SE-01 / FR-UN-03). Rejects user-pasted URIs, `file://`, SAF docIds containing `..`, and out-of-grant documents.
 - **Android unit tests:** `cd android && ./gradlew :app:testDebugUnitTest`
@@ -202,7 +202,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 |-------|----------|
 | Android | `DurationBucketIndex.kt`, `SqliteDurationBucketIndex.kt`; `HashPipeline` duration pre-bucket → size-bucket |
 | iOS | `DBDurationBucketIndex`, `DBSqliteDurationBucketIndex`; `DBHashPipeline` same stage order |
-| Fixture | `tests/fixtures/dupbuster/v1/hash-pipeline-video-01.json` |
+| Fixture | `tests/fixtures/dupbuster/v1/pipeline/hash-pipeline-video-01.json` |
 
 - Video exempt from size-bucket elimination (FR-FP-02); `duration_ms` pre-bucket runs before size-bucket for gate-candidate hints.
 - Different-size videos still fingerprint `VIDEO_CONTENT_V1` (AC-pipeline-video-01).
@@ -214,9 +214,22 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 |-------|----------|
 | Android | `CatalogMigrator.kt`, `CatalogDatabase.onUpgrade`, `CatalogSchema.applyLegacyV1Schema` |
 | iOS | `DBCatalogMigrator`, `DBCatalogDatabase` open + legacy v1 DDL |
-| Fixtures | `index-schema-migration-01.json`, `security-decode-01.json` |
+| Fixtures | `index-schema-migration-01.json`, `security/security-decode-01.json` |
 
 - v1→v2 adds video columns, `match_kind`, `frame_hashes_blob`; sets `full_rescan_required` (FR-IX-05).
+
+### Fixture matrix (M1-17)
+
+| Piece | Location |
+|-------|----------|
+| Manifest | `tests/fixtures/dupbuster/v1/manifest.json` (46 rows: 27 equivalence + 19 component descriptors) |
+| Equivalence | `text/`, `documents/`, `images/`, `av/`, `binary/`, `empty/`, `symlinks/` — maps to `AC-equiv-*` in requirements §11 |
+| Pipeline | `pipeline/` — size skip, quick sample, 2 GB cap, hash timeout, video exception |
+| Security | `security/` — URI, decode, redact, blob, progress bridge safety |
+| Component (root) | `discovery-*`, `stat-*`, `hash-*`, `index-*`, `integrity-*` — per M1 task stubs |
+
+- JSON descriptors document inputs/expectations; **M1-18** wires native unit tests to load rows and assert green.
+- **Tests:** `FixtureManifestTest` (Android), `__tests__/fixtureManifest.test.ts` (Jest) — manifest ↔ on-disk parity.
 - `VIDEO_DECODE_FAILED` stored on partial video hash (`upsertVideoPartialHashed` / iOS parity).
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.

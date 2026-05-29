@@ -1,0 +1,27 @@
+{
+  "id": "equiv-text-04",
+  "description": "Trailing whitespace differs \u2192 different groups",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-text-04"
+  ],
+  "input": {
+    "files": [
+      {
+        "payloadUtf8": "hello  "
+      },
+      {
+        "payloadUtf8": "hello"
+      }
+    ],
+    "mediaTypeHint": "text"
+  },
+  "expect": {
+    "sameDuplicateGroup": false,
+    "normalizationProfile": "TEXT_NFC_LF",
+    "hashValues": [
+      "518a621e78504a16eeece5702650757eefc828064f953c44df4c9cd6c66df978",
+      "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    ]
+  }
+}

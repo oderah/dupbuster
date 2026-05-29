@@ -1,0 +1,38 @@
+{
+  "id": "equiv-video-xres-06",
+  "description": "5% crop or >5% trim \u2192 different groups (v1 false-negative)",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-06"
+  ],
+  "input": {
+    "members": [
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "contentMatches": false,
+    "documentedFalseNegative": true
+  }
+}

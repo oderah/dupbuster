@@ -1,0 +1,17 @@
+{
+  "id": "pipeline-size-skip-01",
+  "description": "Unique non-video size skips byte read until collision",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "FR-FP-02"
+  ],
+  "input": {
+    "sizeBytes": 1024,
+    "mediaTypeHint": "other",
+    "secondFileSameSize": true
+  },
+  "expect": {
+    "firstOutcome": "SizeBucketSkipped",
+    "secondOutcome": "success"
+  }
+}

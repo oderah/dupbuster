@@ -1,0 +1,16 @@
+{
+  "id": "equiv-empty-01",
+  "description": "All zero-byte files \u2192 single EMPTY:0 class",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-empty-01"
+  ],
+  "input": {
+    "fileCount": 3
+  },
+  "expect": {
+    "normalizationProfile": "EMPTY:0",
+    "hashValue": "EMPTY:0",
+    "sameDuplicateGroup": true
+  }
+}

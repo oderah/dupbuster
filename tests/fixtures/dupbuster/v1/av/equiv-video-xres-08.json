@@ -1,0 +1,31 @@
+{
+  "id": "equiv-video-xres-08",
+  "description": "Clip <3s \u2192 single-frame path groups cross-resolution",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-08"
+  ],
+  "input": {
+    "members": [
+      {
+        "durationMs": 2500,
+        "resolution": "1080p",
+        "frameHashes": [
+          42
+        ]
+      },
+      {
+        "durationMs": 2500,
+        "resolution": "720p",
+        "frameHashes": [
+          43
+        ]
+      }
+    ],
+    "sampleFrameCount": 1
+  },
+  "expect": {
+    "matchKind": "SAME_CONTENT_VIDEO",
+    "contentMatches": true
+  }
+}

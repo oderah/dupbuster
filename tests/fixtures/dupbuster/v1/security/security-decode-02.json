@@ -1,0 +1,17 @@
+{
+  "id": "security-decode-02",
+  "description": "Pathological decode terminates \u226490s; no FGS hang",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-security-decode-02"
+  ],
+  "input": {
+    "mediaType": "video",
+    "wallClockBudgetMs": 90000
+  },
+  "expect": {
+    "terminatesWithinMs": 90000,
+    "nativeCrash": false,
+    "fgsHang": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "pipeline-hash-timeout-01",
+  "description": "Hash exceeds 120s \u2192 HASH_TIMEOUT",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-unscan-04",
+    "FR-FP-04"
+  ],
+  "input": {
+    "hashTimeoutMs": 120000
+  },
+  "expect": {
+    "unscannableReason": "HASH_TIMEOUT"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "equiv-video-xres-05",
+  "description": "Duration >2% of min \u2192 different groups",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-05"
+  ],
+  "input": {
+    "members": [
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "durationMs": 62000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "passesDurationGate": false
+  }
+}

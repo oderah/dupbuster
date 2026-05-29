@@ -1,0 +1,21 @@
+{
+  "id": "equiv-img-02",
+  "description": "Different bytes (e.g. EXIF) \u2192 different groups",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-img-02"
+  ],
+  "input": {
+    "files": [
+      {
+        "hashValue": "abc"
+      },
+      {
+        "hashValue": "def"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": false
+  }
+}

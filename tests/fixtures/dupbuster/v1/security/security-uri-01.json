@@ -1,5 +1,5 @@
 {
-  "id": "AC-security-uri-01",
+  "id": "security-uri-01",
   "description": "Crafted SAF docId with .. segment must yield PERMISSION_DENIED without open()",
   "platform": "android",
   "input": {
@@ -11,5 +11,8 @@
     "validation": "denied",
     "unscannableReason": "PERMISSION_DENIED",
     "mustNotOpen": true
-  }
+  },
+  "acceptanceCriteria": [
+    "AC-security-uri-01"
+  ]
 }

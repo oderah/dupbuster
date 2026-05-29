@@ -1,0 +1,15 @@
+{
+  "id": "pipeline-quick-sample-01",
+  "description": "Files >50MB store quickSampleHash (first+last 64KiB)",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "FR-FP-01"
+  ],
+  "input": {
+    "sizeBytes": 52428801
+  },
+  "expect": {
+    "quickSampleHashLength": 64,
+    "normalizationProfile": "RAW_BYTES"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "equiv-img-01",
+  "description": "Identical bytes, different paths \u2192 same group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-img-01"
+  ],
+  "input": {
+    "files": [
+      {
+        "pathAlias": "a.jpg",
+        "hashValue": "abc"
+      },
+      {
+        "pathAlias": "b.jpg",
+        "hashValue": "abc"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "matchKind": "EXACT_BYTES"
+  }
+}

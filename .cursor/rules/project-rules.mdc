@@ -255,6 +255,16 @@ New code must land in these areas unless architecture is amended first.
 - **API:** `report(snapshot, atMs)` coalesces; `advanceTo(atMs)` drains when window elapsed; `flush(atMs)` for terminal pending; `reset()` between runs.
 - **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests`; fixture `integrity-progress-01.json` (AC-integrity-progress-01).
 
+### Fixture matrix (M1-17)
+
+- **Root:** `tests/fixtures/dupbuster/v1/manifest.json` catalogs all rows (`schemaVersion` 1).
+- **Layout:** `text/`, `documents/`, `images/`, `av/`, `binary/`, `empty/`, `symlinks/`, `pipeline/`, `security/` per `implementation-plan.md` §9.2; component stubs (`discovery-*`, `stat-*`, `hash-*`, `index-*`, `integrity-*`) remain at v1 root.
+- **Equivalence:** One JSON descriptor per `AC-equiv-*` (text 01–04, doc, img, av, video-xres 01–10 + 05b, empty, symlink); `equiv-binary-01` documents RAW_BYTES parity (no separate AC id).
+- **Security moved:** `security/security-uri-01.json`, `security/security-decode-01.json` (plus decode-02, redact-01, blob-01, progress-01).
+- **Pipeline moved:** `pipeline/hash-pipeline-video-01.json` (+ pipeline-size/quick/large/timeout descriptors).
+- **Validation:** `FixtureManifestTest` / `__tests__/fixtureManifest.test.ts` — manifest paths exist, ids match, required equiv AC ids listed.
+- **M1-18:** Native tests must load fixture rows and assert `expect` (not manifest-only).
+
 ### Progress `contentKind` bridge (M1-16)
 
 - **Android:** `ScanProgressContentKindPolicy`, `ScanProgressBridgeMapper`, `ScanProgressBridge` — throttled `emitOnScanProgress` payloads.
@@ -290,7 +300,7 @@ New code must land in these areas unless architecture is amended first.
 - **iOS:** `DBDurationBucketIndex`, `DBInMemoryDurationBucketIndex`, `DBSqliteDurationBucketIndex`; same ordering in `DBHashPipeline`.
 - **Size-bucket skip:** Video never size-bucket-skips (`SizeBucketIndex` / `DBSizeBucketIndex` always `NEEDS_HASH`); `countIndexedFilesWithSize` excludes rows with `duration_ms > 0`.
 - **Duration pre-bucket:** Registers `duration_ms` from StatStage before size-bucket; disposition is informational (`UNIQUE_DURATION` / `HAS_GATE_CANDIDATE` / `DURATION_UNKNOWN`) — video always runs `RAW_BYTES` + `VIDEO_CONTENT_V1` (FR-FP-02 / FR-FP-07).
-- **Tests:** `DurationBucketIndexTest`, `HashPipelineTest` (AC-pipeline-video-01); fixture `hash-pipeline-video-01.json`.
+- **Tests:** `DurationBucketIndexTest`, `HashPipelineTest` (AC-pipeline-video-01); fixture `pipeline/hash-pipeline-video-01.json`.
 
 ### Schema v2 migration (M1-15)
 

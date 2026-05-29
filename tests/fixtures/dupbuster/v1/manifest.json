@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 1,
+  "description": "DupBuster v1 native fixture matrix (M1-17). JSON descriptors; M1-18 wires native unit tests.",
+  "root": "tests/fixtures/dupbuster/v1",
+  "categories": {
+    "text": {
+      "directory": "text",
+      "description": "TEXT_NFC_LF equivalence (AC-equiv-text-*)"
+    },
+    "documents": {
+      "directory": "documents",
+      "description": "Document byte equivalence"
+    },
+    "images": {
+      "directory": "images",
+      "description": "Image RAW_BYTES equivalence"
+    },
+    "av": {
+      "directory": "av",
+      "description": "A/V container and VIDEO_CONTENT_V1 cross-resolution"
+    },
+    "binary": {
+      "directory": "binary",
+      "description": "Opaque RAW_BYTES equivalence"
+    },
+    "empty": {
+      "directory": "empty",
+      "description": "EMPTY:0 zero-byte class"
+    },
+    "symlinks": {
+      "directory": "symlinks",
+      "description": "Symlink indexing without follow"
+    },
+    "pipeline": {
+      "directory": "pipeline",
+      "description": "Hash pipeline stages (size skip, sample, caps, video exception)"
+    },
+    "security": {
+      "directory": "security",
+      "description": "Security and redaction gates"
+    },
+    "discovery": {
+      "directory": ".",
+      "description": "DiscoveryEmitter modes"
+    },
+    "stat": {
+      "directory": ".",
+      "description": "StatStage"
+    },
+    "hash": {
+      "directory": ".",
+      "description": "HashPipeline unit descriptors"
+    },
+    "index": {
+      "directory": ".",
+      "description": "IndexWriter / Grouper / migration"
+    },
+    "integrity": {
+      "directory": ".",
+      "description": "Progress throttle and checkpoint"
+    },
+    "component": {
+      "directory": ".",
+      "description": "Cross-cutting component fixtures"
+    }
+  },
+  "fixtures": [
+    {
+      "id": "equiv-av-01",
+      "path": "av/equiv-av-01.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-av-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-01",
+      "path": "av/equiv-video-xres-01.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-02",
+      "path": "av/equiv-video-xres-02.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-02"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-03",
+      "path": "av/equiv-video-xres-03.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-03"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-04",
+      "path": "av/equiv-video-xres-04.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-04"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-05",
+      "path": "av/equiv-video-xres-05.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-05"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-05b",
+      "path": "av/equiv-video-xres-05b.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-05b"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-06",
+      "path": "av/equiv-video-xres-06.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-06"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-07",
+      "path": "av/equiv-video-xres-07.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-07"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-08",
+      "path": "av/equiv-video-xres-08.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-08"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-09",
+      "path": "av/equiv-video-xres-09.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-09"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-video-xres-10",
+      "path": "av/equiv-video-xres-10.json",
+      "category": "av",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-video-xres-10"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-binary-01",
+      "path": "binary/equiv-binary-01.json",
+      "category": "binary",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-binary-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "discovery-platform-discovery-01",
+      "path": "discovery-platform-discovery-01.json",
+      "category": "discovery",
+      "platform": "android",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "discovery-user-selected-01",
+      "path": "discovery-user-selected-01.json",
+      "category": "discovery",
+      "platform": "android",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "equiv-doc-01",
+      "path": "documents/equiv-doc-01.json",
+      "category": "documents",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-doc-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-doc-02",
+      "path": "documents/equiv-doc-02.json",
+      "category": "documents",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-doc-02"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-empty-01",
+      "path": "empty/equiv-empty-01.json",
+      "category": "empty",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-empty-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "hash-raw-bytes-01",
+      "path": "hash-raw-bytes-01.json",
+      "category": "hash",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "hash-text-nfc-lf-01",
+      "path": "hash-text-nfc-lf-01.json",
+      "category": "hash",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "hash-video-content-01",
+      "path": "hash-video-content-01.json",
+      "category": "hash",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "equiv-img-01",
+      "path": "images/equiv-img-01.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-img-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-img-02",
+      "path": "images/equiv-img-02.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-img-02"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "index-duplicate-group-01",
+      "path": "index-duplicate-group-01.json",
+      "category": "index",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "index-hashed-file-01",
+      "path": "index-hashed-file-01.json",
+      "category": "index",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "index-schema-migration-01",
+      "path": "index-schema-migration-01.json",
+      "category": "index",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "integrity-progress-01",
+      "path": "integrity-progress-01.json",
+      "category": "integrity",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "integrity-progress-02",
+      "path": "integrity-progress-02.json",
+      "category": "integrity",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "integrity-resume-01",
+      "path": "integrity-resume-01.json",
+      "category": "integrity",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "hash-pipeline-video-01",
+      "path": "pipeline/hash-pipeline-video-01.json",
+      "category": "pipeline",
+      "platform": "both",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "pipeline-hash-timeout-01",
+      "path": "pipeline/pipeline-hash-timeout-01.json",
+      "category": "pipeline",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-unscan-04",
+        "FR-FP-04"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "pipeline-large-cap-01",
+      "path": "pipeline/pipeline-large-cap-01.json",
+      "category": "pipeline",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-unscan-03",
+        "FR-FP-03"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "pipeline-quick-sample-01",
+      "path": "pipeline/pipeline-quick-sample-01.json",
+      "category": "pipeline",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "FR-FP-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "pipeline-size-skip-01",
+      "path": "pipeline/pipeline-size-skip-01.json",
+      "category": "pipeline",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "FR-FP-02"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-blob-01",
+      "path": "security/security-blob-01.json",
+      "category": "security",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-security-blob-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-decode-01",
+      "path": "security/security-decode-01.json",
+      "category": "security",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-security-decode-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-decode-02",
+      "path": "security/security-decode-02.json",
+      "category": "security",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-security-decode-02"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-progress-01",
+      "path": "security/security-progress-01.json",
+      "category": "security",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-security-progress-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-redact-01",
+      "path": "security/security-redact-01.json",
+      "category": "security",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-security-redact-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "security-uri-01",
+      "path": "security/security-uri-01.json",
+      "category": "security",
+      "platform": "android",
+      "acceptanceCriteria": [
+        "AC-security-uri-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
+      "id": "stat-content-uri-01",
+      "path": "stat-content-uri-01.json",
+      "category": "stat",
+      "platform": "android",
+      "acceptanceCriteria": [],
+      "kind": "descriptor"
+    },
+    {
+      "id": "equiv-symlink-01",
+      "path": "symlinks/equiv-symlink-01.json",
+      "category": "symlinks",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-symlink-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-text-01",
+      "path": "text/equiv-text-01.json",
+      "category": "text",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-text-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-text-02",
+      "path": "text/equiv-text-02.json",
+      "category": "text",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-text-02"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-text-03",
+      "path": "text/equiv-text-03.json",
+      "category": "text",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-text-03"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-text-04",
+      "path": "text/equiv-text-04.json",
+      "category": "text",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-text-04"
+      ],
+      "kind": "equivalence"
+    }
+  ],
+  "counts": {
+    "total": 46,
+    "equivalence": 23,
+    "descriptor": 23
+  }
+}

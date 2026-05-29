@@ -1,0 +1,23 @@
+{
+  "id": "equiv-doc-02",
+  "description": "PDF vs DOCX same logical content \u2192 different groups",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-doc-02"
+  ],
+  "input": {
+    "files": [
+      {
+        "format": "pdf",
+        "hashValue": "aaa"
+      },
+      {
+        "format": "docx",
+        "hashValue": "bbb"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": false
+  }
+}

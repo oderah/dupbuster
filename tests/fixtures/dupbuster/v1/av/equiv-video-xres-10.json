@@ -1,0 +1,16 @@
+{
+  "id": "equiv-video-xres-10",
+  "description": ">500MB without opt-in skips content fingerprint",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-10"
+  ],
+  "input": {
+    "sizeBytes": 524288001,
+    "largeFilesOptIn": false
+  },
+  "expect": {
+    "videoContentFingerprintSkipped": true,
+    "withOptInMayCompleteOrTimeout90s": true
+  }
+}

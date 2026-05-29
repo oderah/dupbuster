@@ -1,0 +1,24 @@
+{
+  "id": "equiv-av-01",
+  "description": "Identical container bytes \u2192 same group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-av-01"
+  ],
+  "input": {
+    "files": [
+      {
+        "container": "mp3",
+        "hashValue": "feedface"
+      },
+      {
+        "container": "mp3",
+        "hashValue": "feedface"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "matchKind": "EXACT_BYTES"
+  }
+}

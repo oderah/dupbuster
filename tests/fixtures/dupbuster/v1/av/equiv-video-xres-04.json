@@ -1,0 +1,28 @@
+{
+  "id": "equiv-video-xres-04",
+  "description": "Byte-identical copies \u2192 EXACT_BYTES only",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-04"
+  ],
+  "input": {
+    "rawHash": "samebytes",
+    "members": [
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "matchKind": "EXACT_BYTES",
+    "noSeparateSameContentVideoGroup": true
+  }
+}

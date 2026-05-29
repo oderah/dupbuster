@@ -1,0 +1,18 @@
+{
+  "id": "security-progress-01",
+  "description": "Progress bridge payloads contain no paths/hashes/bytes",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-security-progress-01"
+  ],
+  "input": {
+    "forbiddenKeys": [
+      "uri_or_path",
+      "hash_value",
+      "display_name"
+    ]
+  },
+  "expect": {
+    "bridgePayloadSafe": true
+  }
+}

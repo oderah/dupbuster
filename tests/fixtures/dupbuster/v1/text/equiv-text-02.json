@@ -1,0 +1,24 @@
+{
+  "id": "equiv-text-02",
+  "description": "BOM stripped; BOM vs no-BOM \u2192 same group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-text-02"
+  ],
+  "input": {
+    "files": [
+      {
+        "payloadUtf8": "\ufeffsame"
+      },
+      {
+        "payloadUtf8": "same"
+      }
+    ],
+    "mediaTypeHint": "text"
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "normalizationProfile": "TEXT_NFC_LF",
+    "hashValue": "0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5"
+  }
+}

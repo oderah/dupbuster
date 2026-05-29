@@ -1,0 +1,40 @@
+{
+  "id": "equiv-video-xres-07",
+  "description": "MP4 vs MOV same content \u2192 SAME_CONTENT_VIDEO",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-07"
+  ],
+  "input": {
+    "members": [
+      {
+        "container": "mp4",
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "container": "mov",
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          11,
+          21,
+          31,
+          41,
+          51
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "matchKind": "SAME_CONTENT_VIDEO",
+    "contentMatches": true
+  }
+}

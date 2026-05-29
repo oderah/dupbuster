@@ -1,0 +1,15 @@
+{
+  "id": "security-redact-01",
+  "description": "Crash payload paths redacted",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-security-redact-01"
+  ],
+  "input": {
+    "rawPath": "/storage/emulated/0/DCIM/test.jpg"
+  },
+  "expect": {
+    "mustNotContainRawPath": true,
+    "ciGate": true
+  }
+}

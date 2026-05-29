@@ -1,0 +1,16 @@
+{
+  "id": "security-blob-01",
+  "description": "Prod: no frame_hashes_blob in crash/analytics",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-security-blob-01"
+  ],
+  "input": {
+    "buildType": "release",
+    "frameHashesBlobPresent": true
+  },
+  "expect": {
+    "blobInCrashPayload": false,
+    "blobInAnalytics": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "pipeline-large-cap-01",
+  "description": ">2GB without opt-in \u2192 LARGE_SKIPPED",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-unscan-03",
+    "FR-FP-03"
+  ],
+  "input": {
+    "sizeBytes": 2147483649,
+    "largeFilesOptIn": false
+  },
+  "expect": {
+    "unscannableReason": "LARGE_SKIPPED"
+  }
+}

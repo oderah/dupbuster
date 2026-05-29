@@ -11,5 +11,8 @@
     "scanContinues": true,
     "nativeCrash": false,
     "rawBytesMayBeIndexed": true
-  }
+  },
+  "acceptanceCriteria": [
+    "AC-security-decode-01"
+  ]
 }

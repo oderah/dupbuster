@@ -1,0 +1,16 @@
+{
+  "id": "equiv-video-xres-09",
+  "description": "Malformed container \u2192 VIDEO_DECODE_FAILED",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-09"
+  ],
+  "input": {
+    "container": "truncated_mp4"
+  },
+  "expect": {
+    "unscannableReason": "VIDEO_DECODE_FAILED",
+    "scanContinues": true,
+    "nativeCrash": false
+  }
+}

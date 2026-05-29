@@ -1,0 +1,21 @@
+{
+  "id": "equiv-symlink-01",
+  "description": "Symlink indexed separately; not grouped with target",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-symlink-01"
+  ],
+  "input": {
+    "symlink": {
+      "targetHash": "abc"
+    },
+    "target": {
+      "hashValue": "abc"
+    }
+  },
+  "expect": {
+    "symlinkOutcome": "SymlinkNode",
+    "sameDuplicateGroup": false,
+    "mustNotFollowSymlink": true
+  }
+}

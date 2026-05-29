@@ -1,0 +1,37 @@
+{
+  "id": "equiv-video-xres-05b",
+  "description": "59s vs 60s (1s floor) \u2192 different groups",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-video-xres-05b"
+  ],
+  "input": {
+    "members": [
+      {
+        "durationMs": 59000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      {
+        "durationMs": 60000,
+        "resolution": "1080p",
+        "frameHashes": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "passesDurationGate": false
+  }
+}

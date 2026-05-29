@@ -1,0 +1,25 @@
+{
+  "id": "equiv-doc-01",
+  "description": "Byte-identical PDF copies \u2192 same group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-doc-01"
+  ],
+  "input": {
+    "files": [
+      {
+        "format": "pdf",
+        "hashValue": "deadbeef01"
+      },
+      {
+        "format": "pdf",
+        "hashValue": "deadbeef01"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "matchKind": "EXACT_BYTES",
+    "normalizationProfile": "RAW_BYTES"
+  }
+}

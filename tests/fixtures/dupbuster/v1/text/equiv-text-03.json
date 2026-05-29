@@ -1,0 +1,24 @@
+{
+  "id": "equiv-text-03",
+  "description": "NFC vs NFD composed \u2192 same group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-text-03"
+  ],
+  "input": {
+    "files": [
+      {
+        "payloadUtf8": "caf\u00e9"
+      },
+      {
+        "payloadUtf8": "cafe\u0301"
+      }
+    ],
+    "mediaTypeHint": "text"
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "normalizationProfile": "TEXT_NFC_LF",
+    "hashValue": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+  }
+}

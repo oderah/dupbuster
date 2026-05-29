@@ -1,0 +1,21 @@
+{
+  "id": "equiv-binary-01",
+  "description": "Identical opaque byte streams \u2192 same RAW_BYTES group",
+  "platform": "both",
+  "acceptanceCriteria": [],
+  "input": {
+    "files": [
+      {
+        "payloadUtf8": "hello"
+      },
+      {
+        "payloadUtf8": "hello"
+      }
+    ]
+  },
+  "expect": {
+    "sameDuplicateGroup": true,
+    "normalizationProfile": "RAW_BYTES",
+    "hashValue": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+  }
+}
