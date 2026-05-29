@@ -12,6 +12,8 @@ FOUNDATION_EXPORT NSString *const DBCatalogMetaFullRescanRequired;
 
 + (NSArray<NSString *> *)createTableStatements;
 + (NSArray<NSString *> *)createIndexStatements;
++ (NSArray<NSString *> *)legacyV1CreateTableStatements;
++ (NSArray<NSString *> *)legacyV1CreateIndexStatements;
 
 @end
 

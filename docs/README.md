@@ -198,6 +198,17 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Different-size videos still fingerprint `VIDEO_CONTENT_V1` (AC-pipeline-video-01).
 - **Tests:** `DurationBucketIndexTest`, extended `HashPipelineTest` / `DBHashPipelineTests`.
 
+### Schema v2 migration (M1-15)
+
+| Piece | Location |
+|-------|----------|
+| Android | `CatalogMigrator.kt`, `CatalogDatabase.onUpgrade`, `CatalogSchema.applyLegacyV1Schema` |
+| iOS | `DBCatalogMigrator`, `DBCatalogDatabase` open + legacy v1 DDL |
+| Fixtures | `index-schema-migration-01.json`, `security-decode-01.json` |
+
+- v1→v2 adds video columns, `match_kind`, `frame_hashes_blob`; sets `full_rescan_required` (FR-IX-05).
+- `VIDEO_DECODE_FAILED` stored on partial video hash (`upsertVideoPartialHashed` / iOS parity).
+
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
 ## Milestones

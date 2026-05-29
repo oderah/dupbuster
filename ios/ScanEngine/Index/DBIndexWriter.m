@@ -77,30 +77,77 @@
       return [self upsertFileEntryWithStaged:staged
                                   generation:generation
                                fingerprintId:0
+                       rawContentFingerprintId:0
                            unscannableReason:nil
                                    isSymlink:NO];
     case DBHashPipelineOutcomeSymlinkNode:
       return [self upsertFileEntryWithStaged:staged
                                   generation:generation
                                fingerprintId:0
+                       rawContentFingerprintId:0
                            unscannableReason:nil
                                    isSymlink:YES];
     case DBHashPipelineOutcomeUnscannable:
       return [self upsertFileEntryWithStaged:staged
                                   generation:generation
                                fingerprintId:0
+                       rawContentFingerprintId:0
                            unscannableReason:result.unscannableReason
                                    isSymlink:staged.isSymlink];
+    case DBHashPipelineOutcomeVideoSuccess:
+      return [self upsertVideoDualHashed:result.rawBytesHashed
+                             videoContent:result.videoContentHashed
+                               generation:generation];
+    case DBHashPipelineOutcomeVideoPartialSuccess:
+      return [self upsertVideoPartialHashed:result.rawBytesHashed
+                      videoUnscannableReason:result.unscannableReason
+                                generation:generation];
   }
+}
+
+- (NSInteger)upsertVideoDualHashed:(DBHashedFile *)rawBytes
+                      videoContent:(DBHashedFile *)videoContent
+                        generation:(NSInteger)generation
+{
+  NSInteger rawFingerprintId = [self getOrCreateFingerprintWithHashValue:rawBytes.hashValue
+                                                    normalizationProfile:rawBytes.normalizationProfile
+                                                         frameHashesBlob:nil];
+  NSInteger videoFingerprintId =
+      [self getOrCreateFingerprintWithHashValue:videoContent.hashValue
+                           normalizationProfile:videoContent.normalizationProfile
+                                frameHashesBlob:videoContent.frameHashesBlob];
+  return [self upsertFileEntryWithStaged:rawBytes.staged
+                              generation:generation
+                           fingerprintId:videoFingerprintId
+                   rawContentFingerprintId:rawFingerprintId
+                       unscannableReason:nil
+                               isSymlink:NO];
+}
+
+- (NSInteger)upsertVideoPartialHashed:(DBHashedFile *)rawBytes
+                 videoUnscannableReason:(NSString *)videoUnscannableReason
+                           generation:(NSInteger)generation
+{
+  NSInteger rawFingerprintId = [self getOrCreateFingerprintWithHashValue:rawBytes.hashValue
+                                                    normalizationProfile:rawBytes.normalizationProfile
+                                                         frameHashesBlob:nil];
+  return [self upsertFileEntryWithStaged:rawBytes.staged
+                              generation:generation
+                           fingerprintId:rawFingerprintId
+                   rawContentFingerprintId:0
+                       unscannableReason:videoUnscannableReason
+                               isSymlink:NO];
 }
 
 - (NSInteger)upsertHashedFile:(DBHashedFile *)hashed generation:(NSInteger)generation
 {
   NSInteger fingerprintId = [self getOrCreateFingerprintWithHashValue:hashed.hashValue
-                                                 normalizationProfile:hashed.normalizationProfile];
+                                                 normalizationProfile:hashed.normalizationProfile
+                                                      frameHashesBlob:hashed.frameHashesBlob];
   return [self upsertFileEntryWithStaged:hashed.staged
                               generation:generation
                            fingerprintId:fingerprintId
+                   rawContentFingerprintId:0
                        unscannableReason:nil
                                isSymlink:NO];
 }
@@ -199,6 +246,7 @@
 
 - (NSInteger)getOrCreateFingerprintWithHashValue:(NSString *)hashValue
                               normalizationProfile:(NSString *)profile
+                                   frameHashesBlob:(NSData *)frameHashesBlob
 {
   sqlite3_stmt *stmt = NULL;
   sqlite3 *db = _database.db;
@@ -218,17 +266,30 @@
   }
   sqlite3_finalize(stmt);
 
-  sqlite3_prepare_v2(
-      db,
-      "INSERT INTO fingerprint (hash_algo, hash_value, normalization_profile, computed_at) "
-      "VALUES (?, ?, ?, ?)",
-      -1,
-      &stmt,
-      NULL);
+  if (frameHashesBlob != nil) {
+    sqlite3_prepare_v2(
+        db,
+        "INSERT INTO fingerprint (hash_algo, hash_value, normalization_profile, computed_at, "
+        "frame_hashes_blob) VALUES (?, ?, ?, ?, ?)",
+        -1,
+        &stmt,
+        NULL);
+  } else {
+    sqlite3_prepare_v2(
+        db,
+        "INSERT INTO fingerprint (hash_algo, hash_value, normalization_profile, computed_at) "
+        "VALUES (?, ?, ?, ?)",
+        -1,
+        &stmt,
+        NULL);
+  }
   sqlite3_bind_text(stmt, 1, DBCatalogHashAlgoSha256.UTF8String, -1, SQLITE_TRANSIENT);
   sqlite3_bind_text(stmt, 2, hashValue.UTF8String, -1, SQLITE_TRANSIENT);
   sqlite3_bind_text(stmt, 3, profile.UTF8String, -1, SQLITE_TRANSIENT);
   sqlite3_bind_int64(stmt, 4, (sqlite3_int64)(NSDate.date.timeIntervalSince1970 * 1000));
+  if (frameHashesBlob != nil) {
+    sqlite3_bind_blob(stmt, 5, frameHashesBlob.bytes, (int)frameHashesBlob.length, SQLITE_TRANSIENT);
+  }
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
   return (NSInteger)sqlite3_last_insert_rowid(db);
@@ -237,6 +298,7 @@
 - (NSInteger)upsertFileEntryWithStaged:(DBStagedFile *)staged
                               generation:(NSInteger)generation
                            fingerprintId:(NSInteger)fingerprintId
+                   rawContentFingerprintId:(NSInteger)rawContentFingerprintId
                        unscannableReason:(NSString *)unscannableReason
                                isSymlink:(BOOL)isSymlink
 {
@@ -254,6 +316,7 @@
                        staged:staged
                    generation:generation
                 fingerprintId:fingerprintId
+        rawContentFingerprintId:rawContentFingerprintId
             unscannableReason:unscannableReason
                     isSymlink:isSymlink];
       return existing;
@@ -268,6 +331,7 @@
                      staged:staged
                  generation:generation
               fingerprintId:fingerprintId
+      rawContentFingerprintId:rawContentFingerprintId
           unscannableReason:unscannableReason
                   isSymlink:isSymlink];
     return existingByUri;
@@ -275,6 +339,7 @@
   return [self insertFileEntryWithStaged:staged
                               generation:generation
                            fingerprintId:fingerprintId
+                   rawContentFingerprintId:rawContentFingerprintId
                        unscannableReason:unscannableReason
                                isSymlink:isSymlink];
 }
@@ -282,6 +347,7 @@
 - (NSInteger)insertFileEntryWithStaged:(DBStagedFile *)staged
                             generation:(NSInteger)generation
                          fingerprintId:(NSInteger)fingerprintId
+                 rawContentFingerprintId:(NSInteger)rawContentFingerprintId
                      unscannableReason:(NSString *)unscannableReason
                              isSymlink:(BOOL)isSymlink
 {
@@ -289,8 +355,9 @@
   sqlite3 *db = _database.db;
   const char *sql =
       "INSERT INTO file_entry (root_id, uri_or_path, display_name, size, mtime_ns, "
-      "fingerprint_id, last_seen_generation, is_symlink, unscannable_reason, inode, device_id) "
-      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "fingerprint_id, last_seen_generation, is_symlink, unscannable_reason, inode, device_id, "
+      "duration_ms, video_width, video_height, raw_content_fingerprint_id) "
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
   DBDiscoveredEntry *discovered = staged.discovered;
   sqlite3_bind_int64(stmt, 1, discovered.scanRootId);
@@ -320,6 +387,12 @@
   } else {
     sqlite3_bind_null(stmt, 11);
   }
+  [self bindVideoMetadataOnStatement:stmt staged:staged startingAtIndex:12];
+  if (rawContentFingerprintId > 0) {
+    sqlite3_bind_int64(stmt, 15, rawContentFingerprintId);
+  } else {
+    sqlite3_bind_null(stmt, 15);
+  }
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
   return (NSInteger)sqlite3_last_insert_rowid(db);
@@ -329,6 +402,7 @@
                    staged:(DBStagedFile *)staged
                generation:(NSInteger)generation
             fingerprintId:(NSInteger)fingerprintId
+    rawContentFingerprintId:(NSInteger)rawContentFingerprintId
         unscannableReason:(NSString *)unscannableReason
                 isSymlink:(BOOL)isSymlink
 {
@@ -336,7 +410,8 @@
   sqlite3 *db = _database.db;
   const char *sql =
       "UPDATE file_entry SET display_name = ?, size = ?, mtime_ns = ?, fingerprint_id = ?, "
-      "last_seen_generation = ?, is_symlink = ?, unscannable_reason = ?, inode = ?, device_id = ? "
+      "last_seen_generation = ?, is_symlink = ?, unscannable_reason = ?, inode = ?, device_id = ?, "
+      "duration_ms = ?, video_width = ?, video_height = ?, raw_content_fingerprint_id = ? "
       "WHERE id = ?";
   sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
   sqlite3_bind_text(stmt, 1, staged.discovered.displayName.UTF8String, -1, SQLITE_TRANSIENT);
@@ -364,9 +439,36 @@
   } else {
     sqlite3_bind_null(stmt, 9);
   }
-  sqlite3_bind_int64(stmt, 10, fileEntryId);
+  [self bindVideoMetadataOnStatement:stmt staged:staged startingAtIndex:10];
+  if (rawContentFingerprintId > 0) {
+    sqlite3_bind_int64(stmt, 13, rawContentFingerprintId);
+  } else {
+    sqlite3_bind_null(stmt, 13);
+  }
+  sqlite3_bind_int64(stmt, 14, fileEntryId);
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
+}
+
+- (void)bindVideoMetadataOnStatement:(sqlite3_stmt *)stmt
+                              staged:(DBStagedFile *)staged
+                    startingAtIndex:(int)startIndex
+{
+  if (staged.durationMs > 0) {
+    sqlite3_bind_int64(stmt, startIndex, staged.durationMs);
+  } else {
+    sqlite3_bind_null(stmt, startIndex);
+  }
+  if (staged.videoWidth > 0) {
+    sqlite3_bind_int64(stmt, startIndex + 1, staged.videoWidth);
+  } else {
+    sqlite3_bind_null(stmt, startIndex + 1);
+  }
+  if (staged.videoHeight > 0) {
+    sqlite3_bind_int64(stmt, startIndex + 2, staged.videoHeight);
+  } else {
+    sqlite3_bind_null(stmt, startIndex + 2);
+  }
 }
 
 - (void)insertPathAlias:(NSString *)aliasPath fileEntryId:(NSInteger)fileEntryId

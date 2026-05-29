@@ -15,6 +15,7 @@ class CatalogDatabase(
   }
 
   override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    CatalogMigrator.migrate(db, oldVersion, newVersion)
   }
 
   fun writable(): SQLiteDatabase = writableDatabase

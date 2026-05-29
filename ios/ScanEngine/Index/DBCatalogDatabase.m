@@ -1,5 +1,6 @@
 #import "DBCatalogDatabase.h"
 
+#import "DBCatalogMigrator.h"
 #import "DBCatalogSchema.h"
 
 static DBCatalogDatabase *_sharedDatabase;
@@ -58,7 +59,10 @@ static DBCatalogDatabase *_sharedDatabase;
   if (errMsg) {
     sqlite3_free(errMsg);
   }
-  return [self applySchemaFreshInstall:YES error:error];
+  if (![self ensureCurrentSchemaWithError:error]) {
+    return NO;
+  }
+  return YES;
 }
 
 - (void)close
@@ -69,7 +73,7 @@ static DBCatalogDatabase *_sharedDatabase;
   }
 }
 
-- (BOOL)applySchemaFreshInstall:(BOOL)freshInstall error:(NSError **)error
+- (BOOL)ensureCurrentSchemaWithError:(NSError **)error
 {
   for (NSString *sql in [DBCatalogSchema createTableStatements]) {
     if (![self execSQL:sql error:error]) {
@@ -81,32 +85,44 @@ static DBCatalogDatabase *_sharedDatabase;
       return NO;
     }
   }
-  if (freshInstall) {
-    NSInteger existingVersion = 0;
-    sqlite3_stmt *stmt = NULL;
-    sqlite3_prepare_v2(_db, "SELECT value FROM meta WHERE key = 'schema_version'", -1, &stmt, NULL);
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-      existingVersion = 1;
+  NSInteger schemaVersion = [self readSchemaVersion];
+  if (schemaVersion == 0) {
+    NSString *version =
+        [NSString stringWithFormat:@"%ld", (long)DBCatalogSchemaCurrentVersion];
+    NSString *sql = [NSString stringWithFormat:
+                                  @"INSERT OR REPLACE INTO meta (key, value) VALUES ('%@', '%@')",
+                                  DBCatalogMetaSchemaVersion,
+                                  version];
+    if (![self execSQL:sql error:error]) {
+      return NO;
     }
-    sqlite3_finalize(stmt);
-    if (existingVersion == 0) {
-      NSString *version =
-          [NSString stringWithFormat:@"%ld", (long)DBCatalogSchemaCurrentVersion];
-      NSString *sql = [NSString stringWithFormat:
-                                    @"INSERT OR REPLACE INTO meta (key, value) VALUES ('%@', '%@')",
-                                    DBCatalogMetaSchemaVersion,
-                                    version];
-      if (![self execSQL:sql error:error]) {
-        return NO;
-      }
-      if (![self execSQL:
-                     @"INSERT OR REPLACE INTO meta (key, value) VALUES ('full_rescan_required', '0')"
-                     error:error]) {
-        return NO;
-      }
+    if (![self execSQL:
+                   @"INSERT OR REPLACE INTO meta (key, value) VALUES ('full_rescan_required', '0')"
+                   error:error]) {
+      return NO;
     }
+    return YES;
+  }
+  if (schemaVersion < DBCatalogSchemaCurrentVersion) {
+    return [DBCatalogMigrator migrateDatabase:self
+                                  fromVersion:schemaVersion
+                                    toVersion:DBCatalogSchemaCurrentVersion
+                                        error:error];
   }
   return YES;
+}
+
+- (NSInteger)readSchemaVersion
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3_prepare_v2(_db, "SELECT value FROM meta WHERE key = ?", -1, &stmt, NULL);
+  sqlite3_bind_text(stmt, 1, DBCatalogMetaSchemaVersion.UTF8String, -1, SQLITE_TRANSIENT);
+  NSInteger version = 0;
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    version = [@(sqlite3_column_text(stmt, 0)).stringValue integerValue];
+  }
+  sqlite3_finalize(stmt);
+  return version;
 }
 
 - (BOOL)execSQL:(NSString *)sql error:(NSError **)error

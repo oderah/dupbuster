@@ -284,6 +284,14 @@ New code must land in these areas unless architecture is amended first.
 - **Duration pre-bucket:** Registers `duration_ms` from StatStage before size-bucket; disposition is informational (`UNIQUE_DURATION` / `HAS_GATE_CANDIDATE` / `DURATION_UNKNOWN`) — video always runs `RAW_BYTES` + `VIDEO_CONTENT_V1` (FR-FP-02 / FR-FP-07).
 - **Tests:** `DurationBucketIndexTest`, `HashPipelineTest` (AC-pipeline-video-01); fixture `hash-pipeline-video-01.json`.
 
+### Schema v2 migration (M1-15)
+
+- **Android:** `CatalogMigrator`, `CatalogSchema.applyLegacyV1Schema`; `CatalogDatabase.onUpgrade` → v1→v2 ALTER + `full_rescan_required=1`; clears `duplicate_group` / `duplicate_member`.
+- **iOS:** `DBCatalogMigrator`, `DBCatalogSchema legacyV1*` DDL; `DBCatalogDatabase` runs migration when `meta.schema_version` &lt; current.
+- **Index:** `upsertVideoPartialHashed` persists `VIDEO_DECODE_FAILED` on `file_entry.unscannable_reason` while keeping `RAW_BYTES` fingerprint (AC-unscan-06 / AC-security-decode-01).
+- **`match_kind`:** Already written by `Grouper` / `DBGrouper` (`EXACT_BYTES` / `SAME_CONTENT_VIDEO`); migration adds column with default `EXACT_BYTES` for legacy rows then clears groups for rescan.
+- **Tests:** `CatalogMigratorTest`, `IndexWriterTest` (video partial); iOS `DBCatalogMigratorTests`, `DBIndexWriterTests`; fixtures `index-schema-migration-01.json`, `security-decode-01.json`.
+
 ---
 
 ## 9. Milestones and definition of done

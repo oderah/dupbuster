@@ -1,0 +1,15 @@
+{
+  "id": "security-decode-01",
+  "description": "Malformed/truncated video container maps to VIDEO_DECODE_FAILED without crash (AC-security-decode-01 / M1-15)",
+  "platform": "both",
+  "input": {
+    "mediaType": "video",
+    "container": "truncated_mp4"
+  },
+  "expect": {
+    "unscannableReason": "VIDEO_DECODE_FAILED",
+    "scanContinues": true,
+    "nativeCrash": false,
+    "rawBytesMayBeIndexed": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "index-schema-migration-01",
+  "description": "Schema v1→v2 migration sets full_rescan_required and adds video/match_kind columns (M1-15)",
+  "platform": "both",
+  "input": {
+    "fromSchemaVersion": 1,
+    "toSchemaVersion": 2
+  },
+  "expect": {
+    "schemaVersion": 2,
+    "fullRescanRequired": true,
+    "columnsAdded": [
+      "file_entry.duration_ms",
+      "file_entry.raw_content_fingerprint_id",
+      "fingerprint.frame_hashes_blob",
+      "duplicate_group.match_kind"
+    ],
+    "duplicateGroupsCleared": true
+  }
+}

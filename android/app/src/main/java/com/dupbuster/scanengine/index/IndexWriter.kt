@@ -107,7 +107,7 @@ class IndexWriter(private val database: CatalogDatabase) {
   /** RAW_BYTES indexed; video content fingerprint failed (budget/decode/timeout). */
   fun upsertVideoPartialHashed(
       rawBytes: HashedFile,
-      @Suppress("UNUSED_PARAMETER") videoUnscannableReason: String,
+      videoUnscannableReason: String,
       generation: Int,
   ): Long {
     val rawFingerprintId =
@@ -120,7 +120,7 @@ class IndexWriter(private val database: CatalogDatabase) {
         generation = generation,
         fingerprintId = rawFingerprintId,
         rawContentFingerprintId = null,
-        unscannableReason = null,
+        unscannableReason = videoUnscannableReason,
         isSymlink = false,
     )
   }
@@ -261,6 +261,27 @@ class IndexWriter(private val database: CatalogDatabase) {
         database.readable().rawQuery("SELECT COUNT(*) FROM file_entry", null)
     cursor.use {
       return if (it.moveToFirst()) it.getInt(0) else 0
+    }
+  }
+
+  /** Test/diagnostic: reads `file_entry.unscannable_reason` for a row. */
+  internal fun unscannableReasonForEntry(fileEntryId: Long): String? {
+    database
+        .readable()
+        .query(
+            "file_entry",
+            arrayOf("unscannable_reason"),
+            "id = ?",
+            arrayOf(fileEntryId.toString()),
+            null,
+            null,
+            null,
+        )
+        .use { cursor ->
+      if (!cursor.moveToFirst() || cursor.isNull(0)) {
+        return null
+      }
+      return cursor.getString(0)
     }
   }
 

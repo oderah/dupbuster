@@ -27,6 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSInteger)upsertHashedFile:(DBHashedFile *)hashed generation:(NSInteger)generation;
 
+- (NSInteger)upsertVideoPartialHashed:(DBHashedFile *)rawBytes
+                 videoUnscannableReason:(NSString *)videoUnscannableReason
+                           generation:(NSInteger)generation;
+
 - (NSInteger)countIndexedFilesWithSize:(int64_t)sizeBytes;
 - (NSInteger)countVideosWithinDurationGate:(int64_t)durationMs;
 

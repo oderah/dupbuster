@@ -9,6 +9,7 @@
 #import "DBNormalizationProfile.h"
 #import "DBStagedFile.h"
 #import "DBFileStat.h"
+#import "DBUnscannableReason.h"
 
 @interface DBIndexWriterTests : XCTestCase
 @property (nonatomic, strong) DBCatalogDatabase *database;
@@ -109,6 +110,37 @@
 - (DBStagedFile *)stagedWithUri:(NSString *)uri sizeBytes:(int64_t)sizeBytes
 {
   return [self stagedWithUri:uri sizeBytes:sizeBytes inode:nil deviceId:nil];
+}
+
+- (void)testUpsertVideoPartialHashed_persistsVideoDecodeFailedReason
+{
+  DBStagedFile *staged = [self stagedWithUri:@"file:///broken.mp4" sizeBytes:100];
+  DBHashedFile *raw =
+      [[DBHashedFile alloc] initWithStaged:staged
+                                 hashValue:@"rawonly"
+                      normalizationProfile:DBNormalizationProfileRawBytes
+                           quickSampleHash:nil
+                          frameHashesBlob:nil];
+  NSInteger fileEntryId = [self.writer upsertVideoPartialHashed:raw
+                                         videoUnscannableReason:DBUnscannableReasonVideoDecodeFailed
+                                                   generation:1];
+  XCTAssertGreaterThan(fileEntryId, 0);
+  XCTAssertEqualObjects([self unscannableReasonForFileEntryId:fileEntryId],
+                        DBUnscannableReasonVideoDecodeFailed);
+}
+
+- (NSString *)unscannableReasonForFileEntryId:(NSInteger)fileEntryId
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3_prepare_v2(
+      self.database.db, "SELECT unscannable_reason FROM file_entry WHERE id = ?", -1, &stmt, NULL);
+  sqlite3_bind_int64(stmt, 1, fileEntryId);
+  NSString *reason = nil;
+  if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_type(stmt, 0) != SQLITE_NULL) {
+    reason = @(sqlite3_column_text(stmt, 0));
+  }
+  sqlite3_finalize(stmt);
+  return reason;
 }
 
 - (NSInteger)aliasCount

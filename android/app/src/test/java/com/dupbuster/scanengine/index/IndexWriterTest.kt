@@ -85,6 +85,27 @@ class IndexWriterTest {
   }
 
   @Test
+  fun upsertVideoPartialHashed_persistsVideoDecodeFailedReason() {
+    val staged = staged(sizeBytes = 100, mediaTypeHint = MediaTypeHint.VIDEO).copy(durationMs = 5_000)
+    val raw =
+        HashedFile(
+            staged = staged,
+            hashValue = "rawonly",
+            normalizationProfile = NormalizationProfile.RAW_BYTES,
+        )
+    val id =
+        writer.upsertVideoPartialHashed(
+            rawBytes = raw,
+            videoUnscannableReason = UnscannableReason.VIDEO_DECODE_FAILED,
+            generation = 1,
+        )
+
+    assertTrue(id > 0)
+    assertEquals(UnscannableReason.VIDEO_DECODE_FAILED, writer.unscannableReasonForEntry(id))
+    assertNotNull(writer.findFingerprintId("rawonly", NormalizationProfile.RAW_BYTES))
+  }
+
+  @Test
   fun upsertUnscannable_hasNullFingerprint() {
     val staged = staged(sizeBytes = 50)
     val id =
