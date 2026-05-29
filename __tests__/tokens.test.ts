@@ -77,6 +77,7 @@ describe('tokens a11y freeze (architecture §9.3)', () => {
     expect(tokens.a11y.scan.cancelling).toBe('Cancelling scan');
     expect(tokens.a11y.scan.cancelled).toBe('Scan cancelled');
     expect(tokens.a11y.scan.pause).toBe('Pause scan');
+    expect(tokens.a11y.scan.resume).toBe('Resume scan');
     expect(tokens.a11y.scan.cancel).toBe('Cancel scan');
     expect(tokens.a11y.scan.videoContent).toBe('Analyzing video content');
   });
@@ -100,6 +101,20 @@ describe('tokens platform constants', () => {
 
   it('touch target minimum meets NFR-08', () => {
     expect(tokens.component.touchTargetMin).toBeGreaterThanOrEqual(44);
+  });
+});
+
+describe('tokens scan phase labels', () => {
+  it('scan.phase labels match catalog phases', () => {
+    expect(tokens.scan.phase.discovering).toBe('Discovering files');
+    expect(tokens.scan.phase.hashing).toBe('Hashing files');
+    expect(tokens.scan.phase.grouping).toBe('Finding duplicate groups');
+    expect(tokens.scan.phase.videoContent).toBe('Analyzing video content…');
+  });
+
+  it('scan.stats templates are frozen', () => {
+    expect(tokens.scan.stats.groups).toBe('{groupsFound} duplicate groups');
+    expect(tokens.scan.stats.files).toBe('{filesProcessed} files scanned');
   });
 });
 

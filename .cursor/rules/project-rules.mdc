@@ -327,6 +327,17 @@ New code must land in these areas unless architecture is amended first.
 - **Types:** `src/types/coverageBanner.ts`.
 - **Tests:** `npm test -- --testPathPattern='CoverageBanner|coverageSessionState'` covers AC-a11y-coverage-01/02/03 behavior.
 
+### ScanProgress + ScanStatusChip (M2-03)
+
+- **`src/components/ScanProgress.tsx`:** Presentational progress for `ScanProgressEvent` / native `ScanPhase`; polite live region; percent line from `notification.scan.body`; stats from `scan.stats.*` + `reclaimable.label`; sticky pause/resume/cancel footer for active phases (`scanProgressDisplay` helpers).
+- **`src/components/ScanStatusChip.tsx`:** Header chip mirroring `getScanPhaseLabel(phase)` (iOS parity).
+- **`src/components/scanProgressDisplay.ts`:** Phase labels, footer visibility, subcopy (`scan.phase.videoContent` when `hashing` + `contentKind=video_content`).
+- **`src/controllers/scanProgressA11y.ts`:** Decoupled a11y cadence for M2-07 — 10%/`filesTotalKnown` or 500-file delta (A11Y-04), terminal phase announcements (A11Y-05), `a11y.scan.videoContent` once per hashing entry (AC-a11y-match-05).
+- **`src/utils/formatBytes.ts`:** Reclaimable size formatting.
+- **Tokens:** `scan.phase.*` labels, `scan.stats.*`, `a11y.scan.resume`; bind phase enum from `scanEngineBridge.types.ts` only.
+- **A11Y:** `accessibilityLiveRegion="polite"`; `reducedMotion` → pulse dot not animated fill (A11Y-09); RTL `scaleX` on progress track (A11Y-10); `maxFontSizeMultiplier={1.3}` (A11Y-11).
+- **Tests:** `npm test -- --testPathPattern='ScanProgress|ScanStatusChip|scanProgressA11y|formatBytes'` + tokens scan phase tests.
+
 ---
 
 ## 9. Milestones and definition of done

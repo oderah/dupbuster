@@ -160,7 +160,20 @@ export const tokens = {
 
   scan: {
     phase: {
+      idle: 'Ready',
+      discovering: 'Discovering files',
+      hashing: 'Hashing files',
+      grouping: 'Finding duplicate groups',
+      complete: 'Scan complete',
+      paused: 'Scan paused',
+      error: 'Scan stopped',
+      cancelling: 'Cancelling scan',
+      cancelled: 'Scan cancelled',
       videoContent: 'Analyzing video content…',
+    },
+    stats: {
+      groups: '{groupsFound} duplicate groups',
+      files: '{filesProcessed} files scanned',
     },
   },
 
@@ -181,6 +194,7 @@ export const tokens = {
       cancelling: 'Cancelling scan',
       cancelled: 'Scan cancelled',
       pause: 'Pause scan',
+      resume: 'Resume scan',
       cancel: 'Cancel scan',
       videoContent: 'Analyzing video content',
     },
