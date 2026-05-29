@@ -1,0 +1,14 @@
+{
+  "id": "integrity-progress-01",
+  "description": "Progress throttle emits ≤4 bridge events per second under 10k synthetic updates (AC-integrity-progress-01)",
+  "platform": "both",
+  "input": {
+    "syntheticUpdateCount": 10000,
+    "minIntervalMs": 250,
+    "timeStepMs": 1
+  },
+  "expect": {
+    "maxEventsPerSecond": 4,
+    "minIntervalMs": 250
+  }
+}

@@ -42,7 +42,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until scan orchestrator wiring (M1-11+) / M3 delete; `getCatalogMeta` reads live catalog metadata from IndexWriter (M1-09).
+- Stubs reject scan/delete commands until scan orchestrator wiring (M1-12+) / M3 delete; `getCatalogMeta` reads live catalog metadata from IndexWriter (M1-09).
 
 ### UriValidator (M1-03)
 
@@ -144,6 +144,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Scan-time `reclaimable_bytes_est` = sum(sizes) − max(size); `is_keeper` stays 0 until delete (M3).
 - `EXACT_BYTES` takes precedence: members already in an exact-bytes group are excluded from `SAME_CONTENT_VIDEO` groups (AC-equiv-video-xres-04).
 - `SqliteSizeBucketIndex` replaces in-memory counts for production size-bucket elimination.
+
+### Progress throttle (M1-11)
+
+| Piece | Location |
+|-------|----------|
+| Android | `scanengine/bridge/ProgressThrottle.kt`, `ScanProgressSnapshot.kt`, `ScanPhase.kt` |
+| iOS | `ScanEngine/Bridge/DBProgressThrottle`, `DBScanProgressSnapshot`, `DBScanPhase` |
+| Fixture | `tests/fixtures/dupbuster/v1/integrity-progress-01.json` |
+
+- Coalesces native progress to **≤4 events/s** (250 ms minimum interval); latest snapshot wins within a window.
+- `report` / `advanceTo` / `flush` / `reset` — orchestrator (M1-12) calls these before emitting `onScanProgress`.
+- Bridge fields only: `filesProcessed`, `filesTotalKnown`, `groupsFound`, `reclaimableBytesEst`, `phase`, optional `contentKind` (full enum wiring in M1-16).
+- **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests` — AC-integrity-progress-01 (10k synthetic load).
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

@@ -246,7 +246,15 @@ New code must land in these areas unless architecture is amended first.
 - **match_kind:** `EXACT_BYTES` for `RAW_BYTES` / `TEXT_NFC_LF` / `EMPTY:0`; `SAME_CONTENT_VIDEO` for `VIDEO_CONTENT_V1` (fingerprinter M1-13).
 - **Precedence:** file entries in an `EXACT_BYTES` group are excluded from `SAME_CONTENT_VIDEO` groups (AC-equiv-video-xres-04).
 - **Reclaimable:** scan-time estimate `sum(size) − max(size)` per group (FR-AC-06 preview); updated on keeper selection in M3.
-- **Tests:** `GrouperTest` / `DBGrouperTests`; fixture `index-duplicate-group-01.json`. Progress throttle is M1-11.
+- **Tests:** `GrouperTest` / `DBGrouperTests`; fixture `index-duplicate-group-01.json`.
+
+### Progress throttle (M1-11)
+
+- **Android:** `com.dupbuster.scanengine.bridge.ProgressThrottle`, `ScanProgressSnapshot`, `ScanPhase` — 250 ms coalesce, max 4 events/s.
+- **iOS:** `DBProgressThrottle`, `DBScanProgressSnapshot`, `DBScanPhase` under `ScanEngine/Bridge/`.
+- **API:** `report(snapshot, atMs)` coalesces; `advanceTo(atMs)` drains when window elapsed; `flush(atMs)` for terminal pending; `reset()` between runs.
+- **Bridge:** Orchestrator (M1-12) maps emitted snapshots to `onScanProgress`; no paths/hashes/bytes. Optional `contentKind` on snapshot; M1-16 wires hashing-phase enum to bridge.
+- **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests`; fixture `integrity-progress-01.json` (AC-integrity-progress-01).
 
 ---
 
