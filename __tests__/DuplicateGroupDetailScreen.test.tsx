@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
+import {createKeeperSelectionState} from '../src/controllers/keeperSelection';
 import {DuplicateGroupDetailScreen} from '../src/screens/DuplicateGroupDetailScreen';
 import {tokens} from '../src/tokens/tokens';
 
@@ -22,22 +23,33 @@ describe('DuplicateGroupDetailScreen', () => {
         fileEntryId: 101,
         displayName: 'vacation-1080p.mp4',
         sizeBytes: 4_000_000,
+        mtimeMs: 2000,
+        pathLength: 22,
         mediaTypeHint: 'video' as const,
       },
       {
         fileEntryId: 102,
         displayName: 'vacation-720p.mp4',
         sizeBytes: 1_000_000,
+        mtimeMs: 1000,
+        pathLength: 21,
         mediaTypeHint: 'video' as const,
       },
     ],
+  };
+
+  const keeperSelection = createKeeperSelectionState(group.members);
+  const keeperProps = {
+    keeperSelection,
+    onSelectKeeper: jest.fn(),
+    onApplyKeeperPreset: jest.fn(),
   };
 
   it('shows match kind, reclaimable, and member rows', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
       tree = ReactTestRenderer.create(
-        <DuplicateGroupDetailScreen group={group} />,
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
       );
     });
 
@@ -52,7 +64,7 @@ describe('DuplicateGroupDetailScreen', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
       tree = ReactTestRenderer.create(
-        <DuplicateGroupDetailScreen group={group} />,
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
       );
     });
 
@@ -62,11 +74,22 @@ describe('DuplicateGroupDetailScreen', () => {
       .not.toBeNull();
   });
 
+  it('renders KeeperSelector radiogroup (M2-06)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
+      );
+    });
+
+    expect(findByTestId(tree!.root, 'duplicate-group-detail-keeper')).not.toBeNull();
+  });
+
   it('uses group a11y label on scroll container (AC-a11y-match-01)', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
       tree = ReactTestRenderer.create(
-        <DuplicateGroupDetailScreen group={group} />,
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
       );
     });
 

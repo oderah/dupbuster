@@ -1,3 +1,4 @@
+import type {KeeperPreset, KeeperSelectionState} from './keeper';
 import type {MatchKind, MediaTypeHint} from './scanEngine';
 
 /** Thumbnail slot for a duplicate group member (local catalog layer — not bridge). */
@@ -29,6 +30,9 @@ export type DuplicateGroupMember = {
   fileEntryId: number;
   displayName: string;
   sizeBytes: number;
+  mtimeMs: number;
+  /** Display path length for shortest-path keeper preset (FR-AC-02). */
+  pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string | null;
 };
@@ -43,6 +47,12 @@ export type DuplicateGroupDetail = {
 
 export type DuplicateGroupDetailScreenProps = {
   group: DuplicateGroupDetail;
+  keeperSelection: KeeperSelectionState;
+  onSelectKeeper: (fileEntryId: number) => void;
+  onApplyKeeperPreset: (preset: KeeperPreset) => void;
+  rememberSession?: boolean;
+  onRememberSessionChange?: (value: boolean) => void;
+  showRememberSession?: boolean;
   testID?: string;
 };
 

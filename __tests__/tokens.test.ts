@@ -40,6 +40,14 @@ describe('tokens EN freeze (requirements §9)', () => {
     expect(tokens.keeper.rememberSession).toBe(
       'Use largest for the rest of this session',
     );
+    expect(tokens.keeper.preset.largest).toBe('Largest file');
+    expect(tokens.keeper.preset.newest).toBe('Newest file');
+    expect(tokens.keeper.preset.shortestPath).toBe('Shortest path');
+    expect(tokens.keeper.education.title).toBe('Review before deleting');
+    expect(tokens.keeper.education.general).toBe(
+      'DupBuster only deletes files you choose to remove. Pick which copy to keep, then confirm before anything is deleted.',
+    );
+    expect(tokens.keeper.education.dismiss).toBe('Got it');
     expect(tokens.settings.largeFiles).toBe(
       'Hash files larger than 2 GB (uses more battery)',
     );

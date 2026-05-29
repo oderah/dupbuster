@@ -7,24 +7,41 @@ import {
   buildDetailThumbnailSlots,
   formatGroupAccessibilityLabel,
   formatGroupReclaimableLine,
-  formatMemberSizeLine,
   getMatchKindLabel,
-  getMediaTypeLabel,
   summarizeGroupMediaTypes,
 } from '../components/duplicateGroupDisplay';
+import {KeeperSelector} from '../components/KeeperSelector';
+import {toKeeperMembers} from '../components/keeperMembers';
 import {ThumbnailGrid} from '../components/ThumbnailGrid';
+import {computeReclaimableBytesForKeeper} from '../controllers/keeperSelection';
+import {formatKeeperReclaimableLine} from '../components/keeperDisplay';
 
 const DETAIL_THUMB_CELL_SIZE = 96;
 
 export function DuplicateGroupDetailScreen({
   group,
+  keeperSelection,
+  onSelectKeeper,
+  onApplyKeeperPreset,
+  rememberSession,
+  onRememberSessionChange,
+  showRememberSession,
   testID = 'duplicate-group-detail',
 }: DuplicateGroupDetailScreenProps): React.JSX.Element {
   const accessibilityLabel = formatGroupAccessibilityLabel(
     group.matchKind,
     group.memberCount,
   );
-  const reclaimableLine = formatGroupReclaimableLine(group.reclaimableBytesEst);
+  const keeperMembers = toKeeperMembers(group.members);
+  const reclaimableBytes = keeperSelection.explicitlyActivated
+    ? computeReclaimableBytesForKeeper(
+        keeperMembers,
+        keeperSelection.selectedFileEntryId,
+      )
+    : group.reclaimableBytesEst;
+  const reclaimableLine = keeperSelection.explicitlyActivated
+    ? formatKeeperReclaimableLine(reclaimableBytes)
+    : formatGroupReclaimableLine(group.reclaimableBytesEst);
   const matchKindLabel = getMatchKindLabel(group.matchKind);
   const mediaTypeSummary = summarizeGroupMediaTypes(
     group.members.map(member => member.mediaTypeHint),
@@ -55,25 +72,16 @@ export function DuplicateGroupDetailScreen({
         testID={`${testID}-grid`}
       />
 
-      <View style={styles.memberList} accessibilityRole="list">
-        {group.members.map(member => (
-          <View
-            key={member.fileEntryId}
-            testID={`${testID}-member-${member.fileEntryId}`}
-            style={styles.memberRow}
-            accessibilityLabel={`${member.displayName}, ${getMediaTypeLabel(member.mediaTypeHint)}, ${formatMemberSizeLine(member.sizeBytes)}`}>
-            <View style={styles.memberText}>
-              <Text style={styles.memberName} maxFontSizeMultiplier={1.3}>
-                {member.displayName}
-              </Text>
-              <Text style={styles.memberMeta} maxFontSizeMultiplier={1.3}>
-                {getMediaTypeLabel(member.mediaTypeHint)} ·{' '}
-                {formatMemberSizeLine(member.sizeBytes)}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <KeeperSelector
+        members={keeperMembers}
+        selection={keeperSelection}
+        onSelectMember={onSelectKeeper}
+        onApplyPreset={onApplyKeeperPreset}
+        rememberSession={rememberSession}
+        onRememberSessionChange={onRememberSessionChange}
+        showRememberSession={showRememberSession}
+        testID={`${testID}-keeper`}
+      />
     </ScrollView>
   );
 }

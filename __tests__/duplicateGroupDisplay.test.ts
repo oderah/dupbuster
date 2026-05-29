@@ -69,6 +69,8 @@ describe('duplicateGroupDisplay', () => {
         fileEntryId: 10,
         displayName: 'clip.mp4',
         sizeBytes: 1024,
+        mtimeMs: 1,
+        pathLength: 8,
         mediaTypeHint: 'video',
       },
     ]);

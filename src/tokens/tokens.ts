@@ -123,9 +123,19 @@ export const tokens = {
 
   keeper: {
     rememberSession: 'Use largest for the rest of this session',
+    /** FR-AC-02 — preset shortcuts (architecture §9.1 catalog copy). */
+    preset: {
+      largest: 'Largest file',
+      newest: 'Newest file',
+      shortestPath: 'Shortest path',
+    },
     education: {
+      title: 'Review before deleting',
+      general:
+        'DupBuster only deletes files you choose to remove. Pick which copy to keep, then confirm before anything is deleted.',
       videoContent:
         'DupBuster can find the same video saved at different resolutions or in different formats. Files may look different but match by content. Always review the group before deleting.',
+      dismiss: 'Got it',
     },
   },
 

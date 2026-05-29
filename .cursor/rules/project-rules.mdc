@@ -356,9 +356,21 @@ New code must land in these areas unless architecture is amended first.
 - **`src/types/duplicateGroup.ts`:** `DuplicateGroupSummary`, `DuplicateGroupDetail`, `DuplicateGroupMember`, thumbnail slot types.
 - **Types:** `MatchKind`, `MediaTypeHint`, `MATCH_KINDS`, `MEDIA_TYPE_HINTS`, `DUPLICATE_GROUP_THUMBNAIL_GRID_MAX` on bridge types module.
 - **Tokens:** `group.overflow`, `group.mediaType.*`, `group.memberSize`; match-kind copy remains `match.*` / `a11y.group.*`.
-- **Deferred:** `MatchKindBadge` (M2-12), `ContentMatchNotice` (M2-13), `KeeperSelector` (M2-06) — detail screen leaves hooks for later composition.
 - **Bridge:** Thumbnail URIs and member metadata from native catalog query in M2-07 — not over scan progress bridge.
 - **Tests:** `npm test -- --testPathPattern='DuplicateGroup|duplicateGroupDisplay'` + tokens group media-type tests; AC-a11y-match-01, US-09.
+
+### KeeperSelector + KeeperEducationSheet (M2-06)
+
+- **`src/components/KeeperSelector.tsx`:** Presets largest/newest/shortest path (FR-AC-02); member `radiogroup` with `a11y.keeper.group`; largest `defaultHighlighted` without `accessibilityState.selected` until explicit tap (AC-action-keeper-01, AC-a11y-keeper-01); optional `rememberSession` checkbox (FR-AC-05).
+- **`src/components/KeeperEducationSheet.tsx`:** Modal sheet with `keeper.education.*` copy; appends `keeper.education.videoContent` for `SAME_CONTENT_VIDEO` groups.
+- **`src/controllers/keeperSelection.ts`:** Preset resolution, selection state, `isKeeperSelectionComplete`, `computeReclaimableBytesForKeeper` (FR-AC-06).
+- **`src/controllers/keeperEducationSession.ts`:** Once-per-session gate for AC-action-keeper-02 (not persisted across cold start).
+- **`src/components/keeperDisplay.ts`**, **`keeperMembers.ts`**, **`src/types/keeper.ts`:** Labels, member mapping, closed preset set.
+- **`DuplicateGroupDetailScreen`:** Composes `KeeperSelector`; reclaimable line switches to non-keeper sum after explicit keeper pick.
+- **Tokens:** `keeper.preset.*`, `keeper.education.title` / `general` / `dismiss` (catalog copy); `keeper.education.videoContent` unchanged.
+- **`DuplicateGroupMember`:** Requires `mtimeMs` + `pathLength` for preset resolution.
+- **Deferred:** `MatchKindBadge` (M2-12), `ContentMatchNotice` (M2-13), delete button + `DeleteConfirmModal` (M3).
+- **Tests:** `npm test -- --testPathPattern='Keeper|keeper'` + tokens keeper preset/education tests; AC-action-keeper-01/02, AC-a11y-keeper-01, FR-AC-02/05/06.
 
 ---
 
