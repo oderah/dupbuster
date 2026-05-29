@@ -155,8 +155,18 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 
 - Coalesces native progress to **≤4 events/s** (250 ms minimum interval); latest snapshot wins within a window.
 - `report` / `advanceTo` / `flush` / `reset` — orchestrator (M1-12) calls these before emitting `onScanProgress`.
-- Bridge fields only: `filesProcessed`, `filesTotalKnown`, `groupsFound`, `reclaimableBytesEst`, `phase`, optional `contentKind` (full enum wiring in M1-16).
-- **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests` — AC-integrity-progress-01 (10k synthetic load).
+- Bridge fields only: `filesProcessed`, `filesTotalKnown`, `groupsFound`, `reclaimableBytesEst`, `phase`, optional `contentKind` (`none` \| `video_content` on hashing phase only).
+
+### Progress `contentKind` (M1-16)
+
+| Piece | Location |
+|-------|----------|
+| Android | `ScanProgressContentKindPolicy.kt`, `ScanProgressBridgeMapper.kt`, `ScanProgressBridge.kt` |
+| iOS | `DBScanProgressContentKindPolicy`, `DBScanProgressBridgeMapper` |
+| Fixture | `tests/fixtures/dupbuster/v1/integrity-progress-02.json` |
+
+- Hashing + `VIDEO_CONTENT_V1` pass → `contentKind=video_content`; other hashing → `none`; discovering/grouping omit the field.
+- **Tests:** policy + mapper + throttle coalesce tests — AC-integrity-progress-02; still ≤4 Hz (AC-integrity-progress-01).
 
 ### CheckpointStore (M1-12)
 

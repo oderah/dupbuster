@@ -77,6 +77,64 @@ class ProgressThrottleTest {
   }
 
   @Test
+  fun report_hashingVideoContent_coalescesContentKind_acIntegrityProgress02() {
+    val emitted = mutableListOf<ScanProgressSnapshot>()
+    val throttle = ProgressThrottle { snapshot, _ -> emitted.add(snapshot) }
+
+    throttle.report(
+        progress(
+            filesProcessed = 1,
+            phase = ScanPhase.HASHING,
+            contentKind = ScanProgressContentKind.VIDEO_CONTENT,
+        ),
+        atMs = 0,
+    )
+    throttle.report(
+        progress(
+            filesProcessed = 2,
+            phase = ScanPhase.HASHING,
+            contentKind = ScanProgressContentKind.NONE,
+        ),
+        atMs = 100,
+    )
+    throttle.advanceTo(atMs = 250)
+
+    assertEquals(2, emitted.size)
+    assertEquals(ScanProgressContentKind.VIDEO_CONTENT, emitted[0].contentKind)
+    assertEquals(ScanProgressContentKind.NONE, emitted[1].contentKind)
+  }
+
+  @Test
+  fun report_10kHashingVideoContent_atMost4EventsPerSecond() {
+    val emitTimesMs = mutableListOf<Long>()
+    val throttle =
+        ProgressThrottle { _, emittedAtMs ->
+          emitTimesMs.add(emittedAtMs)
+        }
+
+    var t = 0L
+    repeat(10_000) {
+      throttle.report(
+          progress(
+              filesProcessed = it,
+              phase = ScanPhase.HASHING,
+              contentKind = ScanProgressContentKind.VIDEO_CONTENT,
+          ),
+          atMs = t,
+      )
+      throttle.advanceTo(atMs = t)
+      t += 1
+    }
+    throttle.flush(atMs = t)
+
+    val maxPerSecond = maxEventsInAnyOneSecondWindow(emitTimesMs)
+    assertTrue(
+        "Expected ≤ ${ProgressThrottle.MAX_EVENTS_PER_SECOND} emits per 1s window, saw $maxPerSecond",
+        maxPerSecond <= ProgressThrottle.MAX_EVENTS_PER_SECOND,
+    )
+  }
+
+  @Test
   fun report_respectsMinIntervalMs() {
     val emitTimesMs = mutableListOf<Long>()
     val throttle = ProgressThrottle { _, atMs -> emitTimesMs.add(atMs) }

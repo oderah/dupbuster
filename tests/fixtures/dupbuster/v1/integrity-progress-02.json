@@ -1,0 +1,24 @@
+{
+  "id": "integrity-progress-02",
+  "description": "Hashing-phase progress may set contentKind=video_content; bridge payload has no paths/hashes/bytes (AC-integrity-progress-02)",
+  "platform": "both",
+  "input": {
+    "phase": "hashing",
+    "isVideoFingerprintPass": true,
+    "syntheticUpdateCount": 10000,
+    "minIntervalMs": 250
+  },
+  "expect": {
+    "contentKind": "video_content",
+    "maxEventsPerSecond": 4,
+    "allowedBridgeKeys": [
+      "filesProcessed",
+      "filesTotalKnown",
+      "groupsFound",
+      "reclaimableBytesEst",
+      "phase",
+      "contentKind"
+    ],
+    "forbiddenBridgeKeys": ["uri_or_path", "hash_value", "display_name"]
+  }
+}

@@ -2,6 +2,7 @@
 
 #import "DBProgressThrottle.h"
 #import "DBScanPhase.h"
+#import "DBScanProgressContentKind.h"
 #import "DBScanProgressSnapshot.h"
 
 @interface DBProgressThrottleTests : XCTestCase
@@ -53,6 +54,30 @@
   XCTAssertEqual(processed[1].integerValue, 3);
 }
 
+- (void)testReport_hashingVideoContent_coalescesContentKind
+{
+  NSMutableArray<NSString *> *kinds = [NSMutableArray array];
+  DBProgressThrottle *throttle =
+      [[DBProgressThrottle alloc] initWithEmitBlock:^(DBScanProgressSnapshot *snapshot, int64_t emittedAtMs) {
+        (void)emittedAtMs;
+        [kinds addObject:snapshot.contentKind ?: @""];
+      }];
+
+  [throttle reportSnapshot:[self progressWithFilesProcessed:1
+                                                      phase:DBScanPhaseHashing
+                                                contentKind:DBScanProgressContentKindVideoContent]
+                      atMs:0];
+  [throttle reportSnapshot:[self progressWithFilesProcessed:2
+                                                      phase:DBScanPhaseHashing
+                                                contentKind:DBScanProgressContentKindNone]
+                      atMs:100];
+  [throttle advanceToMs:250];
+
+  XCTAssertEqual(kinds.count, 2u);
+  XCTAssertEqualObjects(kinds[0], DBScanProgressContentKindVideoContent);
+  XCTAssertEqualObjects(kinds[1], DBScanProgressContentKindNone);
+}
+
 - (void)testFlush_emitsLatestPendingBeforeWindowElapses
 {
   NSMutableArray<NSNumber *> *processed = [NSMutableArray array];
@@ -73,12 +98,21 @@
 
 - (DBScanProgressSnapshot *)progressWithFilesProcessed:(NSInteger)filesProcessed
 {
+  return [self progressWithFilesProcessed:filesProcessed
+                                    phase:DBScanPhaseDiscovering
+                              contentKind:nil];
+}
+
+- (DBScanProgressSnapshot *)progressWithFilesProcessed:(NSInteger)filesProcessed
+                                                 phase:(NSString *)phase
+                                           contentKind:(NSString *)contentKind
+{
   return [[DBScanProgressSnapshot alloc] initWithFilesProcessed:filesProcessed
                                                 filesTotalKnown:@10000
                                                     groupsFound:0
                                             reclaimableBytesEst:0
-                                                          phase:DBScanPhaseDiscovering
-                                                    contentKind:nil];
+                                                          phase:phase
+                                                    contentKind:contentKind];
 }
 
 - (NSInteger)maxEventsInAnyOneSecondWindow:(NSArray<NSNumber *> *)emitTimesMs
