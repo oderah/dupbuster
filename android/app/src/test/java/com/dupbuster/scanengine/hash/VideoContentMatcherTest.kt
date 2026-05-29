@@ -48,4 +48,24 @@ class VideoContentMatcherTest {
     assertTrue(VideoContentMatcher.contentMatches(left, right))
     assertFalse(VideoContentMatcher.contentMatches(left, durationMismatch))
   }
+
+  @Test
+  fun contentMatches_singleFrameClip_matchesCrossResolution() {
+    val left =
+        VideoFingerprint(
+            frameHashes = longArrayOf(42),
+            durationMs = 2_500,
+            videoWidth = 1920,
+            videoHeight = 1080,
+        )
+    val right =
+        VideoFingerprint(
+            frameHashes = longArrayOf(43),
+            durationMs = 2_500,
+            videoWidth = 1280,
+            videoHeight = 720,
+        )
+
+    assertTrue(VideoContentMatcher.contentMatches(left, right))
+  }
 }

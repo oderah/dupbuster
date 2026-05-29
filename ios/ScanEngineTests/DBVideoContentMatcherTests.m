@@ -38,4 +38,19 @@
   XCTAssertTrue([DBVideoContentMatcher contentMatchesLeft:left right:right hammingThreshold:8]);
 }
 
+- (void)testContentMatches_singleFrameClip_matchesCrossResolution
+{
+  DBVideoFingerprint *left =
+      [[DBVideoFingerprint alloc] initWithFrameHashes:@[@42]
+                                           durationMs:2500
+                                           videoWidth:1920
+                                          videoHeight:1080];
+  DBVideoFingerprint *right =
+      [[DBVideoFingerprint alloc] initWithFrameHashes:@[@43]
+                                           durationMs:2500
+                                           videoWidth:1280
+                                          videoHeight:720];
+  XCTAssertTrue([DBVideoContentMatcher contentMatchesLeft:left right:right hammingThreshold:8]);
+}
+
 @end

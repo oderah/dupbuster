@@ -35,7 +35,15 @@
       matchingPairs++;
     }
   }
-  return matchingPairs >= DBVideoMinMatchingFramePairs;
+  return matchingPairs >= [self requiredMatchingPairsForCount:pairCount];
+}
+
++ (NSInteger)requiredMatchingPairsForCount:(NSUInteger)pairCount
+{
+  if (pairCount == 0) {
+    return NSIntegerMax;
+  }
+  return MAX(1, MIN((NSUInteger)DBVideoMinMatchingFramePairs, pairCount));
 }
 
 + (BOOL)contentMatchesLeft:(DBVideoFingerprint *)left

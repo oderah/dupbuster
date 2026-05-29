@@ -102,6 +102,7 @@
 		D4F8A3052B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */; };
 		D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */; };
 		D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */; };
+		D4F8A3312B68200000A75B9A /* DBEquivFixturesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */; };
 		D4F8A3082B681C0000A75B9A /* DBVideoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3112B681C0000A75B9A /* DBVideoConstants.m */; };
 		D4F8A3092B681C0000A75B9A /* DBDHash.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3132B681C0000A75B9A /* DBDHash.m */; };
 		D4F8A30A2B681C0000A75B9A /* DBVideoFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3152B681C0000A75B9A /* DBVideoFingerprint.m */; };
@@ -240,6 +241,7 @@
 		D4F8A31A2B681C0000A75B9A /* DBVideoFingerprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFingerprinter.h; path = ScanEngine/Hash/DBVideoFingerprinter.h; sourceTree = "<group>"; };
 		D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoContentMatcherTests.m; path = ScanEngineTests/DBVideoContentMatcherTests.m; sourceTree = "<group>"; };
 		D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinterTests.m; path = ScanEngineTests/DBVideoFingerprinterTests.m; sourceTree = "<group>"; };
+		D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBEquivFixturesTests.m; path = ScanEngineTests/DBEquivFixturesTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -455,6 +457,7 @@
 				D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */,
 				D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */,
 				D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */,
+				D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -724,6 +727,7 @@
 				D4F8A3052B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */,
 				D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */,
 				D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */,
+				D4F8A3312B68200000A75B9A /* DBEquivFixturesTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

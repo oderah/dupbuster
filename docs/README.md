@@ -228,7 +228,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 | Security | `security/` — URI, decode, redact, blob, progress bridge safety |
 | Component (root) | `discovery-*`, `stat-*`, `hash-*`, `index-*`, `integrity-*` — per M1 task stubs |
 
-- JSON descriptors document inputs/expectations; **M1-18** wires native unit tests to load rows and assert green.
+- JSON descriptors document inputs/expectations; **M1-18** wires native unit tests to load rows and assert green (`EquivFixturesTest` Android, `DBEquivFixturesTests` iOS).
 - **Tests:** `FixtureManifestTest` (Android), `__tests__/fixtureManifest.test.ts` (Jest) — manifest ↔ on-disk parity.
 - `VIDEO_DECODE_FAILED` stored on partial video hash (`upsertVideoPartialHashed` / iOS parity).
 

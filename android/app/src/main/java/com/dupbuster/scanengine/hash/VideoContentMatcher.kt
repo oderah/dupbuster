@@ -37,8 +37,11 @@ object VideoContentMatcher {
         matchingPairs++
       }
     }
-    return matchingPairs >= VideoConstants.MIN_MATCHING_FRAME_PAIRS
+    return matchingPairs >= requiredMatchingPairs(pairCount)
   }
+
+  private fun requiredMatchingPairs(pairCount: Int): Int =
+      minOf(VideoConstants.MIN_MATCHING_FRAME_PAIRS, pairCount).coerceAtLeast(1)
 
   fun contentMatches(
       left: VideoFingerprint,

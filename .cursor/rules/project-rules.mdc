@@ -263,7 +263,7 @@ New code must land in these areas unless architecture is amended first.
 - **Security moved:** `security/security-uri-01.json`, `security/security-decode-01.json` (plus decode-02, redact-01, blob-01, progress-01).
 - **Pipeline moved:** `pipeline/hash-pipeline-video-01.json` (+ pipeline-size/quick/large/timeout descriptors).
 - **Validation:** `FixtureManifestTest` / `__tests__/fixtureManifest.test.ts` — manifest paths exist, ids match, required equiv AC ids listed.
-- **M1-18:** Native tests must load fixture rows and assert `expect` (not manifest-only).
+- **M1-18:** `FixtureLoader` + `EquivFixtureRunner` / `DBEquivFixturesTests` load every `kind=equivalence` manifest row and assert native `expect` (HashPipeline, Grouper, VideoContentMatcher, decode/budget paths). `VideoContentMatcher.requiredMatchingPairs` scales to single-frame clips (<3 s). Tests: `EquivFixturesTest`, `DBEquivFixturesTests`; fixture frame hashes corrected for Hamming false-positive cases (xres-02, xres-06).
 
 ### Progress `contentKind` bridge (M1-16)
 
