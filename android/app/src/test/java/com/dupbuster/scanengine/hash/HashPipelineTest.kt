@@ -164,10 +164,90 @@ class HashPipelineTest {
         )
     val result =
         pipeline.hash(
-            staged(sizeBytes = 1, mediaTypeHint = MediaTypeHint.VIDEO),
+            staged(sizeBytes = 1, mediaTypeHint = MediaTypeHint.VIDEO, durationMs = 10_000),
         )
 
     assertTrue(result is HashResult.Success)
+  }
+
+  @Test
+  fun hash_videoDifferentSizes_runsVideoContentFingerprint() {
+    val payload1080 = byteArrayOf(0x01, 0x02, 0x03)
+    val payload720 = byteArrayOf(0x0A)
+    val fingerprinter =
+        VideoFingerprinter(
+            object : VideoFrameExtractor {
+              override fun extractFrames(
+                  uri: Uri,
+                  samplePositions: DoubleArray,
+                  deadlineMs: Long,
+              ): VideoFrameExtractOutcome =
+                  VideoFrameExtractOutcome.Ok(
+                      frames = List(samplePositions.size) { grayFrame(8, 8, it) },
+                      durationMs = 10_000,
+                      videoWidth = 1920,
+                      videoHeight = 1080,
+                  )
+            },
+        )
+    val pipeline =
+        HashPipeline(
+            context,
+            FakeContentReader(payload1080),
+            sizeBucketIndex = InMemorySizeBucketIndex(),
+            durationBucketIndex = InMemoryDurationBucketIndex(),
+            videoFingerprinter = fingerprinter,
+        )
+    val pipeline720 =
+        HashPipeline(
+            context,
+            FakeContentReader(payload720),
+            sizeBucketIndex = InMemorySizeBucketIndex(),
+            durationBucketIndex = InMemoryDurationBucketIndex(),
+            videoFingerprinter = fingerprinter,
+        )
+
+    val first =
+        pipeline.hash(
+            staged(
+                sizeBytes = payload1080.size.toLong(),
+                mediaTypeHint = MediaTypeHint.VIDEO,
+                durationMs = 10_000,
+            ),
+        )
+    val second =
+        pipeline720.hash(
+            staged(
+                sizeBytes = payload720.size.toLong(),
+                mediaTypeHint = MediaTypeHint.VIDEO,
+                durationMs = 10_000,
+            ),
+        )
+
+    assertTrue(first is HashResult.VideoSuccess)
+    assertTrue(second is HashResult.VideoSuccess)
+    val firstSuccess = first as HashResult.VideoSuccess
+    val secondSuccess = second as HashResult.VideoSuccess
+    assertEquals(NormalizationProfile.RAW_BYTES, firstSuccess.rawBytes.normalizationProfile)
+    assertEquals(NormalizationProfile.VIDEO_CONTENT_V1, firstSuccess.videoContent.normalizationProfile)
+    assertEquals(NormalizationProfile.VIDEO_CONTENT_V1, secondSuccess.videoContent.normalizationProfile)
+    assertTrue(firstSuccess.rawBytes.hashValue != secondSuccess.rawBytes.hashValue)
+  }
+
+  @Test
+  fun hash_videoDurationPreBucket_detectsGateCandidate() {
+    val durationIndex = InMemoryDurationBucketIndex()
+    val fingerprinter = VideoFingerprinter(FakeVideoFrameExtractor())
+    val pipeline =
+        HashPipeline(
+            context,
+            FakeContentReader(byteArrayOf(0x01)),
+            durationBucketIndex = durationIndex,
+            videoFingerprinter = fingerprinter,
+        )
+
+    pipeline.hash(staged(sizeBytes = 100, mediaTypeHint = MediaTypeHint.VIDEO, durationMs = 60_000))
+    assertEquals(DurationBucketDisposition.HAS_GATE_CANDIDATE, durationIndex.register(60_100))
   }
 
   @Test
@@ -257,6 +337,7 @@ class HashPipelineTest {
       sizeBytes: Long,
       mediaTypeHint: MediaTypeHint = MediaTypeHint.OTHER,
       isSymlink: Boolean = false,
+      durationMs: Long = 0L,
   ): StagedFile {
     val entry =
         DiscoveredEntry(
@@ -276,7 +357,30 @@ class HashPipelineTest {
         deviceId = 1,
         isSymlink = isSymlink,
         mediaTypeHint = mediaTypeHint,
+        durationMs = durationMs,
     )
+  }
+
+  private fun grayFrame(width: Int, height: Int, seed: Int): GrayFrame {
+    val pixels = ByteArray(width * height) { index -> ((index + seed) % 256).toByte() }
+    return GrayFrame(width, height, pixels)
+  }
+
+  private class FakeVideoFrameExtractor : VideoFrameExtractor {
+    override fun extractFrames(
+        uri: Uri,
+        samplePositions: DoubleArray,
+        deadlineMs: Long,
+    ): VideoFrameExtractOutcome =
+        VideoFrameExtractOutcome.Ok(
+            frames =
+                List(samplePositions.size) { seed ->
+                  GrayFrame(8, 8, ByteArray(64) { index -> ((index + seed) % 256).toByte() })
+                },
+            durationMs = 10_000,
+            videoWidth = 640,
+            videoHeight = 360,
+        )
   }
 
   private class FakeContentReader(

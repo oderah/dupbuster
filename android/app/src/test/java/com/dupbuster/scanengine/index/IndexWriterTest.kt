@@ -8,6 +8,7 @@ import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashResult
 import com.dupbuster.scanengine.hash.HashedFile
 import com.dupbuster.scanengine.hash.NormalizationProfile
+import com.dupbuster.scanengine.hash.SizeBucketDisposition
 import com.dupbuster.scanengine.security.ScanRootMode
 import com.dupbuster.scanengine.security.UnscannableReason
 import com.dupbuster.scanengine.stat.StagedFile
@@ -135,18 +136,47 @@ class IndexWriterTest {
   }
 
   @Test
+  fun countIndexedFilesWithSize_excludesVideoRows() {
+    val size = 2048L
+    writer.upsertHashed(
+        HashedFile(
+            staged(sizeBytes = size, mediaTypeHint = MediaTypeHint.VIDEO).copy(durationMs = 60_000),
+            "video-hash",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+
+    assertEquals(0, writer.countIndexedFilesWithSize(size))
+    val index = SqliteSizeBucketIndex(writer)
+    val disposition = index.register(size, MediaTypeHint.OTHER, isEmpty = false)
+    assertEquals(SizeBucketDisposition.UNIQUE_SKIP, disposition)
+  }
+
+  @Test
   fun countIndexedFilesWithSize_drivesSizeBucketSkip() {
     val size = 2048L
     writer.upsertSizeBucketSkipped(staged(sizeBytes = size), generation = 1)
 
     assertEquals(1, writer.countIndexedFilesWithSize(size))
     val index = SqliteSizeBucketIndex(writer)
-    val disposition =
-        index.register(size, MediaTypeHint.OTHER, isEmpty = false)
-    assertEquals(
-        com.dupbuster.scanengine.hash.SizeBucketDisposition.NEEDS_HASH,
-        disposition,
+    val disposition = index.register(size, MediaTypeHint.OTHER, isEmpty = false)
+    assertEquals(SizeBucketDisposition.NEEDS_HASH, disposition)
+  }
+
+  @Test
+  fun countVideosWithinDurationGate_findsMatchingDuration() {
+    writer.upsertHashed(
+        HashedFile(
+            staged(sizeBytes = 100, mediaTypeHint = MediaTypeHint.VIDEO).copy(durationMs = 60_000),
+            "v1",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
     )
+
+    assertEquals(1, writer.countVideosWithinDurationGate(60_100))
+    assertEquals(0, writer.countVideosWithinDurationGate(62_000))
   }
 
   @Test

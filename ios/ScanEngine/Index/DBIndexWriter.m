@@ -9,6 +9,7 @@
 #import "DBNormalizationProfile.h"
 #import "DBStagedFile.h"
 #import "DBCheckpointStore.h"
+#import "DBVideoContentMatcher.h"
 
 @implementation DBIndexWriter {
   DBCatalogDatabase *_database;
@@ -108,11 +109,37 @@
 {
   sqlite3_stmt *stmt = NULL;
   sqlite3 *db = _database.db;
-  sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM file_entry WHERE size = ?", -1, &stmt, NULL);
+  const char *sql =
+      "SELECT COUNT(*) FROM file_entry WHERE size = ? AND (duration_ms IS NULL OR duration_ms = 0)";
+  sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
   sqlite3_bind_int64(stmt, 1, sizeBytes);
   NSInteger count = 0;
   if (sqlite3_step(stmt) == SQLITE_ROW) {
     count = sqlite3_column_int(stmt, 0);
+  }
+  sqlite3_finalize(stmt);
+  return count;
+}
+
+- (NSInteger)countVideosWithinDurationGate:(int64_t)durationMs
+{
+  if (durationMs <= 0) {
+    return 0;
+  }
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(
+      db,
+      "SELECT duration_ms FROM file_entry WHERE duration_ms IS NOT NULL AND duration_ms > 0",
+      -1,
+      &stmt,
+      NULL);
+  NSInteger count = 0;
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    int64_t other = sqlite3_column_int64(stmt, 0);
+    if ([DBVideoContentMatcher passesDurationGateWithDurationA:durationMs durationB:other]) {
+      count++;
+    }
   }
   sqlite3_finalize(stmt);
   return count;

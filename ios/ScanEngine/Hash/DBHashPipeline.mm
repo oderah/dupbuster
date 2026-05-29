@@ -7,6 +7,7 @@
 #import "DBTextNormalizer.h"
 #import "DBUnscannableReason.h"
 #import "DBVideoFingerprinter.h"
+#import "DBDurationBucketIndex.h"
 
 @implementation DBHashPipelineResult
 @end
@@ -14,6 +15,7 @@
 @interface DBHashPipeline ()
 @property (nonatomic, strong) id<DBFileContentReading> contentReader;
 @property (nonatomic, strong) id<DBSizeBucketIndexing> sizeBucketIndex;
+@property (nonatomic, strong) id<DBDurationBucketIndexing> durationBucketIndex;
 @property (nonatomic, strong, nullable) DBVideoFingerprinter *videoFingerprinter;
 @end
 
@@ -24,6 +26,7 @@
 {
   return [self initWithFileContentReader:contentReader
                          sizeBucketIndex:sizeBucketIndex
+                    durationBucketIndex:[[DBInMemoryDurationBucketIndex alloc] init]
                       videoFingerprinter:nil];
 }
 
@@ -31,10 +34,22 @@
                           sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
                        videoFingerprinter:(DBVideoFingerprinter *)videoFingerprinter
 {
+  return [self initWithFileContentReader:contentReader
+                         sizeBucketIndex:sizeBucketIndex
+                    durationBucketIndex:[[DBInMemoryDurationBucketIndex alloc] init]
+                      videoFingerprinter:videoFingerprinter];
+}
+
+- (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
+                          sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                     durationBucketIndex:(id<DBDurationBucketIndexing>)durationBucketIndex
+                       videoFingerprinter:(DBVideoFingerprinter *)videoFingerprinter
+{
   self = [super init];
   if (self) {
     _contentReader = contentReader;
     _sizeBucketIndex = sizeBucketIndex;
+    _durationBucketIndex = durationBucketIndex;
     _videoFingerprinter = videoFingerprinter;
   }
   return self;
@@ -64,6 +79,10 @@
     result.outcome = DBHashPipelineOutcomeUnscannable;
     result.unscannableReason = DBUnscannableReasonLargeSkipped;
     return result;
+  }
+
+  if ([staged.mediaTypeHint isEqualToString:DBMediaTypeHintVideo]) {
+    [self.durationBucketIndex registerDurationMs:staged.durationMs];
   }
 
   DBSizeBucketDisposition disposition =

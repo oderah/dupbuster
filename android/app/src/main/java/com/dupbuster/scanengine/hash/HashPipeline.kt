@@ -8,13 +8,14 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.min
 
 /**
- * Size bucket → quick sample (> 50 MB) → full SHA-256 (`RAW_BYTES` or `TEXT_NFC_LF`).
+ * Duration pre-bucket (video) → size bucket → quick sample (> 50 MB) → full SHA-256.
  * Video files also run `VIDEO_CONTENT_V1` in parallel via [VideoFingerprinter] (M1-13).
  */
 class HashPipeline(
     context: Context,
     private val contentReader: FileContentReader = ContentResolverFileContentReader(context),
     private val sizeBucketIndex: SizeBucketIndex = InMemorySizeBucketIndex(),
+    private val durationBucketIndex: DurationBucketIndex = InMemoryDurationBucketIndex(),
     private val videoFingerprinter: VideoFingerprinter? = null,
 ) {
 
@@ -38,6 +39,10 @@ class HashPipeline(
 
     if (staged.sizeBytes > HashConstants.LARGE_FILE_CAP_BYTES && !settings.largeFilesOptIn) {
       return HashResult.Unscannable(UnscannableReason.LARGE_SKIPPED)
+    }
+
+    if (staged.mediaTypeHint == MediaTypeHint.VIDEO) {
+      durationBucketIndex.register(staged.durationMs)
     }
 
     when (

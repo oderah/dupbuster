@@ -186,6 +186,18 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Dual fingerprint columns on `file_entry`: `fingerprint_id` (video content), `raw_content_fingerprint_id` (exact bytes).
 - **Tests:** Android hash video suite + iOS `DBVideoFingerprinterTests` / `DBVideoContentMatcherTests`.
 
+### Video pipeline exception (M1-14)
+
+| Piece | Location |
+|-------|----------|
+| Android | `DurationBucketIndex.kt`, `SqliteDurationBucketIndex.kt`; `HashPipeline` duration pre-bucket → size-bucket |
+| iOS | `DBDurationBucketIndex`, `DBSqliteDurationBucketIndex`; `DBHashPipeline` same stage order |
+| Fixture | `tests/fixtures/dupbuster/v1/hash-pipeline-video-01.json` |
+
+- Video exempt from size-bucket elimination (FR-FP-02); `duration_ms` pre-bucket runs before size-bucket for gate-candidate hints.
+- Different-size videos still fingerprint `VIDEO_CONTENT_V1` (AC-pipeline-video-01).
+- **Tests:** `DurationBucketIndexTest`, extended `HashPipelineTest` / `DBHashPipelineTests`.
+
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
 ## Milestones

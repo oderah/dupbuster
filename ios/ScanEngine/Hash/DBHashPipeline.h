@@ -2,6 +2,7 @@
 
 #import "DBHashSettings.h"
 #import "DBHashedFile.h"
+#import "DBDurationBucketIndex.h"
 #import "DBSizeBucketIndex.h"
 #import "DBStagedFile.h"
 
@@ -30,7 +31,8 @@ typedef NS_ENUM(NSInteger, DBHashPipelineOutcome) {
 @class DBVideoFingerprinter;
 
 /**
- * Size bucket → quick sample (> 50 MB) → full SHA-256; video also runs VIDEO_CONTENT_V1 (M1-13).
+ * Duration pre-bucket (video) → size bucket → quick sample (> 50 MB) → full SHA-256;
+ * video also runs VIDEO_CONTENT_V1 (M1-13 / M1-14).
  */
 @interface DBHashPipeline : NSObject
 
@@ -39,6 +41,11 @@ typedef NS_ENUM(NSInteger, DBHashPipelineOutcome) {
 
 - (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
                           sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                       videoFingerprinter:(nullable DBVideoFingerprinter *)videoFingerprinter;
+
+- (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
+                          sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                     durationBucketIndex:(id<DBDurationBucketIndexing>)durationBucketIndex
                        videoFingerprinter:(nullable DBVideoFingerprinter *)videoFingerprinter;
 
 - (DBHashPipelineResult *)hashStagedFile:(DBStagedFile *)staged

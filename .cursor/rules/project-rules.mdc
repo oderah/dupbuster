@@ -276,6 +276,14 @@ New code must land in these areas unless architecture is amended first.
 - **Tests:** `DHashTest`, `VideoFingerprinterTest`, `VideoContentMatcherTest`, `VideoFingerprintCodecTest` / iOS `DBVideoFingerprinterTests`, `DBVideoContentMatcherTests`; fixture `hash-video-content-01.json`.
 - **Platform decoders:** Production `MediaCodec` / `AVAssetReader` frame extractors are wired when scan orchestrator lands; M1-13 ships algorithm + injectable extractor + unit tests.
 
+### Video pipeline exception (M1-14)
+
+- **Android:** `DurationBucketIndex`, `InMemoryDurationBucketIndex`, `SqliteDurationBucketIndex`; `HashPipeline` runs duration pre-bucket before size-bucket for video.
+- **iOS:** `DBDurationBucketIndex`, `DBInMemoryDurationBucketIndex`, `DBSqliteDurationBucketIndex`; same ordering in `DBHashPipeline`.
+- **Size-bucket skip:** Video never size-bucket-skips (`SizeBucketIndex` / `DBSizeBucketIndex` always `NEEDS_HASH`); `countIndexedFilesWithSize` excludes rows with `duration_ms > 0`.
+- **Duration pre-bucket:** Registers `duration_ms` from StatStage before size-bucket; disposition is informational (`UNIQUE_DURATION` / `HAS_GATE_CANDIDATE` / `DURATION_UNKNOWN`) — video always runs `RAW_BYTES` + `VIDEO_CONTENT_V1` (FR-FP-02 / FR-FP-07).
+- **Tests:** `DurationBucketIndexTest`, `HashPipelineTest` (AC-pipeline-video-01); fixture `hash-pipeline-video-01.json`.
+
 ---
 
 ## 9. Milestones and definition of done

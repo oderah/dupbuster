@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.dupbuster.scanengine.hash.HashResult
 import com.dupbuster.scanengine.hash.HashedFile
+import com.dupbuster.scanengine.hash.VideoContentMatcher
 import com.dupbuster.scanengine.security.ScanRootMode
 import com.dupbuster.scanengine.stat.StagedFile
 
@@ -173,20 +174,49 @@ class IndexWriter(private val database: CatalogDatabase) {
       )
 
   /**
-   * Counts indexed rows with [sizeBytes] for size-bucket elimination (FR-FP-02).
-   * Excludes video rows (video always hashes).
+   * Counts indexed non-video rows with [sizeBytes] for size-bucket elimination (FR-FP-02).
+   * Video rows (`duration_ms > 0`) are excluded — video always hashes (M1-14).
    */
   fun countIndexedFilesWithSize(sizeBytes: Long): Int {
     val cursor =
         database
             .readable()
             .rawQuery(
-                "SELECT COUNT(*) FROM file_entry WHERE size = ?",
+                """
+                SELECT COUNT(*) FROM file_entry
+                WHERE size = ?
+                  AND (duration_ms IS NULL OR duration_ms = 0)
+                """
+                    .trimIndent(),
                 arrayOf(sizeBytes.toString()),
             )
     cursor.use {
       return if (it.moveToFirst()) it.getInt(0) else 0
     }
+  }
+
+  /**
+   * Counts indexed videos whose duration passes the gate with [durationMs] (M1-14 pre-bucket).
+   */
+  fun countVideosWithinDurationGate(durationMs: Long): Int {
+    if (durationMs <= 0) {
+      return 0
+    }
+    var count = 0
+    database
+        .readable()
+        .rawQuery(
+            "SELECT duration_ms FROM file_entry WHERE duration_ms IS NOT NULL AND duration_ms > 0",
+            null,
+        )
+        .use { cursor ->
+          while (cursor.moveToNext()) {
+            if (VideoContentMatcher.passesDurationGate(durationMs, cursor.getLong(0))) {
+              count++
+            }
+          }
+        }
+    return count
   }
 
   fun findFingerprintId(hashValue: String, normalizationProfile: String): Long? {

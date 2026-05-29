@@ -116,5 +116,6 @@ object CatalogSchema {
           "CREATE INDEX IF NOT EXISTS idx_file_entry_inode_device ON file_entry(inode, device_id)",
           "CREATE INDEX IF NOT EXISTS idx_file_entry_generation ON file_entry(root_id, last_seen_generation)",
           "CREATE INDEX IF NOT EXISTS idx_file_entry_fingerprint ON file_entry(fingerprint_id)",
+          "CREATE INDEX IF NOT EXISTS idx_file_entry_duration_ms ON file_entry(duration_ms)",
       )
 }

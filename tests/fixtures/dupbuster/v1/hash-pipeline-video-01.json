@@ -1,0 +1,19 @@
+{
+  "id": "hash-pipeline-video-01",
+  "description": "Video pipeline exception: different-size videos still run VIDEO_CONTENT_V1 (AC-pipeline-video-01 / M1-14)",
+  "platform": "both",
+  "input": {
+    "videos": [
+      { "sizeBytes": 104857600, "durationMs": 60000, "resolution": "1080p" },
+      { "sizeBytes": 52428800, "durationMs": 60000, "resolution": "720p" }
+    ]
+  },
+  "expect": {
+    "sizeBucketSkip": false,
+    "durationPreBucket": true,
+    "rawBytesProfile": "RAW_BYTES",
+    "videoContentProfile": "VIDEO_CONTENT_V1",
+    "differentRawHashes": true,
+    "bothVideoContentFingerprinted": true
+  }
+}

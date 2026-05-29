@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)upsertHashedFile:(DBHashedFile *)hashed generation:(NSInteger)generation;
 
 - (NSInteger)countIndexedFilesWithSize:(int64_t)sizeBytes;
+- (NSInteger)countVideosWithinDurationGate:(int64_t)durationMs;
 
 - (NSInteger)purgeEntriesNotSeenInGeneration:(NSInteger)rootId generation:(NSInteger)generation;
 
