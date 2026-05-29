@@ -143,7 +143,22 @@ export const tokens = {
   },
 
   unscan: {
+    title: "Some files couldn't be scanned",
+    row: '{count} {reason}',
     retry: 'Retry',
+    cta: {
+      enableLargeFiles: 'Enable large file scanning',
+    },
+    reason: {
+      CLOUD_PLACEHOLDER: 'cloud-only files',
+      ENCRYPTED: 'encrypted files',
+      PERMISSION_DENIED: 'access denied',
+      OFFLINE_ONLY: 'offline-only files',
+      LOCKED: 'locked files',
+      LARGE_SKIPPED: 'files over 2 GB',
+      HASH_TIMEOUT: 'timed out while hashing',
+      VIDEO_DECODE_FAILED: 'video decode failed',
+    },
   },
 
   /** architecture.md §9.3 — match-kind UI (EN freeze) */

@@ -338,6 +338,15 @@ New code must land in these areas unless architecture is amended first.
 - **A11Y:** `accessibilityLiveRegion="polite"`; `reducedMotion` → pulse dot not animated fill (A11Y-09); RTL `scaleX` on progress track (A11Y-10); `maxFontSizeMultiplier={1.3}` (A11Y-11).
 - **Tests:** `npm test -- --testPathPattern='ScanProgress|ScanStatusChip|scanProgressA11y|formatBytes'` + tokens scan phase tests.
 
+### UnscannableSummaryCard (M2-04)
+
+- **`src/components/UnscannableSummaryCard.tsx`:** Presentational card for aggregate unscannable counts at scan end (FR-UN-04); one row per non-zero `unscannable_reason` (AC-unscan-01); CTAs for `HASH_TIMEOUT` (`unscan.retry`) and `LARGE_SKIPPED` (`unscan.cta.enableLargeFiles`).
+- **`src/components/unscannableSummaryDisplay.ts`:** Reason labels from `unscan.reason.*`, stable row order via `UNSCANNABLE_REASONS`, row copy from `unscan.row`.
+- **`src/types/unscannableSummary.ts`:** `UnscannableCountsByReason`, props with `onRetryHashTimeout` / `onEnableLargeFiles`.
+- **Tokens:** `unscan.title`, `unscan.row`, `unscan.reason.*`, `unscan.cta.enableLargeFiles`; requirements §9 `unscan.retry` unchanged.
+- **Bridge:** Counts come from native catalog aggregation in M2-07 — component accepts pre-aggregated props only (no paths/reasons over bridge per event).
+- **Tests:** `npm test -- --testPathPattern='UnscannableSummary|unscannableSummaryDisplay'` + tokens unscan reason tests; AC-unscan-01/03/04.
+
 ---
 
 ## 9. Milestones and definition of done

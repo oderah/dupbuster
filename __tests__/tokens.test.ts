@@ -47,7 +47,21 @@ describe('tokens EN freeze (requirements §9)', () => {
     expect(tokens.rescan.required).toBe(
       'This update changed how files are compared. Rescan to refresh results.',
     );
+    expect(tokens.unscan.title).toBe("Some files couldn't be scanned");
+    expect(tokens.unscan.row).toBe('{count} {reason}');
     expect(tokens.unscan.retry).toBe('Retry');
+    expect(tokens.unscan.cta.enableLargeFiles).toBe('Enable large file scanning');
+  });
+
+  it('unscan.reason labels cover the closed reason set (FR-UN-02)', () => {
+    expect(tokens.unscan.reason.CLOUD_PLACEHOLDER).toBe('cloud-only files');
+    expect(tokens.unscan.reason.ENCRYPTED).toBe('encrypted files');
+    expect(tokens.unscan.reason.PERMISSION_DENIED).toBe('access denied');
+    expect(tokens.unscan.reason.OFFLINE_ONLY).toBe('offline-only files');
+    expect(tokens.unscan.reason.LOCKED).toBe('locked files');
+    expect(tokens.unscan.reason.LARGE_SKIPPED).toBe('files over 2 GB');
+    expect(tokens.unscan.reason.HASH_TIMEOUT).toBe('timed out while hashing');
+    expect(tokens.unscan.reason.VIDEO_DECODE_FAILED).toBe('video decode failed');
   });
 
   it('coverage.footer matches requirements §5.3', () => {

@@ -16,4 +16,7 @@ export type {
   UnscannableReason,
 } from '../native/scanEngineBridge.types';
 
-export {TERMINAL_SCAN_PHASES} from '../native/scanEngineBridge.types';
+export {
+  TERMINAL_SCAN_PHASES,
+  UNSCANNABLE_REASONS,
+} from '../native/scanEngineBridge.types';

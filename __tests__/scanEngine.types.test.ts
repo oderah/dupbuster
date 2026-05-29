@@ -1,5 +1,6 @@
 import {
   TERMINAL_SCAN_PHASES,
+  UNSCANNABLE_REASONS,
   type ScanPhase,
   type UnscannableReason,
 } from '../src/types/scanEngine';
@@ -22,5 +23,6 @@ describe('ScanEngine bridge types', () => {
       'VIDEO_DECODE_FAILED',
     ];
     expect(reasons).toHaveLength(8);
+    expect(UNSCANNABLE_REASONS).toEqual(reasons);
   });
 });

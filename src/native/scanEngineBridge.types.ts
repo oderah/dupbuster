@@ -26,6 +26,18 @@ export type UnscannableReason =
   | 'HASH_TIMEOUT'
   | 'VIDEO_DECODE_FAILED';
 
+/** Stable display order for UnscannableSummaryCard rows (FR-UN-02). */
+export const UNSCANNABLE_REASONS = [
+  'CLOUD_PLACEHOLDER',
+  'ENCRYPTED',
+  'PERMISSION_DENIED',
+  'OFFLINE_ONLY',
+  'LOCKED',
+  'LARGE_SKIPPED',
+  'HASH_TIMEOUT',
+  'VIDEO_DECODE_FAILED',
+] as const satisfies readonly UnscannableReason[];
+
 export type ScanProgressContentKind = 'none' | 'video_content';
 
 export type ScanProgressEvent = {
