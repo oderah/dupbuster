@@ -13,6 +13,8 @@ import com.dupbuster.scanengine.stat.StagedFile
  */
 class IndexWriter(private val database: CatalogDatabase) {
 
+  private val checkpointStore = CheckpointStore(database)
+
   fun readCatalogMeta(): CatalogMeta {
     val db = database.readable()
     val schemaVersion =
@@ -42,37 +44,14 @@ class IndexWriter(private val database: CatalogDatabase) {
       generation: Int,
       rootId: Long? = null,
       startedAtMs: Long = System.currentTimeMillis(),
-  ): Long {
-    val values =
-        ContentValues().apply {
-          put("root_id", rootId)
-          put("generation", generation)
-          put("status", "running")
-          put("last_processed_id", 0)
-          put("started_at", startedAtMs)
-        }
-    return database.writable().insert("scan_run", null, values)
-  }
+  ): Long = checkpointStore.beginRun(rootId = rootId, generation = generation, startedAtMs = startedAtMs)
 
   fun updateScanRunCheckpoint(scanRunId: Long, lastProcessedId: Long) {
-    val values =
-        ContentValues().apply {
-          put("last_processed_id", lastProcessedId)
-        }
-    database
-        .writable()
-        .update("scan_run", values, "id = ?", arrayOf(scanRunId.toString()))
+    checkpointStore.saveCheckpoint(scanRunId, lastProcessedId)
   }
 
   fun completeScanRun(scanRunId: Long, endedAtMs: Long = System.currentTimeMillis()) {
-    val values =
-        ContentValues().apply {
-          put("status", "complete")
-          put("ended_at", endedAtMs)
-        }
-    database
-        .writable()
-        .update("scan_run", values, "id = ?", arrayOf(scanRunId.toString()))
+    checkpointStore.markComplete(scanRunId, endedAtMs)
   }
 
   /** Persists one hash-pipeline outcome and returns `file_entry.id`. */

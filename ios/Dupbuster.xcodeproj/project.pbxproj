@@ -78,6 +78,13 @@
 		D4F8A2E02B681A0000A75B9A /* DBScanProgressContentKind.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2D42B681A0000A75B9A /* DBScanProgressContentKind.m */; };
 		D4F8A2E12B681A0000A75B9A /* DBScanProgressSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2D62B681A0000A75B9A /* DBScanProgressSnapshot.m */; };
 		D4F8A2E22B681A0000A75B9A /* DBProgressThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2D82B681A0000A75B9A /* DBProgressThrottle.m */; };
+		D4F8A2E32B681B0000A75B9A /* DBScanRunStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EC2B681B0000A75B9A /* DBScanRunStatus.m */; };
+		D4F8A2E42B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */; };
+		D4F8A2E52B681B0000A75B9A /* DBCheckpointStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */; };
+		D4F8A2E62B681B0000A75B9A /* DBCheckpointStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */; };
+		D4F8A2E72B681B0000A75B9A /* DBScanRunStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EC2B681B0000A75B9A /* DBScanRunStatus.m */; };
+		D4F8A2E82B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */; };
+		D4F8A2E92B681B0000A75B9A /* DBCheckpointStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */; };
 		D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */; };
@@ -175,6 +182,13 @@
 		D4F8A2D72B681A0000A75B9A /* DBProgressThrottle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBProgressThrottle.h; path = ScanEngine/Bridge/DBProgressThrottle.h; sourceTree = "<group>"; };
 		D4F8A2D82B681A0000A75B9A /* DBProgressThrottle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBProgressThrottle.m; path = ScanEngine/Bridge/DBProgressThrottle.m; sourceTree = "<group>"; };
 		D4F8A2D92B681A0000A75B9A /* DBProgressThrottleTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBProgressThrottleTests.m; path = ScanEngineTests/DBProgressThrottleTests.m; sourceTree = "<group>"; };
+		D4F8A2EB2B681B0000A75B9A /* DBScanRunStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanRunStatus.h; path = ScanEngine/Index/DBScanRunStatus.h; sourceTree = "<group>"; };
+		D4F8A2EC2B681B0000A75B9A /* DBScanRunStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanRunStatus.m; path = ScanEngine/Index/DBScanRunStatus.m; sourceTree = "<group>"; };
+		D4F8A2ED2B681B0000A75B9A /* DBScanRunSnapshot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanRunSnapshot.h; path = ScanEngine/Index/DBScanRunSnapshot.h; sourceTree = "<group>"; };
+		D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanRunSnapshot.m; path = ScanEngine/Index/DBScanRunSnapshot.m; sourceTree = "<group>"; };
+		D4F8A2EF2B681B0000A75B9A /* DBCheckpointStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCheckpointStore.h; path = ScanEngine/Index/DBCheckpointStore.h; sourceTree = "<group>"; };
+		D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCheckpointStore.m; path = ScanEngine/Index/DBCheckpointStore.m; sourceTree = "<group>"; };
+		D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCheckpointStoreTests.m; path = ScanEngineTests/DBCheckpointStoreTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -324,6 +338,12 @@
 				D4F8A2C22B68190000A75B9A /* DBMatchKind.m */,
 				D4F8A2CA2B68190000A75B9A /* DBGrouper.h */,
 				D4F8A2C52B68190000A75B9A /* DBGrouper.m */,
+				D4F8A2EB2B681B0000A75B9A /* DBScanRunStatus.h */,
+				D4F8A2EC2B681B0000A75B9A /* DBScanRunStatus.m */,
+				D4F8A2ED2B681B0000A75B9A /* DBScanRunSnapshot.h */,
+				D4F8A2EE2B681B0000A75B9A /* DBScanRunSnapshot.m */,
+				D4F8A2EF2B681B0000A75B9A /* DBCheckpointStore.h */,
+				D4F8A2F02B681B0000A75B9A /* DBCheckpointStore.m */,
 			);
 			name = Index;
 			sourceTree = "<group>";
@@ -357,6 +377,7 @@
 				D4F8A2AD2B68180000A75B9A /* DBIndexWriterTests.m */,
 				D4F8A2C82B68190000A75B9A /* DBGrouperTests.m */,
 				D4F8A2D92B681A0000A75B9A /* DBProgressThrottleTests.m */,
+				D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -582,6 +603,10 @@
 				D4F8A2BA2B68180000A75B9A /* DBIndexWriterTests.m in Sources */,
 				D4F8A2C62B68190000A75B9A /* DBGrouperTests.m in Sources */,
 				D4F8A2DE2B681A0000A75B9A /* DBProgressThrottleTests.m in Sources */,
+				D4F8A2E62B681B0000A75B9A /* DBCheckpointStoreTests.m in Sources */,
+				D4F8A2E32B681B0000A75B9A /* DBScanRunStatus.m in Sources */,
+				D4F8A2E42B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */,
+				D4F8A2E52B681B0000A75B9A /* DBCheckpointStore.m in Sources */,
 				D4F8A2DA2B681A0000A75B9A /* DBScanPhase.m in Sources */,
 				D4F8A2DB2B681A0000A75B9A /* DBScanProgressContentKind.m in Sources */,
 				D4F8A2DC2B681A0000A75B9A /* DBScanProgressSnapshot.m in Sources */,
@@ -647,6 +672,9 @@
 				D4F8A2E02B681A0000A75B9A /* DBScanProgressContentKind.m in Sources */,
 				D4F8A2E12B681A0000A75B9A /* DBScanProgressSnapshot.m in Sources */,
 				D4F8A2E22B681A0000A75B9A /* DBProgressThrottle.m in Sources */,
+				D4F8A2E72B681B0000A75B9A /* DBScanRunStatus.m in Sources */,
+				D4F8A2E82B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */,
+				D4F8A2E92B681B0000A75B9A /* DBCheckpointStore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

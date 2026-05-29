@@ -158,6 +158,20 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Bridge fields only: `filesProcessed`, `filesTotalKnown`, `groupsFound`, `reclaimableBytesEst`, `phase`, optional `contentKind` (full enum wiring in M1-16).
 - **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests` — AC-integrity-progress-01 (10k synthetic load).
 
+### CheckpointStore (M1-12)
+
+| Piece | Location |
+|-------|----------|
+| Android | `scanengine/index/CheckpointStore.kt`, `ScanRunSnapshot.kt`, `ScanRunStatus.kt` |
+| iOS | `ScanEngine/Index/DBCheckpointStore`, `DBScanRunSnapshot`, `DBScanRunStatus` |
+| Fixture | `tests/fixtures/dupbuster/v1/integrity-resume-01.json` |
+
+- Persists `scan_run.last_processed_id` during a run; monotonic `saveCheckpoint`.
+- `findResumableRun` returns latest `running` or `paused` row (process-kill relaunch); `abandonForRestart` clears resumability.
+- No second active `scan_run` for the same `root_id` + `generation`.
+- **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests` — native resume store (full restart prompt AC is M3).
+- Scan pipeline orchestrator + `startScan` wiring follows in a later M1 task.
+
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 
 ## Milestones

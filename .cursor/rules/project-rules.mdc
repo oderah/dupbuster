@@ -256,6 +256,15 @@ New code must land in these areas unless architecture is amended first.
 - **Bridge:** Orchestrator (M1-12) maps emitted snapshots to `onScanProgress`; no paths/hashes/bytes. Optional `contentKind` on snapshot; M1-16 wires hashing-phase enum to bridge.
 - **Tests:** `ProgressThrottleTest` / `DBProgressThrottleTests`; fixture `integrity-progress-01.json` (AC-integrity-progress-01).
 
+### CheckpointStore (M1-12)
+
+- **Android:** `com.dupbuster.scanengine.index.CheckpointStore`, `ScanRunSnapshot`, `ScanRunStatus` — persists `scan_run.last_processed_id` with monotonic checkpoints.
+- **iOS:** `DBCheckpointStore`, `DBScanRunSnapshot`, `DBScanRunStatus` under `ScanEngine/Index/`.
+- **API:** `beginRun` / `saveCheckpoint` / `findResumableRun` / `pauseRun` / `resumeRun` / `abandonForRestart`; rejects conflicting active runs for same `root_id` + `generation`.
+- **IndexWriter:** `beginScanRun` / `updateScanRunCheckpoint` / `completeScanRun` delegate to `CheckpointStore`.
+- **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests`; fixture `integrity-resume-01.json` (native resume data layer; full AC-integrity-resume-01 UI prompt is M3).
+- **Orchestrator:** Pipeline wiring (`startScan` → stages → throttled `onScanProgress`) is post–M1-12; store is ready for orchestrator consumption.
+
 ---
 
 ## 9. Milestones and definition of done

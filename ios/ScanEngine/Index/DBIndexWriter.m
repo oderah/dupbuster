@@ -8,9 +8,11 @@
 #import "DBHashedFile.h"
 #import "DBNormalizationProfile.h"
 #import "DBStagedFile.h"
+#import "DBCheckpointStore.h"
 
 @implementation DBIndexWriter {
   DBCatalogDatabase *_database;
+  DBCheckpointStore *_checkpointStore;
 }
 
 - (instancetype)initWithDatabase:(DBCatalogDatabase *)database
@@ -18,6 +20,7 @@
   self = [super init];
   if (self) {
     _database = database;
+    _checkpointStore = [[DBCheckpointStore alloc] initWithDatabase:database];
   }
   return self;
 }
@@ -54,18 +57,12 @@
 
 - (NSInteger)beginScanRunWithGeneration:(NSInteger)generation rootId:(NSInteger)rootId
 {
-  sqlite3_stmt *stmt = NULL;
-  const char *sql =
-      "INSERT INTO scan_run (root_id, generation, status, last_processed_id, started_at) "
-      "VALUES (?, ?, 'running', 0, ?)";
-  sqlite3 *db = _database.db;
-  sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-  sqlite3_bind_int64(stmt, 1, rootId);
-  sqlite3_bind_int64(stmt, 2, generation);
-  sqlite3_bind_int64(stmt, 3, (sqlite3_int64)(NSDate.date.timeIntervalSince1970 * 1000));
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
-  return (NSInteger)sqlite3_last_insert_rowid(db);
+  NSError *error = nil;
+  NSInteger runId = [_checkpointStore beginRunWithRootId:rootId generation:generation error:&error];
+  if (error != nil) {
+    return 0;
+  }
+  return runId;
 }
 
 - (NSInteger)persistHashPipelineResult:(DBHashPipelineResult *)result
