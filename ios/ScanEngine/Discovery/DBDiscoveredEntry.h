@@ -11,10 +11,13 @@ FOUNDATION_EXPORT DBMediaTypeHint const DBMediaTypeHintDocument;
 FOUNDATION_EXPORT DBMediaTypeHint const DBMediaTypeHintText;
 FOUNDATION_EXPORT DBMediaTypeHint const DBMediaTypeHintOther;
 
-/** One file under an active user-selected scan_root (Mode A). */
+/** One file discovered under an active scan_root (Modes A and B). */
 @interface DBDiscoveredEntry : NSObject
 
-@property (nonatomic, copy) NSURL *contentURL;
+/** Set for Mode A `file://` / security-scoped paths and optional bookmark union. */
+@property (nonatomic, copy, nullable) NSURL *contentURL;
+/** Set for Mode B PHAsset rows (`uri_or_path` in index). */
+@property (nonatomic, copy, nullable) NSString *phAssetLocalIdentifier;
 @property (nonatomic, assign) NSInteger scanRootId;
 @property (nonatomic, assign) NSInteger generation;
 @property (nonatomic, copy) NSString *displayName;
@@ -22,7 +25,8 @@ FOUNDATION_EXPORT DBMediaTypeHint const DBMediaTypeHintOther;
 @property (nonatomic, assign) int64_t sizeBytes;
 @property (nonatomic, assign) int64_t mtimeNs;
 
-- (instancetype)initWithContentURL:(NSURL *)contentURL
+- (instancetype)initWithContentURL:(nullable NSURL *)contentURL
+            phAssetLocalIdentifier:(nullable NSString *)phAssetLocalIdentifier
                        scanRootId:(NSInteger)scanRootId
                        generation:(NSInteger)generation
                       displayName:(NSString *)displayName

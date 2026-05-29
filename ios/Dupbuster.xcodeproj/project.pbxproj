@@ -15,6 +15,13 @@
 		D4F8A21F2B68130000A75B9A /* DBDiscoveryEmitter.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A21C2B68130000A75B9A /* DBDiscoveryEmitter.mm */; };
 		D4F8A2202B68130000A75B9A /* DBMediaTypeHintResolverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2222B68130000A75B9A /* DBMediaTypeHintResolverTests.m */; };
 		D4F8A2232B68130000A75B9A /* DBDiscoveryEmitterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2252B68130000A75B9A /* DBDiscoveryEmitterTests.m */; };
+		D4F8A2272B68140000A75B9A /* DBPhAssetRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2292B68140000A75B9A /* DBPhAssetRecord.m */; };
+		D4F8A22A2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A22C2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m */; };
+		D4F8A22D2B68140000A75B9A /* DBPhAssetRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2292B68140000A75B9A /* DBPhAssetRecord.m */; };
+		D4F8A22E2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A22C2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m */; };
+		D4F8A22F2B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2312B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m */; };
+		D4F8A2322B68140000A75B9A /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4F8A2332B68140000A75B9A /* Photos.framework */; };
+		D4F8A2342B68140000A75B9A /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4F8A2332B68140000A75B9A /* Photos.framework */; };
 		D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */; };
@@ -47,6 +54,13 @@
 		D4F8A21C2B68130000A75B9A /* DBDiscoveryEmitter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DBDiscoveryEmitter.mm; path = ScanEngine/Discovery/DBDiscoveryEmitter.mm; sourceTree = "<group>"; };
 		D4F8A2222B68130000A75B9A /* DBMediaTypeHintResolverTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBMediaTypeHintResolverTests.m; path = ScanEngineTests/DBMediaTypeHintResolverTests.m; sourceTree = "<group>"; };
 		D4F8A2252B68130000A75B9A /* DBDiscoveryEmitterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDiscoveryEmitterTests.m; path = ScanEngineTests/DBDiscoveryEmitterTests.m; sourceTree = "<group>"; };
+		D4F8A2282B68140000A75B9A /* DBPhAssetRecord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBPhAssetRecord.h; path = ScanEngine/Discovery/DBPhAssetRecord.h; sourceTree = "<group>"; };
+		D4F8A2292B68140000A75B9A /* DBPhAssetRecord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhAssetRecord.m; path = ScanEngine/Discovery/DBPhAssetRecord.m; sourceTree = "<group>"; };
+		D4F8A22B2B68140000A75B9A /* DBPhAssetDiscoverySource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBPhAssetDiscoverySource.h; path = ScanEngine/Discovery/DBPhAssetDiscoverySource.h; sourceTree = "<group>"; };
+		D4F8A22C2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhotosPhAssetDiscoverySource.m; path = ScanEngine/Discovery/DBPhotosPhAssetDiscoverySource.m; sourceTree = "<group>"; };
+		D4F8A2302B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBPhotosPhAssetDiscoverySource.h; path = ScanEngine/Discovery/DBPhotosPhAssetDiscoverySource.h; sourceTree = "<group>"; };
+		D4F8A2312B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDiscoveryEmitterModeBTests.m; path = ScanEngineTests/DBDiscoveryEmitterModeBTests.m; sourceTree = "<group>"; };
+		D4F8A2332B68140000A75B9A /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -57,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D4F8A2342B68140000A75B9A /* Photos.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +80,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-Dupbuster.a in Frameworks */,
+				D4F8A2322B68140000A75B9A /* Photos.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +128,11 @@
 				D4F8A2192B68130000A75B9A /* DBMediaTypeHintResolver.m */,
 				D4F8A21B2B68130000A75B9A /* DBDiscoveryEmitter.h */,
 				D4F8A21C2B68130000A75B9A /* DBDiscoveryEmitter.mm */,
+				D4F8A2282B68140000A75B9A /* DBPhAssetRecord.h */,
+				D4F8A2292B68140000A75B9A /* DBPhAssetRecord.m */,
+				D4F8A22B2B68140000A75B9A /* DBPhAssetDiscoverySource.h */,
+				D4F8A2302B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.h */,
+				D4F8A22C2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m */,
 			);
 			name = Discovery;
 			sourceTree = "<group>";
@@ -131,6 +152,7 @@
 				D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */,
 				D4F8A2222B68130000A75B9A /* DBMediaTypeHintResolverTests.m */,
 				D4F8A2252B68130000A75B9A /* DBDiscoveryEmitterTests.m */,
+				D4F8A2312B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -344,9 +366,12 @@
 				D4F8A21D2B68130000A75B9A /* DBDiscoveredEntry.m in Sources */,
 				D4F8A21E2B68130000A75B9A /* DBMediaTypeHintResolver.m in Sources */,
 				D4F8A21F2B68130000A75B9A /* DBDiscoveryEmitter.mm in Sources */,
+				D4F8A22D2B68140000A75B9A /* DBPhAssetRecord.m in Sources */,
+				D4F8A22E2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m in Sources */,
 				D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */,
 				D4F8A2202B68130000A75B9A /* DBMediaTypeHintResolverTests.m in Sources */,
 				D4F8A2232B68130000A75B9A /* DBDiscoveryEmitterTests.m in Sources */,
+				D4F8A22F2B68140000A75B9A /* DBDiscoveryEmitterModeBTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,6 +385,8 @@
 				D4F8A2142B68130000A75B9A /* DBDiscoveredEntry.m in Sources */,
 				D4F8A2172B68130000A75B9A /* DBMediaTypeHintResolver.m in Sources */,
 				D4F8A21A2B68130000A75B9A /* DBDiscoveryEmitter.mm in Sources */,
+				D4F8A2272B68140000A75B9A /* DBPhAssetRecord.m in Sources */,
+				D4F8A22A2B68140000A75B9A /* DBPhotosPhAssetDiscoverySource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

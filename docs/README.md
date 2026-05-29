@@ -67,7 +67,19 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Mode A only** (`user_selected`): SAF tree walk (Android) or DocumentPicker folder (iOS). Each file passes `UriValidator` with `DISCOVERY` provenance before emit.
 - Emits `DiscoveredEntry` / `DBDiscoveredEntry`: `contentUri`/`contentURL`, `displayName`, `sizeBytes`, `mtimeNs`, `mediaTypeHint`, `scanRootId`, `generation` — native-only until IndexWriter (M1-09).
 - Yields every **32** emitted files; honours cooperative cancel callback.
-- **Mode B** (MediaStore / PHAsset) is **M1-05**.
+
+### DiscoveryEmitter mode B (M1-05)
+
+| Piece | Location |
+|-------|----------|
+| Android | `DiscoveryEmitter.emitModeB` + `ContentResolverMediaStoreDiscoveryQuery` (images, video, audio, downloads) |
+| iOS | `DBDiscoveryEmitter.emitModeBWithScanRootGrant:` + `DBPhotosPhAssetDiscoverySource` |
+| Fixture | `tests/fixtures/dupbuster/v1/discovery-platform-discovery-01.json` |
+
+- **Mode B** (`platform_discovery`): MediaStore union on Android; PHAsset fetch on iOS (optional limited-library identifier list). Optional SAF / security-scoped folder union via `additionalSafGrants` / `additionalScopedFolderURLs`.
+- Android grant marker: `PlatformDiscoveryGrant.MARKER_URI` (`content://dupbuster/scan-root/platform-discovery`). iOS platform grant typically `uriGrant` `*`.
+- PHAsset rows set `phAssetLocalIdentifier` on `DBDiscoveredEntry` (no `contentURL`); MediaStore rows use `contentUri` as in Mode A.
+- No `/sdcard` crawl without grants (requirements §5.1 mode B).
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

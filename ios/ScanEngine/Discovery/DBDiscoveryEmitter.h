@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import "DBDiscoveredEntry.h"
+#import "DBPhAssetDiscoverySource.h"
 #import "DBUriValidator.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -15,13 +16,13 @@ typedef BOOL (^DBDiscoveryCancelBlock)(void);
 @property (nonatomic, assign) BOOL cancelled;
 @end
 
-/**
- * Mode A — user-selected folder via DocumentPicker / security-scoped bookmark.
- * Mode B (PHAsset) lands in M1-05.
- */
+/** Modes A (DocumentPicker folder) and B (PHAsset platform discovery). */
 @interface DBDiscoveryEmitter : NSObject
 
 - (instancetype)initWithUriValidator:(DBUriValidator *)uriValidator;
+
+- (instancetype)initWithUriValidator:(DBUriValidator *)uriValidator
+              phAssetDiscoverySource:(id<DBPhAssetDiscoverySource>)phAssetDiscoverySource;
 
 /**
  * @param folderURL Security-scoped directory URL from DocumentPicker (file://).
@@ -33,6 +34,21 @@ typedef BOOL (^DBDiscoveryCancelBlock)(void);
                                  generation:(NSInteger)generation
                                     handler:(DBDiscoveryEntryHandler)handler
                                   isCancelled:(nullable DBDiscoveryCancelBlock)isCancelled;
+
+/**
+ * Mode B — PHAsset fetch (full or limited-library identifiers) plus optional
+ * security-scoped folder union from prior DocumentPicker grants.
+ *
+ * @param grant Must be `DBScanRootModePlatformDiscovery` (`uriGrant` is typically `*`).
+ */
+- (DBDiscoveryResult *)emitModeBWithScanRootGrant:(DBScanRootGrant *)grant
+                                     scanRootId:(NSInteger)scanRootId
+                                     generation:(NSInteger)generation
+                    authorizedLocalIdentifiers:(nullable NSArray<NSString *> *)authorizedLocalIdentifiers
+                  additionalScopedFolderURLs:(nullable NSArray<NSURL *> *)additionalScopedFolderURLs
+                  additionalScopedGrants:(nullable NSArray<DBScanRootGrant *> *)additionalScopedGrants
+                                       handler:(DBDiscoveryEntryHandler)handler
+                                   isCancelled:(nullable DBDiscoveryCancelBlock)isCancelled;
 
 @end
 

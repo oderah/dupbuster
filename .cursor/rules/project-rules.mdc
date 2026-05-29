@@ -193,6 +193,14 @@ New code must land in these areas unless architecture is amended first.
 - **Batching:** `BATCH_SIZE` / 32 emitted files then yield; support `isCancelled` for pipeline cancel (M1-12).
 - **Mode B** (MediaStore / PHAsset) is M1-05 — do not implement platform discovery union in M1-04.
 
+### 8.5 DiscoveryEmitter mode B (M1-05)
+
+- **Android:** `DiscoveryEmitter.emitModeB` — `MediaStoreDiscoveryQuery` over images, video, audio, downloads (downloads API 29+); dedupe by URI; `PlatformDiscoveryGrant` marker; optional `additionalSafGrants` (Mode A SAF union).
+- **iOS:** `DBDiscoveryEmitter.emitModeBWithScanRootGrant:` — `DBPhAssetDiscoverySource` (default `DBPhotosPhAssetDiscoverySource`); limited library via `authorizedLocalIdentifiers`; optional scoped folder union with paired `additionalScopedFolderURLs` + `additionalScopedGrants`.
+- **Output:** Mode B PHAsset → `phAssetLocalIdentifier` on `DBDiscoveredEntry`; MediaStore → `contentUri` on `DiscoveredEntry`. Never bridge identifiers.
+- **Validation:** `UriValidator` / `DBUriValidator` with `PLATFORM_DISCOVERY` / `DBScanRootModePlatformDiscovery` + `DISCOVERY` provenance.
+- **Tests:** inject `MediaStoreDiscoveryQuery` (Android); inject `DBPhAssetDiscoverySource` (iOS). Fixture `discovery-platform-discovery-01.json`.
+
 ---
 
 ## 9. Milestones and definition of done

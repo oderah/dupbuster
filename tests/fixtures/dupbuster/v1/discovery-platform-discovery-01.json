@@ -1,0 +1,44 @@
+{
+  "id": "discovery-platform-discovery-01",
+  "description": "Mode B MediaStore union emits image/video rows with media_type hints; denies unknown authorities",
+  "platform": "android",
+  "input": {
+    "mode": "platform_discovery",
+    "grant": "content://dupbuster/scan-root/platform-discovery",
+    "mediaStoreRows": [
+      {
+        "collection": "image",
+        "contentUri": "content://com.android.providers.media.documents/document/image%3A100",
+        "displayName": "photo.jpg",
+        "mimeType": "image/jpeg",
+        "sizeBytes": 2048,
+        "lastModifiedMs": 1700000000000
+      },
+      {
+        "collection": "video",
+        "contentUri": "content://com.android.providers.media.documents/document/video%3A200",
+        "displayName": "clip.mp4",
+        "mimeType": "video/mp4",
+        "sizeBytes": 4096,
+        "lastModifiedMs": 1700000000001
+      },
+      {
+        "collection": "audio",
+        "contentUri": "content://evil.provider/document/track.mp3",
+        "displayName": "track.mp3",
+        "mimeType": "audio/mpeg",
+        "sizeBytes": 100,
+        "lastModifiedMs": 0
+      }
+    ]
+  },
+  "expect": {
+    "entriesEmitted": 2,
+    "entriesDenied": 1,
+    "displayNames": ["photo.jpg", "clip.mp4"],
+    "mediaTypeHints": {
+      "photo.jpg": "image",
+      "clip.mp4": "video"
+    }
+  }
+}

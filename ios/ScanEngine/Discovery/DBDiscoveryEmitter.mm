@@ -1,6 +1,7 @@
 #import "DBDiscoveryEmitter.h"
 
 #import "DBMediaTypeHintResolver.h"
+#import "DBPhotosPhAssetDiscoverySource.h"
 
 static const NSInteger kDiscoveryBatchSize = 32;
 
@@ -9,15 +10,24 @@ static const NSInteger kDiscoveryBatchSize = 32;
 
 @interface DBDiscoveryEmitter ()
 @property (nonatomic, strong) DBUriValidator *uriValidator;
+@property (nonatomic, strong) id<DBPhAssetDiscoverySource> phAssetDiscoverySource;
 @end
 
 @implementation DBDiscoveryEmitter
 
 - (instancetype)initWithUriValidator:(DBUriValidator *)uriValidator
 {
+  return [self initWithUriValidator:uriValidator
+             phAssetDiscoverySource:[[DBPhotosPhAssetDiscoverySource alloc] init]];
+}
+
+- (instancetype)initWithUriValidator:(DBUriValidator *)uriValidator
+              phAssetDiscoverySource:(id<DBPhAssetDiscoverySource>)phAssetDiscoverySource
+{
   self = [super init];
   if (self) {
     _uriValidator = uriValidator;
+    _phAssetDiscoverySource = phAssetDiscoverySource;
   }
   return self;
 }
@@ -143,6 +153,7 @@ static const NSInteger kDiscoveryBatchSize = 32;
 
     DBDiscoveredEntry *entry =
         [[DBDiscoveredEntry alloc] initWithContentURL:childURL
+                               phAssetLocalIdentifier:nil
                                           scanRootId:scanRootId
                                           generation:generation
                                          displayName:childURL.lastPathComponent
@@ -157,6 +168,89 @@ static const NSInteger kDiscoveryBatchSize = 32;
       [NSThread sleepForTimeInterval:0];
     }
   }
+}
+
+- (DBDiscoveryResult *)emitModeBWithScanRootGrant:(DBScanRootGrant *)grant
+                                     scanRootId:(NSInteger)scanRootId
+                                     generation:(NSInteger)generation
+                    authorizedLocalIdentifiers:(NSArray<NSString *> *)authorizedLocalIdentifiers
+                  additionalScopedFolderURLs:(NSArray<NSURL *> *)additionalScopedFolderURLs
+                  additionalScopedGrants:(NSArray<DBScanRootGrant *> *)additionalScopedGrants
+                                       handler:(DBDiscoveryEntryHandler)handler
+                                   isCancelled:(DBDiscoveryCancelBlock)isCancelled
+{
+  DBDiscoveryResult *result = [[DBDiscoveryResult alloc] init];
+  if (grant.mode != DBScanRootModePlatformDiscovery) {
+    return result;
+  }
+
+  NSMutableSet<NSString *> *seenIdentifiers = [NSMutableSet set];
+  NSArray<DBPhAssetRecord *> *records =
+      [self.phAssetDiscoverySource fetchAssetRecordsWithAuthorizedLocalIdentifiers:
+                                        authorizedLocalIdentifiers];
+  NSInteger batchCount = 0;
+  for (DBPhAssetRecord *record in records) {
+    if (isCancelled != nil && isCancelled()) {
+      result.cancelled = YES;
+      return result;
+    }
+    if (![seenIdentifiers addObject:record.localIdentifier]) {
+      continue;
+    }
+
+    DBUriValidationOutcome outcome =
+        [self.uriValidator validateLocalIdentifier:record.localIdentifier
+                                     scanRootGrant:grant
+                                       provenance:DBUriProvenanceDiscovery];
+    if (outcome != DBUriValidationOutcomeAllowed) {
+      result.entriesDenied += 1;
+      continue;
+    }
+
+    DBDiscoveredEntry *entry =
+        [[DBDiscoveredEntry alloc] initWithContentURL:nil
+                               phAssetLocalIdentifier:record.localIdentifier
+                                          scanRootId:scanRootId
+                                          generation:generation
+                                         displayName:record.displayName
+                                       mediaTypeHint:record.mediaTypeHint
+                                           sizeBytes:record.sizeBytes
+                                             mtimeNs:record.mtimeNs];
+    handler(entry);
+    result.entriesEmitted += 1;
+    batchCount += 1;
+    if (batchCount >= kDiscoveryBatchSize) {
+      batchCount = 0;
+      [NSThread sleepForTimeInterval:0];
+    }
+  }
+
+  NSUInteger folderCount = additionalScopedFolderURLs.count;
+  if (folderCount != additionalScopedGrants.count) {
+    return result;
+  }
+  for (NSUInteger index = 0; index < folderCount; index++) {
+    if (isCancelled != nil && isCancelled()) {
+      result.cancelled = YES;
+      return result;
+    }
+    DBDiscoveryResult *folderResult =
+        [self emitModeAWithFolderURL:additionalScopedFolderURLs[index]
+                     scanRootGrant:additionalScopedGrants[index]
+                        scanRootId:scanRootId
+                        generation:generation
+                           handler:handler
+                         isCancelled:isCancelled];
+    result.entriesEmitted += folderResult.entriesEmitted;
+    result.entriesDenied += folderResult.entriesDenied;
+    result.directoriesVisited += folderResult.directoriesVisited;
+    if (folderResult.cancelled) {
+      result.cancelled = YES;
+      return result;
+    }
+  }
+
+  return result;
 }
 
 @end

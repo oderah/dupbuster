@@ -10,6 +10,7 @@ DBMediaTypeHint const DBMediaTypeHintOther = @"other";
 @implementation DBDiscoveredEntry
 
 - (instancetype)initWithContentURL:(NSURL *)contentURL
+            phAssetLocalIdentifier:(NSString *)phAssetLocalIdentifier
                        scanRootId:(NSInteger)scanRootId
                        generation:(NSInteger)generation
                       displayName:(NSString *)displayName
@@ -20,6 +21,7 @@ DBMediaTypeHint const DBMediaTypeHintOther = @"other";
   self = [super init];
   if (self) {
     _contentURL = [contentURL copy];
+    _phAssetLocalIdentifier = [phAssetLocalIdentifier copy];
     _scanRootId = scanRootId;
     _generation = generation;
     _displayName = [displayName copy];

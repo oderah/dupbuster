@@ -13,12 +13,13 @@ fun interface DiscoveryEntryConsumer {
 }
 
 /**
- * Enumerates files for scan mode A (SAF / DocumentPicker user-selected root).
- * Mode B (MediaStore / PHAsset) is implemented in M1-05.
+ * Enumerates files for scan modes A (SAF / DocumentPicker) and B (MediaStore union).
  */
 class DiscoveryEmitter(
     context: Context,
     private val childQuery: SafChildDocumentsQuery = ContentResolverSafChildDocumentsQuery(context),
+    private val mediaStoreQuery: MediaStoreDiscoveryQuery =
+        ContentResolverMediaStoreDiscoveryQuery(context),
     private val uriValidator: UriValidator = UriValidator(context),
 ) {
 
@@ -127,6 +128,114 @@ class DiscoveryEmitter(
     }
 
     return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = false)
+  }
+
+  /**
+   * Union of MediaStore collections (images, video, audio, downloads) plus optional SAF trees.
+   * Does not crawl `/sdcard` without grants (requirements §5.1 mode B).
+   */
+  fun emitModeB(
+      request: PlatformDiscoveryRequest,
+      consumer: DiscoveryEntryConsumer,
+      isCancelled: () -> Boolean = { false },
+  ): DiscoveryResult {
+    var emitted = 0
+    var denied = 0
+    var directoriesVisited = 0
+    var batchCount = 0
+    val seenUris = mutableSetOf<String>()
+
+    for (kind in MediaStoreCollectionKind.entries) {
+      if (isCancelled()) {
+        return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = true)
+      }
+
+      val rows = runCatching { mediaStoreQuery.queryCollection(kind) }.getOrElse { emptyList() }
+      for (row in rows) {
+        if (isCancelled()) {
+          return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = true)
+        }
+
+        val uriKey = row.contentUri.toString()
+        if (!seenUris.add(uriKey)) {
+          continue
+        }
+
+        when (
+            uriValidator.validate(
+                row.contentUri,
+                request.grant,
+                UriProvenance.DISCOVERY,
+            )
+        ) {
+          is UriValidationResult.Denied -> {
+            denied++
+            continue
+          }
+          UriValidationResult.Allowed -> Unit
+        }
+
+        val mediaHint = mediaHintForRow(row)
+        consumer.onEntry(
+            DiscoveredEntry(
+                contentUri = row.contentUri,
+                scanRootId = request.scanRootId,
+                generation = request.generation,
+                displayName = row.displayName,
+                mediaTypeHint = mediaHint,
+                sizeBytes = row.sizeBytes,
+                mtimeNs = row.lastModifiedMs * 1_000_000L,
+            ),
+        )
+        emitted++
+        batchCount++
+        if (batchCount >= BATCH_SIZE) {
+          batchCount = 0
+          Thread.yield()
+        }
+      }
+    }
+
+    for (safGrant in request.additionalSafGrants) {
+      if (isCancelled()) {
+        return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = true)
+      }
+      val modeAResult =
+          emitModeA(
+              DiscoveryRequest(
+                  scanRootId = request.scanRootId,
+                  generation = request.generation,
+                  grant = safGrant,
+              ),
+              consumer,
+              isCancelled,
+          )
+      emitted += modeAResult.entriesEmitted
+      denied += modeAResult.entriesDenied
+      directoriesVisited += modeAResult.directoriesVisited
+      if (modeAResult.cancelled) {
+        return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = true)
+      }
+    }
+
+    return DiscoveryResult(emitted, denied, directoriesVisited, cancelled = false)
+  }
+
+  private fun mediaHintForRow(row: MediaStoreRow): MediaTypeHint {
+    val fromMime = MediaTypeHint.fromMimeType(row.mimeType)
+    if (fromMime != MediaTypeHint.OTHER) {
+      return fromMime
+    }
+    val fromName = MediaTypeHint.fromFileName(row.displayName)
+    if (fromName != MediaTypeHint.OTHER) {
+      return fromName
+    }
+    return when (row.collectionKind) {
+      MediaStoreCollectionKind.IMAGE -> MediaTypeHint.IMAGE
+      MediaStoreCollectionKind.VIDEO -> MediaTypeHint.VIDEO
+      MediaStoreCollectionKind.AUDIO -> MediaTypeHint.AUDIO
+      MediaStoreCollectionKind.DOWNLOAD -> MediaTypeHint.DOCUMENT
+    }
   }
 
   companion object {
