@@ -24,6 +24,10 @@ describe('tokens EN freeze (requirements §9)', () => {
     );
   });
 
+  it('denied.settingsCta is verbatim', () => {
+    expect(tokens.denied.settingsCta).toBe('Open Settings');
+  });
+
   it('notification scan strings are verbatim', () => {
     expect(tokens.notification.scan.title).toBe('Scanning for duplicates');
     expect(tokens.notification.scan.body).toBe(

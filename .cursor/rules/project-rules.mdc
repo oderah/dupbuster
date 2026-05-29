@@ -318,6 +318,15 @@ New code must land in these areas unless architecture is amended first.
 - **Match-kind copy:** Architecture §9.3 names `match.*` / `keeper.education.videoContent` without prose in requirements — literal values live in `tokens.ts`; change only with doc + `__tests__/tokens.test.ts` update.
 - **Tests:** `npm test -- --testPathPattern=tokens` asserts requirements §9 + architecture §9.3 verbatim strings.
 
+### CoverageBanner (M2-02)
+
+- **`src/components/CoverageBanner.tsx`:** Presentational banner for `partial`, `denied`, `limited-library` variants; props per architecture §9.1 (`variant`, `coverageSessionKey`, `firstDisplayAlertEligible`, `dismissedForSession`). Partial/limited use `color.surface.caution`; denied uses `surface.secondary` (not danger).
+- **Copy:** `partial.android`, `partial.ios.limited` + `formatToken`, `denied.blocking`, platform CTAs from `partial.cta.*` / `denied.settingsCta`; dismiss/settings a11y from `a11y.coverage.*`.
+- **A11y:** Partial/denied → `accessibilityRole="alert"` when `firstDisplayAlertEligible`; repeat same key → `accessibilityLiveRegion="polite"`. Limited-library → polite always (no alert). Settings CTA uses `accessibilityRole="link"` + `settingsHint` (no URI in announcement). Dismiss control min 44×44 dp.
+- **`src/controllers/coverageSessionState.ts`:** Session-key wiring prelude to M2-07 `ScanSessionController` — `buildCoverageSessionKey`, `resolveCoverageBannerPresentation`, dismiss/display tracking for A11Y-01/03.
+- **Types:** `src/types/coverageBanner.ts`.
+- **Tests:** `npm test -- --testPathPattern='CoverageBanner|coverageSessionState'` covers AC-a11y-coverage-01/02/03 behavior.
+
 ---
 
 ## 9. Milestones and definition of done

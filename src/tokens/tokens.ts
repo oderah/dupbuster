@@ -107,6 +107,8 @@ export const tokens = {
 
   denied: {
     blocking: 'DupBuster needs storage access to find duplicates.',
+    /** CTA paired with platform Settings deep link (requirements §9 denied row). */
+    settingsCta: 'Open Settings',
   },
 
   notification: {
