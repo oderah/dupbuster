@@ -42,7 +42,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until pipeline wiring (M1-07+) / M3 delete; `getCatalogMeta` returns `{ schemaVersion: 0, fullRescanRequired: false }`.
+- Stubs reject scan/delete commands until scan orchestrator wiring (M1-10+) / M3 delete; `getCatalogMeta` reads live catalog metadata from IndexWriter (M1-09).
 
 ### UriValidator (M1-03)
 
@@ -119,6 +119,18 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - Pipeline: UTF-8 decode (strict) → strip BOM → NFC → CRLF→LF → SHA-256; **no** trailing-whitespace trim (AC-equiv-text-04).
 - Quick sample (> 50 MB) remains on raw bytes; invalid UTF-8 → unscannable (same as read failure).
 - Covers AC-equiv-text-01–04 in native unit tests.
+
+### IndexWriter (M1-09)
+
+| Piece | Location |
+|-------|----------|
+| Android | `CatalogSchema.kt`, `CatalogDatabase.kt`, `IndexWriter.kt`, `SqliteSizeBucketIndex.kt` |
+| iOS | `DBCatalogSchema`, `DBCatalogDatabase`, `DBIndexWriter`, `DBSqliteSizeBucketIndex` |
+| Fixture | `tests/fixtures/dupbuster/v1/index-hashed-file-01.json` |
+
+- SQLite schema v2 per architecture §5.2 (`schema_version` in `meta`); `getCatalogMeta` reads live values from the catalog DB.
+- Persists hash-pipeline outcomes (`file_entry`, `fingerprint`, hard-link `file_path` aliases); duplicate grouping is M1-10.
+- `SqliteSizeBucketIndex` replaces in-memory counts for production size-bucket elimination.
 
 **WSL:** copy `android/local.properties.example` → `android/local.properties`. Builds in WSL need a **Linux** SDK (`~/Android/Sdk`), not the Windows SDK under `/mnt/c/...` (NDK host toolchain mismatch). Emulator can stay on Windows via `adb.exe`.
 

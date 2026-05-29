@@ -1,0 +1,17 @@
+{
+  "id": "index-hashed-file-01",
+  "description": "IndexWriter persists hashed file with SHA256 fingerprint row (M1-09)",
+  "platform": "both",
+  "input": {
+    "uriOrPath": "content://test/document/readme.bin",
+    "sizeBytes": 4096,
+    "hashValue": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalizationProfile": "RAW_BYTES",
+    "generation": 1
+  },
+  "expect": {
+    "fileEntryCount": 1,
+    "schemaVersion": 2,
+    "fullRescanRequired": false
+  }
+}

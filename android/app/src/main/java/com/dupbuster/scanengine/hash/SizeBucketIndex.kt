@@ -4,7 +4,7 @@ import com.dupbuster.scanengine.discovery.MediaTypeHint
 
 /**
  * Tracks per-size occurrence counts for size-bucket elimination (FR-FP-02).
- * Replaced by SQLite-backed counts when IndexWriter lands (M1-09).
+ * Production scans use [com.dupbuster.scanengine.index.SqliteSizeBucketIndex] (M1-09).
  */
 interface SizeBucketIndex {
   /**

@@ -53,6 +53,17 @@
 		D4F8A2902B68170000A75B9A /* DBTextNormalizer.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2942B68170000A75B9A /* DBTextNormalizer.m */; };
 		D4F8A2912B68170000A75B9A /* DBTextNormalizer.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2942B68170000A75B9A /* DBTextNormalizer.m */; };
 		D4F8A2922B68170000A75B9A /* DBTextNormalizerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2952B68170000A75B9A /* DBTextNormalizerTests.m */; };
+		D4F8A2B02B68180000A75B9A /* DBCatalogSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A42B68180000A75B9A /* DBCatalogSchema.m */; };
+		D4F8A2B12B68180000A75B9A /* DBCatalogSchema.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A42B68180000A75B9A /* DBCatalogSchema.m */; };
+		D4F8A2B22B68180000A75B9A /* DBCatalogMeta.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A62B68180000A75B9A /* DBCatalogMeta.m */; };
+		D4F8A2B32B68180000A75B9A /* DBCatalogMeta.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A62B68180000A75B9A /* DBCatalogMeta.m */; };
+		D4F8A2B42B68180000A75B9A /* DBCatalogDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A82B68180000A75B9A /* DBCatalogDatabase.m */; };
+		D4F8A2B52B68180000A75B9A /* DBCatalogDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2A82B68180000A75B9A /* DBCatalogDatabase.m */; };
+		D4F8A2B62B68180000A75B9A /* DBIndexWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2AA2B68180000A75B9A /* DBIndexWriter.m */; };
+		D4F8A2B72B68180000A75B9A /* DBIndexWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2AA2B68180000A75B9A /* DBIndexWriter.m */; };
+		D4F8A2B82B68180000A75B9A /* DBSqliteSizeBucketIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2AC2B68180000A75B9A /* DBSqliteSizeBucketIndex.m */; };
+		D4F8A2B92B68180000A75B9A /* DBSqliteSizeBucketIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2AC2B68180000A75B9A /* DBSqliteSizeBucketIndex.m */; };
+		D4F8A2BA2B68180000A75B9A /* DBIndexWriterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2AD2B68180000A75B9A /* DBIndexWriterTests.m */; };
 		D4F8A2072B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20B2B68120000A75B9A /* DBUriValidator.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A2062B68120000A75B9A /* DBUriValidator.mm */; };
 		D4F8A20C2B68120000A75B9A /* DBUriValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A20A2B68120000A75B9A /* DBUriValidatorTests.m */; };
@@ -125,6 +136,17 @@
 		D4F8A2932B68170000A75B9A /* DBTextNormalizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBTextNormalizer.h; path = ScanEngine/Hash/DBTextNormalizer.h; sourceTree = "<group>"; };
 		D4F8A2942B68170000A75B9A /* DBTextNormalizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBTextNormalizer.m; path = ScanEngine/Hash/DBTextNormalizer.m; sourceTree = "<group>"; };
 		D4F8A2952B68170000A75B9A /* DBTextNormalizerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBTextNormalizerTests.m; path = ScanEngineTests/DBTextNormalizerTests.m; sourceTree = "<group>"; };
+		D4F8A2A32B68180000A75B9A /* DBCatalogSchema.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogSchema.h; path = ScanEngine/Index/DBCatalogSchema.h; sourceTree = "<group>"; };
+		D4F8A2A42B68180000A75B9A /* DBCatalogSchema.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogSchema.m; path = ScanEngine/Index/DBCatalogSchema.m; sourceTree = "<group>"; };
+		D4F8A2A52B68180000A75B9A /* DBCatalogMeta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogMeta.h; path = ScanEngine/Index/DBCatalogMeta.h; sourceTree = "<group>"; };
+		D4F8A2A62B68180000A75B9A /* DBCatalogMeta.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogMeta.m; path = ScanEngine/Index/DBCatalogMeta.m; sourceTree = "<group>"; };
+		D4F8A2A72B68180000A75B9A /* DBCatalogDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogDatabase.h; path = ScanEngine/Index/DBCatalogDatabase.h; sourceTree = "<group>"; };
+		D4F8A2A82B68180000A75B9A /* DBCatalogDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogDatabase.m; path = ScanEngine/Index/DBCatalogDatabase.m; sourceTree = "<group>"; };
+		D4F8A2A92B68180000A75B9A /* DBIndexWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBIndexWriter.h; path = ScanEngine/Index/DBIndexWriter.h; sourceTree = "<group>"; };
+		D4F8A2AA2B68180000A75B9A /* DBIndexWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBIndexWriter.m; path = ScanEngine/Index/DBIndexWriter.m; sourceTree = "<group>"; };
+		D4F8A2AB2B68180000A75B9A /* DBSqliteSizeBucketIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBSqliteSizeBucketIndex.h; path = ScanEngine/Index/DBSqliteSizeBucketIndex.h; sourceTree = "<group>"; };
+		D4F8A2AC2B68180000A75B9A /* DBSqliteSizeBucketIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBSqliteSizeBucketIndex.m; path = ScanEngine/Index/DBSqliteSizeBucketIndex.m; sourceTree = "<group>"; };
+		D4F8A2AD2B68180000A75B9A /* DBIndexWriterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBIndexWriterTests.m; path = ScanEngineTests/DBIndexWriterTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -181,6 +203,7 @@
 				D4F8A2262B68130000A75B9A /* Discovery */,
 				D4F8A2512B68150000A75B9A /* Stat */,
 				D4F8A2862B68160000A75B9A /* Hash */,
+				D4F8A2AE2B68180000A75B9A /* Index */,
 			);
 			name = ScanEngine;
 			sourceTree = "<group>";
@@ -240,6 +263,23 @@
 			name = Hash;
 			sourceTree = "<group>";
 		};
+		D4F8A2AE2B68180000A75B9A /* Index */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A2A32B68180000A75B9A /* DBCatalogSchema.h */,
+				D4F8A2A42B68180000A75B9A /* DBCatalogSchema.m */,
+				D4F8A2A52B68180000A75B9A /* DBCatalogMeta.h */,
+				D4F8A2A62B68180000A75B9A /* DBCatalogMeta.m */,
+				D4F8A2A72B68180000A75B9A /* DBCatalogDatabase.h */,
+				D4F8A2A82B68180000A75B9A /* DBCatalogDatabase.m */,
+				D4F8A2A92B68180000A75B9A /* DBIndexWriter.h */,
+				D4F8A2AA2B68180000A75B9A /* DBIndexWriter.m */,
+				D4F8A2AB2B68180000A75B9A /* DBSqliteSizeBucketIndex.h */,
+				D4F8A2AC2B68180000A75B9A /* DBSqliteSizeBucketIndex.m */,
+			);
+			name = Index;
+			sourceTree = "<group>";
+		};
 		D4F8A2512B68150000A75B9A /* Stat */ = {
 			isa = PBXGroup;
 			children = (
@@ -266,6 +306,7 @@
 				D4F8A2502B68150000A75B9A /* DBStatStageTests.m */,
 				D4F8A2852B68160000A75B9A /* DBHashPipelineTests.m */,
 				D4F8A2952B68170000A75B9A /* DBTextNormalizerTests.m */,
+				D4F8A2AD2B68180000A75B9A /* DBIndexWriterTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -488,6 +529,12 @@
 				D4F8A24E2B68150000A75B9A /* DBStatStageTests.m in Sources */,
 				D4F8A2832B68160000A75B9A /* DBHashPipelineTests.m in Sources */,
 				D4F8A2922B68170000A75B9A /* DBTextNormalizerTests.m in Sources */,
+				D4F8A2BA2B68180000A75B9A /* DBIndexWriterTests.m in Sources */,
+				D4F8A2B02B68180000A75B9A /* DBCatalogSchema.m in Sources */,
+				D4F8A2B22B68180000A75B9A /* DBCatalogMeta.m in Sources */,
+				D4F8A2B42B68180000A75B9A /* DBCatalogDatabase.m in Sources */,
+				D4F8A2B62B68180000A75B9A /* DBIndexWriter.m in Sources */,
+				D4F8A2B82B68180000A75B9A /* DBSqliteSizeBucketIndex.m in Sources */,
 				D4F8A24A2B68150000A75B9A /* DBFileStat.m in Sources */,
 				D4F8A24B2B68150000A75B9A /* DBStagedFile.m in Sources */,
 				D4F8A24C2B68150000A75B9A /* DBFileStatReader.mm in Sources */,
@@ -531,6 +578,11 @@
 				D4F8A2742B68160000A75B9A /* DBFileContentReader.mm in Sources */,
 				D4F8A2772B68160000A75B9A /* DBHashPipeline.mm in Sources */,
 				D4F8A2902B68170000A75B9A /* DBTextNormalizer.m in Sources */,
+				D4F8A2B12B68180000A75B9A /* DBCatalogSchema.m in Sources */,
+				D4F8A2B32B68180000A75B9A /* DBCatalogMeta.m in Sources */,
+				D4F8A2B52B68180000A75B9A /* DBCatalogDatabase.m in Sources */,
+				D4F8A2B72B68180000A75B9A /* DBIndexWriter.m in Sources */,
+				D4F8A2B92B68180000A75B9A /* DBSqliteSizeBucketIndex.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,6 +608,7 @@
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = Dupbuster;
@@ -585,6 +638,7 @@
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = Dupbuster;
@@ -747,6 +801,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/ScanEngine/Security",
 					"$(SRCROOT)/ScanEngine/Discovery",
+					"$(SRCROOT)/ScanEngine/Index",
 					"$(inherited)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -759,6 +814,7 @@
 					"$(inherited)",
 					"-framework",
 					XCTest,
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dupbuster.ScanEngineTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -776,6 +832,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/ScanEngine/Security",
 					"$(SRCROOT)/ScanEngine/Discovery",
+					"$(SRCROOT)/ScanEngine/Index",
 					"$(inherited)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -788,6 +845,7 @@
 					"$(inherited)",
 					"-framework",
 					XCTest,
+					"-lsqlite3",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dupbuster.ScanEngineTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -1,6 +1,8 @@
 package com.dupbuster.scanengine
 
 import com.facebook.proguard.annotations.DoNotStrip
+import com.dupbuster.scanengine.index.CatalogDatabase
+import com.dupbuster.scanengine.index.IndexWriter
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -45,10 +47,11 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
 
   @DoNotStrip
   override fun getCatalogMeta(promise: Promise) {
+    val catalogMeta = IndexWriter(CatalogDatabase.getInstance(reactApplicationContext)).readCatalogMeta()
     val meta =
         Arguments.createMap().apply {
-          putDouble("schemaVersion", 0.0)
-          putBoolean("fullRescanRequired", false)
+          putDouble("schemaVersion", catalogMeta.schemaVersion.toDouble())
+          putBoolean("fullRescanRequired", catalogMeta.fullRescanRequired)
         }
     promise.resolve(meta)
   }

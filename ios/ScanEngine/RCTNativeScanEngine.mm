@@ -2,6 +2,10 @@
 
 #import <React/RCTUtils.h>
 
+#import "DBCatalogDatabase.h"
+#import "DBCatalogMeta.h"
+#import "DBIndexWriter.h"
+
 static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED";
 
 @implementation RCTNativeScanEngine
@@ -17,7 +21,7 @@ static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED"
            reject:(RCTPromiseRejectBlock)reject
 {
   reject(kScanEngineNotImplemented,
-         @"startScan is not implemented until ScanEngine pipeline wires IndexWriter (M1-09+)",
+         @"startScan is not implemented until scan orchestrator wires Grouper (M1-10+)",
          nil);
 }
 
@@ -59,9 +63,11 @@ static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED"
 
 - (void)getCatalogMeta:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
+  DBIndexWriter *writer = [[DBIndexWriter alloc] initWithDatabase:[DBCatalogDatabase sharedDatabase]];
+  DBCatalogMeta *meta = [writer readCatalogMeta];
   resolve(@{
-    @"schemaVersion" : @0,
-    @"fullRescanRequired" : @NO,
+    @"schemaVersion" : @(meta.schemaVersion),
+    @"fullRescanRequired" : @(meta.fullRescanRequired),
   });
 }
 

@@ -229,6 +229,15 @@ New code must land in these areas unless architecture is amended first.
 - **Invalid UTF-8:** fail closed → `PERMISSION_DENIED` on hash path (no silent RAW_BYTES fallback).
 - **Tests:** `TextNormalizerTest` / `DBTextNormalizerTests`; pipeline tests for AC-equiv-text-01–04; fixture `hash-text-nfc-lf-01.json`.
 
+### 8.9 SQLite catalog + IndexWriter (M1-09)
+
+- **Android:** `com.dupbuster.scanengine.index` — `CatalogSchema`, `CatalogDatabase`, `IndexWriter`, `SqliteSizeBucketIndex`.
+- **iOS:** `ScanEngine/Index/` — `DBCatalogSchema`, `DBCatalogDatabase`, `DBIndexWriter`, `DBSqliteSizeBucketIndex`; link `-lsqlite3`.
+- **Schema:** architecture §5.2 tables; fresh install `schema_version = 2`, `full_rescan_required = 0` in `meta`. v1→v2 migration is M1-15.
+- **IndexWriter:** upsert hashed/unscannable/symlink/size-bucket-skip rows; hard-link alias via `inode`+`device_id` (FR-IX-04); generation purge (FR-IX-03); fingerprint dedupe by `(hash_algo, hash_value, normalization_profile)`.
+- **Bridge:** `getCatalogMeta` returns `{ schemaVersion, fullRescanRequired }` from the catalog DB (not stub zeros).
+- **Tests:** `IndexWriterTest` / `DBIndexWriterTests`; fixture `index-hashed-file-01.json`. Grouper + `duplicate_group` writes are M1-10.
+
 ---
 
 ## 9. Milestones and definition of done
