@@ -184,6 +184,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | M2-SMOKE-12 | A11Y-05 | S4 | Listen at phase start | Hears **`Scanning, discovering files`** (`a11y.scan.discovering`) once on `discovering` entry | ✓ | ✓ |
 | M2-SMOKE-13 | A11Y-04 | S4 | Listen during hashing | Progress announcement uses template `a11y.scan.progress` (percent, files, groups). Mock totals 100 files → cadence at 10% buckets, **not** every native 4 Hz tick | ✓ | ✓ |
 | M2-SMOKE-14 | AC-a11y-match-05, A11Y-04 | S4 | Listen during hashing | Hears **`Analyzing video content`** (`a11y.scan.videoContent`) **once** when mock emits `contentKind=video_content` | ✓ | ✓ |
+| M2-SMOKE-34 | M2-14 | S4 | View `ScanProgress` during mock video hashing step | Phase title remains **`Hashing files`**; on-screen subcopy shows **`Analyzing video content…`** (`scan.phase.videoContent`, testID `scan-progress-phase-subcopy`); subcopy absent on other hashing ticks | ✓ | ✓ |
 | M2-SMOKE-15 | A11Y-05 | S4 | Listen at complete | Hears **`Scan complete`** (`a11y.scan.complete`) | ✓ | ✓ |
 | M2-SMOKE-16 | A11Y-05 | S5 | Pause scan | Hears **`Scan paused`** (`a11y.scan.paused`); **Resume scan** control labeled `a11y.scan.resume` | ✓ | ✓ |
 | M2-SMOKE-17 | A11Y-05 | S6 | Cancel scan | Hears **`Cancelling scan`** then **`Scan cancelled`** (terminal announcements) | ✓ | ✓ |
@@ -263,6 +264,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | M2-SMOKE-31 | | | | | |
 | M2-SMOKE-32 | | | | | |
 | M2-SMOKE-33 | | | | | |
+| M2-SMOKE-34 | | | | | |
 
 ### Accessibility sign-off
 
@@ -279,7 +281,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 
 | implementation-plan §4.2 bullet | Row IDs |
 |----------------------------------|---------|
-| Manual smoke: partial library, denied, progress cadence, cancel terminal | 01–07, 11–17 |
+| Manual smoke: partial library, denied, progress cadence, cancel terminal | 01–07, 11–17, 34 (video subcopy) |
 | Manual smoke: 200% font scale dismiss/CTA | 08, 20 |
 | Manual smoke: delete modal focus | 30 (blocked M3) |
 | Manual smoke: PathChipList multi-path | 31 (blocked M3) |

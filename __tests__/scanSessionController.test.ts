@@ -79,6 +79,20 @@ describe('ScanSessionController', () => {
     expect(controller.getState().coverageVariant).toBe('denied');
   });
 
+  it('preserves contentKind=video_content during mock hashing progress (M2-14)', async () => {
+    const hashingContentKinds: Array<string | undefined> = [];
+    controller.subscribe(state => {
+      if (state.phase === 'hashing') {
+        hashingContentKinds.push(state.progress.contentKind);
+      }
+    });
+
+    await controller.startScan({mode: 'platform_discovery', roots: []});
+    await waitForPhase(controller, 'complete');
+
+    expect(hashingContentKinds).toContain('video_content');
+  });
+
   it('notifies subscribers on progress updates', async () => {
     const seen: string[] = [];
     controller.subscribe(state => {

@@ -331,7 +331,7 @@ New code must land in these areas unless architecture is amended first.
 
 - **`src/components/ScanProgress.tsx`:** Presentational progress for `ScanProgressEvent` / native `ScanPhase`; polite live region; percent line from `notification.scan.body`; stats from `scan.stats.*` + `reclaimable.label`; sticky pause/resume/cancel footer for active phases (`scanProgressDisplay` helpers).
 - **`src/components/ScanStatusChip.tsx`:** Header chip mirroring `getScanPhaseLabel(phase)` (iOS parity).
-- **`src/components/scanProgressDisplay.ts`:** Phase labels, footer visibility, subcopy (`scan.phase.videoContent` when `hashing` + `contentKind=video_content`).
+- **`src/components/scanProgressDisplay.ts`:** Phase labels, footer visibility; subcopy helper `resolveScanProgressSubcopy` (M2-14 wiring lives here and in `ScanProgress`).
 - **`src/controllers/scanProgressA11y.ts`:** Decoupled a11y cadence for M2-07 — 10%/`filesTotalKnown` or 500-file delta (A11Y-04), terminal phase announcements (A11Y-05), `a11y.scan.videoContent` once per hashing entry (AC-a11y-match-05).
 - **`src/utils/formatBytes.ts`:** Reclaimable size formatting.
 - **Tokens:** `scan.phase.*` labels, `scan.stats.*`, `a11y.scan.resume`; bind phase enum from `scanEngineBridge.types.ts` only.
@@ -425,6 +425,14 @@ New code must land in these areas unless architecture is amended first.
 - **Blocked rows:** M2-SMOKE-29 partial (re-verify notice-before-delete when M3 delete lands); M2-SMOKE-30–31 (M3); M2-SMOKE-18 until `reducedMotion` wired from shell.
 - **Sign-off:** QA fills §6 table; Accessibility approves when all non-blocked rows pass on iOS VoiceOver + Android TalkBack.
 - **Re-run:** After M3 delete/path components, or catalog a11y changes.
+
+### Progress video subcopy (M2-14)
+
+- **`resolveScanProgressSubcopy` in `scanProgressDisplay.ts`:** Returns frozen `tokens.scan.phase.videoContent` only when `phase === 'hashing'` and `contentKind === 'video_content'`; `none` or omitted → no subcopy (matches M1-16 bridge policy).
+- **`ScanProgress.tsx`:** Renders subcopy under phase title with `testID` `{progressTestId}-phase-subcopy`; phase title stays `scan.phase.hashing` (not replaced by subcopy).
+- **A11y:** Visual subcopy is separate from AC-a11y-match-05 — `scanProgressA11y` announces `a11y.scan.videoContent` once per hashing pass; do not merge into `accessibilityLabel` on the progress container.
+- **Session:** `ScanSessionController` stores bridge `contentKind` on `state.progress` unchanged; mock engine emits `video_content` mid-hash for shell QA.
+- **Tests:** `npm test -- --testPathPattern='scanProgressDisplay|ScanProgress|scanSessionController'`; manual M2-SMOKE-34.
 
 ### ContentMatchNotice (M2-13)
 

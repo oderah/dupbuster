@@ -64,15 +64,32 @@ describe('ScanProgress', () => {
     expect(json).toContain('12% · 120 files');
   });
 
-  it('shows video subcopy when hashing with video_content', () => {
+  it('shows video subcopy when hashing with video_content (M2-14)', () => {
     const tree = renderProgress({
       progress: progress({
         phase: 'hashing',
         contentKind: 'video_content',
       }),
     });
+    const subcopy = findByTestId(tree.root, 'scan-progress-phase-subcopy');
+    expect(subcopy).not.toBeNull();
+    expect(JSON.stringify(tree.toJSON())).toContain(tokens.scan.phase.videoContent);
+  });
+
+  it('omits video subcopy when hashing without video_content (M2-14)', () => {
+    const tree = renderProgress({
+      progress: progress({phase: 'hashing'}),
+    });
+    expect(findByTestId(tree.root, 'scan-progress-phase-subcopy')).toBeNull();
     const json = JSON.stringify(tree.toJSON());
-    expect(json).toContain(tokens.scan.phase.videoContent);
+    expect(json).not.toContain(tokens.scan.phase.videoContent);
+  });
+
+  it('omits video subcopy when hashing with contentKind none (M2-14)', () => {
+    const tree = renderProgress({
+      progress: progress({phase: 'hashing', contentKind: 'none'}),
+    });
+    expect(findByTestId(tree.root, 'scan-progress-phase-subcopy')).toBeNull();
   });
 
   it('uses pulse dot instead of fill when reducedMotion (A11Y-09)', () => {

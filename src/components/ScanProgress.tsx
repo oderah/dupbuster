@@ -60,7 +60,10 @@ export function ScanProgress({
           {phaseLabel}
         </Text>
         {subcopy ? (
-          <Text style={styles.subcopy} maxFontSizeMultiplier={1.3}>
+          <Text
+            testID={`${testID}-phase-subcopy`}
+            style={styles.subcopy}
+            maxFontSizeMultiplier={1.3}>
             {subcopy}
           </Text>
         ) : null}
