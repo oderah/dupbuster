@@ -113,6 +113,14 @@ describe('tokens a11y freeze (architecture §9.3)', () => {
     expect(tokens.a11y.path.sameFile).toBe('Same file, {n} locations');
   });
 
+  it('match-kind tokens are frozen (architecture §9.3)', () => {
+    expect(tokens.match.exact.label).toBe('Identical files');
+    expect(tokens.match.videoContent.label).toBe('Same video, different quality');
+    expect(tokens.match.videoContent.notice).toBe(
+      'These files contain the same video at different resolutions or formats. Review each file before choosing what to keep or delete.',
+    );
+  });
+
   it('group media type and overflow tokens are frozen', () => {
     expect(tokens.group.overflow).toBe('+{count}');
     expect(tokens.group.mediaType.image).toBe('Photo');

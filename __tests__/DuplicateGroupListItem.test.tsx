@@ -23,6 +23,20 @@ describe('DuplicateGroupListItem', () => {
     ],
   };
 
+  it('shows MatchKindBadge with frozen label (M2-12)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupListItem group={baseGroup} />,
+      );
+    });
+
+    expect(
+      findByTestId(tree!.root, 'duplicate-group-list-item-match-kind-badge'),
+    ).not.toBeNull();
+    expect(JSON.stringify(tree!.toJSON())).toContain(tokens.match.exact.label);
+  });
+
   it('shows match kind, media type, and reclaimable copy (US-09)', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {

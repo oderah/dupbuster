@@ -46,8 +46,9 @@ function delay(ms: number): Promise<void> {
 
 /** Deterministic mock catalog for RN shell until native orchestrator is live. */
 export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
-  const groupId = 1;
-  const members = [
+  const videoGroupId = 1;
+  const exactGroupId = 2;
+  const videoMembers = [
     {
       fileEntryId: 101,
       displayName: 'vacation-1080p.mp4',
@@ -65,21 +66,56 @@ export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
       mediaTypeHint: 'video' as const,
     },
   ];
-  const detail = {
-    groupId,
+  const exactMembers = [
+    {
+      fileEntryId: 201,
+      displayName: 'photo-copy.jpg',
+      sizeBytes: 512_000,
+      mtimeMs: 3000,
+      pathLength: 18,
+      mediaTypeHint: 'image' as const,
+    },
+    {
+      fileEntryId: 202,
+      displayName: 'photo-dup.jpg',
+      sizeBytes: 512_000,
+      mtimeMs: 2500,
+      pathLength: 17,
+      mediaTypeHint: 'image' as const,
+    },
+  ];
+  const videoDetail = {
+    groupId: videoGroupId,
     matchKind: 'SAME_CONTENT_VIDEO' as const,
     memberCount: 2,
     reclaimableBytesEst: 1_000_000,
-    members,
+    members: videoMembers,
+  };
+  const exactDetail = {
+    groupId: exactGroupId,
+    matchKind: 'EXACT_BYTES' as const,
+    memberCount: 2,
+    reclaimableBytesEst: 512_000,
+    members: exactMembers,
   };
   return {
     duplicateGroups: [
       {
-        groupId,
+        groupId: videoGroupId,
         matchKind: 'SAME_CONTENT_VIDEO',
         memberCount: 2,
         reclaimableBytesEst: 1_000_000,
-        thumbnails: members.map(member => ({
+        thumbnails: videoMembers.map(member => ({
+          fileEntryId: member.fileEntryId,
+          mediaTypeHint: member.mediaTypeHint,
+        })),
+      },
+      {
+        groupId: exactGroupId,
+        matchKind: 'EXACT_BYTES',
+        memberCount: 2,
+        reclaimableBytesEst: 512_000,
+        thumbnails: exactMembers.map(member => ({
           fileEntryId: member.fileEntryId,
           mediaTypeHint: member.mediaTypeHint,
         })),
@@ -90,7 +126,8 @@ export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
       LARGE_SKIPPED: 2,
     },
     groupDetailsById: {
-      [groupId]: detail,
+      [videoGroupId]: videoDetail,
+      [exactGroupId]: exactDetail,
     },
   };
 }

@@ -7,10 +7,10 @@ import {
   buildDetailThumbnailSlots,
   formatGroupAccessibilityLabel,
   formatGroupReclaimableLine,
-  getMatchKindLabel,
   summarizeGroupMediaTypes,
 } from '../components/duplicateGroupDisplay';
 import {KeeperSelector} from '../components/KeeperSelector';
+import {MatchKindBadge} from '../components/MatchKindBadge';
 import {toKeeperMembers} from '../components/keeperMembers';
 import {ThumbnailGrid} from '../components/ThumbnailGrid';
 import {computeReclaimableBytesForKeeper} from '../controllers/keeperSelection';
@@ -42,7 +42,6 @@ export function DuplicateGroupDetailScreen({
   const reclaimableLine = keeperSelection.explicitlyActivated
     ? formatKeeperReclaimableLine(reclaimableBytes)
     : formatGroupReclaimableLine(group.reclaimableBytesEst);
-  const matchKindLabel = getMatchKindLabel(group.matchKind);
   const mediaTypeSummary = summarizeGroupMediaTypes(
     group.members.map(member => member.mediaTypeHint),
   );
@@ -54,9 +53,11 @@ export function DuplicateGroupDetailScreen({
       contentContainerStyle={styles.content}
       accessibilityLabel={accessibilityLabel}>
       <View style={styles.header}>
-        <Text style={styles.matchKind} maxFontSizeMultiplier={1.3}>
-          {matchKindLabel}
-        </Text>
+        <MatchKindBadge
+          matchKind={group.matchKind}
+          presentation="prominent"
+          testID={`${testID}-match-kind-badge`}
+        />
         <Text style={styles.mediaType} maxFontSizeMultiplier={1.3}>
           {mediaTypeSummary}
         </Text>
@@ -93,10 +94,6 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: tokens.spacing.xs,
-  },
-  matchKind: {
-    ...tokens.typography.heading,
-    color: tokens.color.text.primary,
   },
   mediaType: {
     ...tokens.typography.caption,

@@ -63,9 +63,10 @@ describe('scanSessionReducer', () => {
       schemaVersion: 2,
       fullRescanRequired: false,
     });
-    expect(state.duplicateGroups).toHaveLength(1);
+    expect(state.duplicateGroups).toHaveLength(2);
     expect(state.unscannableCounts.HASH_TIMEOUT).toBe(1);
     expect(state.groupDetailsById[1]).toBeDefined();
+    expect(state.groupDetailsById[2]).toBeDefined();
     expect(state.rescanPresentation).toBeNull();
   });
 

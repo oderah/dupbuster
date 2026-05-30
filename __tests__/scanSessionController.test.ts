@@ -57,7 +57,7 @@ describe('ScanSessionController', () => {
 
     const state = controller.getState();
     expect(state.scanRunId).not.toBeNull();
-    expect(state.duplicateGroups).toHaveLength(1);
+    expect(state.duplicateGroups).toHaveLength(2);
     expect(state.unscannableCounts.LARGE_SKIPPED).toBe(2);
     expect(state.progressAccessibilityLabel).toBe(tokens.a11y.scan.complete);
   });

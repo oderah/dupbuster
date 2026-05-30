@@ -141,7 +141,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 |---------|---------------|--------|
 | M2-SMOKE-30 | M3-01 | `DeleteConfirmModal` not implemented |
 | M2-SMOKE-31 | M3-02 | `PathChipList` not implemented |
-| M2-SMOKE-22, 27–29 | M2-12, M2-13, mock data | `EXACT_BYTES` list row needs mock group; `MatchKindBadge` / `ContentMatchNotice` not implemented |
+| M2-SMOKE-22, 28–29 | M2-13 | `ContentMatchNotice` not implemented |
 | M2-SMOKE-18 | Shell wiring | `reducedMotion` prop not passed from `App.tsx` — verify A11Y-09 via automated tests until wired |
 
 ---
@@ -196,7 +196,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | ID | Ref | Setup | Steps | Expected | iOS | Android |
 |----|-----|-------|-------|----------|-----|---------|
 | M2-SMOKE-21 | AC-a11y-match-01 | S4 | Focus list item after complete | Label matches `a11y.group.videoContent` with `{count}` → **"Same video at different quality, 2 files"** (mock group) | ✓ | ✓ |
-| M2-SMOKE-22 | AC-a11y-match-01 | S4 | Compare EXACT_BYTES group | *Blocked until mock catalog includes `EXACT_BYTES` group* — label should use `a11y.group.exact` | — | — |
+| M2-SMOKE-22 | AC-a11y-match-01 | S4 | Compare EXACT_BYTES group | Label uses `a11y.group.exact` → **"Identical files, 2 copies"** (mock exact-bytes group) | ✓ | ✓ |
 | M2-SMOKE-23 | A11Y-06, AC-a11y-keeper-01 | S11 | Traverse keeper radiogroup | Group label **`Choose file to keep`**; largest member **suggested** but **not** `selected` until explicit activation | ✓ | ✓ |
 | M2-SMOKE-24 | AC-action-keeper-01 | S11 | Swipe through radio items before tap | No item announces `selected` until user activates one | ✓ | ✓ |
 | M2-SMOKE-25 | FR-AC-02 | S11 | Activate preset chips | Preset buttons speak `keeper.preset.*` labels; selection updates | ✓ | ✓ |
@@ -206,7 +206,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 
 | ID | Ref | Setup | Steps | Expected | iOS | Android |
 |----|-----|-------|-------|----------|-----|---------|
-| M2-SMOKE-27 | AC-a11y-match-03 | S11 | Inspect match kind badge | **Blocked (M2-12)** — readable text for both match kinds, not color-only | — | — |
+| M2-SMOKE-27 | AC-a11y-match-03 | S11 | Inspect match kind badge | Readable label text for both variants (`tokens.match.*.label`); not color-only | ✓ | ✓ |
 | M2-SMOKE-28 | AC-a11y-match-02 | S11 | Enter SAME_CONTENT_VIDEO detail | **Blocked (M2-13)** — polite **`ContentMatchNotice`** once on mount | — | — |
 | M2-SMOKE-29 | AC-a11y-match-04 | S11 | Traverse detail focus order | **Blocked (M2-13 + M3 delete)** — notice before delete button | — | — |
 
@@ -287,4 +287,4 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | AC-a11y-coverage-01 through AC-a11y-path-01 | Coverage + progress + keeper rows; path/delete blocked |
 | AC-a11y-match-01 through AC-a11y-match-05 | 21–29 |
 
-Re-run this matrix after M2-12, M2-13, or M3 lands the blocked components.
+Re-run this matrix after M2-13 or M3 lands the blocked components.

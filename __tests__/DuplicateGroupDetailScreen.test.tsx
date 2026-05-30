@@ -45,6 +45,19 @@ describe('DuplicateGroupDetailScreen', () => {
     onApplyKeeperPreset: jest.fn(),
   };
 
+  it('renders MatchKindBadge in header (M2-12)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
+      );
+    });
+
+    expect(
+      findByTestId(tree!.root, 'duplicate-group-detail-match-kind-badge'),
+    ).not.toBeNull();
+  });
+
   it('shows match kind, reclaimable, and member rows', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {

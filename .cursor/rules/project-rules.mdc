@@ -369,7 +369,7 @@ New code must land in these areas unless architecture is amended first.
 - **`DuplicateGroupDetailScreen`:** Composes `KeeperSelector`; reclaimable line switches to non-keeper sum after explicit keeper pick.
 - **Tokens:** `keeper.preset.*`, `keeper.education.title` / `general` / `dismiss` (catalog copy); `keeper.education.videoContent` unchanged.
 - **`DuplicateGroupMember`:** Requires `mtimeMs` + `pathLength` for preset resolution.
-- **Deferred:** `MatchKindBadge` (M2-12), `ContentMatchNotice` (M2-13), delete button + `DeleteConfirmModal` (M3).
+- **Deferred:** `ContentMatchNotice` (M2-13), delete button + `DeleteConfirmModal` (M3).
 - **Tests:** `npm test -- --testPathPattern='Keeper|keeper'` + tokens keeper preset/education tests; AC-action-keeper-01/02, AC-a11y-keeper-01, FR-AC-02/05/06.
 
 ### ScanSessionController (M2-07)
@@ -422,9 +422,18 @@ New code must land in these areas unless architecture is amended first.
 
 - **`tests/manual/m2-voiceover-talkback-smoke-matrix.md`:** QA-executable matrix (33 rows) mapping `M2-SMOKE-*` → `A11Y-*` / `AC-a11y-*`; setup appendix (permission variants, mock scan, rescan QA build, dynamic type, RTL, reduced motion).
 - **Prerequisite:** `npm run test:a11y` green before manual session (M2-10).
-- **Blocked rows:** M2-SMOKE-22, 27–29 (M2-12/13); M2-SMOKE-30–31 (M3); M2-SMOKE-18 until `reducedMotion` wired from shell.
+- **Blocked rows:** M2-SMOKE-28–29 (M2-13); M2-SMOKE-30–31 (M3); M2-SMOKE-18 until `reducedMotion` wired from shell.
 - **Sign-off:** QA fills §6 table; Accessibility approves when all non-blocked rows pass on iOS VoiceOver + Android TalkBack.
-- **Re-run:** After M2-12, M2-13, M3 delete/path components, or catalog a11y changes.
+- **Re-run:** After M2-13, M3 delete/path components, or catalog a11y changes.
+
+### MatchKindBadge (M2-12)
+
+- **`src/components/MatchKindBadge.tsx`:** Presentational badge for `EXACT_BYTES` vs `SAME_CONTENT_VIDEO`; copy from `getMatchKindLabel` / `tokens.match.*.label`; `presentation` `compact` (list) or `prominent` (detail).
+- **Visual:** Secondary surface for exact bytes; caution surface for video content — **always** includes readable label text (AC-a11y-match-03), not color-only.
+- **Composition:** `DuplicateGroupListItem` + `DuplicateGroupDetailScreen` render badge instead of inline `Text`.
+- **Types:** `src/types/matchKindBadge.ts`.
+- **Mock catalog:** `createMockCatalogSnapshot()` includes both match kinds for manual smoke M2-SMOKE-22/27.
+- **Tests:** `npm test -- --testPathPattern='MatchKindBadge|DuplicateGroup'`; a11y gate cases in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-a11y-match-03.
 
 ---
 

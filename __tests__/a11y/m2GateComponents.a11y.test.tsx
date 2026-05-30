@@ -3,6 +3,7 @@ import ReactTestRenderer from 'react-test-renderer';
 
 import {CoverageBanner} from '../../src/components/CoverageBanner';
 import {KeeperSelector} from '../../src/components/KeeperSelector';
+import {MatchKindBadge} from '../../src/components/MatchKindBadge';
 import {RescanPromptBanner} from '../../src/components/RescanPromptBanner';
 import {ScanProgress} from '../../src/components/ScanProgress';
 import {createKeeperSelectionState} from '../../src/controllers/keeperSelection';
@@ -168,6 +169,23 @@ describe('M2 gate components — automated a11y (M2-10)', () => {
           onDismiss={jest.fn()}
           onRescan={jest.fn()}
         />,
+      );
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
+  });
+
+  describe('MatchKindBadge', () => {
+    it.each([
+      ['EXACT_BYTES' as const],
+      ['SAME_CONTENT_VIDEO' as const],
+    ])('%s variant has zero critical violations', matchKind => {
+      const root = renderRoot(<MatchKindBadge matchKind={matchKind} />);
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
+
+    it('prominent SAME_CONTENT_VIDEO has zero critical violations', () => {
+      const root = renderRoot(
+        <MatchKindBadge matchKind="SAME_CONTENT_VIDEO" presentation="prominent" />,
       );
       expect(root).toHaveZeroCriticalA11yViolations();
     });

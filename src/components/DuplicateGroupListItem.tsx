@@ -7,9 +7,9 @@ import {
   buildListThumbnailSlots,
   formatGroupAccessibilityLabel,
   formatGroupReclaimableLine,
-  getMatchKindLabel,
   resolveGroupMediaTypeSummary,
 } from './duplicateGroupDisplay';
+import {MatchKindBadge} from './MatchKindBadge';
 import {ThumbnailGrid} from './ThumbnailGrid';
 
 const LIST_THUMB_CELL_SIZE = 72;
@@ -26,7 +26,6 @@ export function DuplicateGroupListItem({
   );
   const reclaimableLine = formatGroupReclaimableLine(group.reclaimableBytesEst);
   const mediaTypeSummary = resolveGroupMediaTypeSummary(group);
-  const matchKindLabel = getMatchKindLabel(group.matchKind);
 
   const content = (
     <>
@@ -36,9 +35,11 @@ export function DuplicateGroupListItem({
         testID={`${testID}-thumbnails`}
       />
       <View style={styles.meta}>
-        <Text style={styles.matchKind} maxFontSizeMultiplier={1.3}>
-          {matchKindLabel}
-        </Text>
+        <MatchKindBadge
+          matchKind={group.matchKind}
+          presentation="compact"
+          testID={`${testID}-match-kind-badge`}
+        />
         <Text style={styles.mediaType} maxFontSizeMultiplier={1.3}>
           {mediaTypeSummary}
         </Text>
@@ -89,11 +90,6 @@ const styles = StyleSheet.create({
   meta: {
     flex: 1,
     gap: tokens.spacing.xs,
-  },
-  matchKind: {
-    ...tokens.typography.body,
-    fontWeight: '600',
-    color: tokens.color.text.primary,
   },
   mediaType: {
     ...tokens.typography.caption,
