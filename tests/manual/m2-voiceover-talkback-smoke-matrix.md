@@ -141,7 +141,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 |---------|---------------|--------|
 | M2-SMOKE-30 | M3-01 | `DeleteConfirmModal` not implemented |
 | M2-SMOKE-31 | M3-02 | `PathChipList` not implemented |
-| M2-SMOKE-22, 28–29 | M2-13 | `ContentMatchNotice` not implemented |
+| M2-SMOKE-29 (delete focus order) | M3 | Delete button not implemented — notice-before-delete partial until M3 |
 | M2-SMOKE-18 | Shell wiring | `reducedMotion` prop not passed from `App.tsx` — verify A11Y-09 via automated tests until wired |
 
 ---
@@ -202,13 +202,13 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | M2-SMOKE-25 | FR-AC-02 | S11 | Activate preset chips | Preset buttons speak `keeper.preset.*` labels; selection updates | ✓ | ✓ |
 | M2-SMOKE-26 | FR-AC-05 | S11 | Toggle remember-session checkbox (if shown) | Checkbox role; `accessibilityState.checked` toggles; label readable | ✓ | ✓ |
 
-### 5.5 Match kind + content notice (deferred)
+### 5.5 Match kind + content notice
 
 | ID | Ref | Setup | Steps | Expected | iOS | Android |
 |----|-----|-------|-------|----------|-----|---------|
 | M2-SMOKE-27 | AC-a11y-match-03 | S11 | Inspect match kind badge | Readable label text for both variants (`tokens.match.*.label`); not color-only | ✓ | ✓ |
-| M2-SMOKE-28 | AC-a11y-match-02 | S11 | Enter SAME_CONTENT_VIDEO detail | **Blocked (M2-13)** — polite **`ContentMatchNotice`** once on mount | — | — |
-| M2-SMOKE-29 | AC-a11y-match-04 | S11 | Traverse detail focus order | **Blocked (M2-13 + M3 delete)** — notice before delete button | — | — |
+| M2-SMOKE-28 | AC-a11y-match-02 | S11 | Enter SAME_CONTENT_VIDEO detail | Polite **`ContentMatchNotice`** once on mount (`tokens.match.videoContent.notice`); absent on EXACT_BYTES detail | ✓ | ✓ |
+| M2-SMOKE-29 | AC-a11y-match-04 | S11 | Traverse detail focus order | Notice before keeper controls; **re-verify before delete** when M3 delete lands | ✓ | ✓ |
 
 ### 5.6 Delete + paths (M3)
 
@@ -283,8 +283,9 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | Manual smoke: 200% font scale dismiss/CTA | 08, 20 |
 | Manual smoke: delete modal focus | 30 (blocked M3) |
 | Manual smoke: PathChipList multi-path | 31 (blocked M3) |
-| Manual smoke: ContentMatchNotice before delete | 28–29 (blocked M2-13) |
+| Manual smoke: ContentMatchNotice polite on mount | 28 |
+| Manual smoke: ContentMatchNotice before delete | 29 (partial until M3 delete) |
 | AC-a11y-coverage-01 through AC-a11y-path-01 | Coverage + progress + keeper rows; path/delete blocked |
 | AC-a11y-match-01 through AC-a11y-match-05 | 21–29 |
 
-Re-run this matrix after M2-13 or M3 lands the blocked components.
+Re-run this matrix after M3 delete/path components land.

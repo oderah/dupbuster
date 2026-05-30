@@ -87,6 +87,64 @@ describe('DuplicateGroupDetailScreen', () => {
       .not.toBeNull();
   });
 
+  it('renders ContentMatchNotice for SAME_CONTENT_VIDEO (M2-13)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
+      );
+    });
+
+    expect(
+      findByTestId(tree!.root, 'duplicate-group-detail-content-match-notice'),
+    ).not.toBeNull();
+    expect(JSON.stringify(tree!.toJSON())).toContain(
+      tokens.match.videoContent.notice,
+    );
+  });
+
+  it('omits ContentMatchNotice for EXACT_BYTES (AC-a11y-match-02)', () => {
+    const exactGroup = {
+      ...group,
+      matchKind: 'EXACT_BYTES' as const,
+    };
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={exactGroup} {...keeperProps} />,
+      );
+    });
+
+    const json = JSON.stringify(tree!.toJSON());
+    expect(json).not.toContain(tokens.match.videoContent.notice);
+  });
+
+  it('places ContentMatchNotice before KeeperSelector (AC-a11y-match-04)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
+      );
+    });
+
+    const notice = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-content-match-notice',
+    );
+    const keeper = findByTestId(tree!.root, 'duplicate-group-detail-keeper');
+    expect(notice).not.toBeNull();
+    expect(keeper).not.toBeNull();
+
+    const noticeIndex = tree!.root.findAll(
+      node => node === notice,
+    )[0];
+    const keeperIndex = tree!.root.findAll(
+      node => node === keeper,
+    )[0];
+    const flat = tree!.root.findAll(() => true);
+    expect(flat.indexOf(noticeIndex)).toBeLessThan(flat.indexOf(keeperIndex));
+  });
+
   it('renders KeeperSelector radiogroup (M2-06)', () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {

@@ -9,6 +9,7 @@ import {
   formatGroupReclaimableLine,
   summarizeGroupMediaTypes,
 } from '../components/duplicateGroupDisplay';
+import {ContentMatchNotice} from '../components/ContentMatchNotice';
 import {KeeperSelector} from '../components/KeeperSelector';
 import {MatchKindBadge} from '../components/MatchKindBadge';
 import {toKeeperMembers} from '../components/keeperMembers';
@@ -71,6 +72,11 @@ export function DuplicateGroupDetailScreen({
         cellSize={DETAIL_THUMB_CELL_SIZE}
         columns={3}
         testID={`${testID}-grid`}
+      />
+
+      <ContentMatchNotice
+        matchKind={group.matchKind}
+        testID={`${testID}-content-match-notice`}
       />
 
       <KeeperSelector

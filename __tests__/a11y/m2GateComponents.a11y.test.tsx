@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
+import {ContentMatchNotice} from '../../src/components/ContentMatchNotice';
 import {CoverageBanner} from '../../src/components/CoverageBanner';
 import {KeeperSelector} from '../../src/components/KeeperSelector';
 import {MatchKindBadge} from '../../src/components/MatchKindBadge';
@@ -169,6 +170,15 @@ describe('M2 gate components — automated a11y (M2-10)', () => {
           onDismiss={jest.fn()}
           onRescan={jest.fn()}
         />,
+      );
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
+  });
+
+  describe('ContentMatchNotice', () => {
+    it('SAME_CONTENT_VIDEO variant has zero critical violations', () => {
+      const root = renderRoot(
+        <ContentMatchNotice matchKind="SAME_CONTENT_VIDEO" />,
       );
       expect(root).toHaveZeroCriticalA11yViolations();
     });
