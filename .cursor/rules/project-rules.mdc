@@ -372,6 +372,18 @@ New code must land in these areas unless architecture is amended first.
 - **Deferred:** `MatchKindBadge` (M2-12), `ContentMatchNotice` (M2-13), delete button + `DeleteConfirmModal` (M3).
 - **Tests:** `npm test -- --testPathPattern='Keeper|keeper'` + tokens keeper preset/education tests; AC-action-keeper-01/02, AC-a11y-keeper-01, FR-AC-02/05/06.
 
+### ScanSessionController (M2-07)
+
+- **`src/controllers/scanSessionController.ts`:** `ScanSessionController` class — phase state machine, native progress/error subscriptions, catalog refresh on terminal phases, coverage session keys, keeper/group detail wiring.
+- **`src/controllers/scanSessionReducer.ts`:** Pure reducers for progress/a11y (`advanceScanProgressA11y`), coverage escalation (A11Y-03), `PERMISSION_DENIED` → denied banner, catalog merge, keeper education gate (AC-action-keeper-02).
+- **`src/native/scanEnginePort.ts`:** Injectable `ScanEnginePort`; `createNativeScanEnginePort` (live bridge; empty catalog until orchestrator query APIs); `createMockScanEnginePort` (deterministic mock progress + catalog for RN shell).
+- **`src/types/scanSession.ts`**, **`src/types/scanCatalog.ts`:** Session + catalog read models (not bridge payloads).
+- **`src/hooks/useScanSessionController.ts`:** React subscription hook with dispose on unmount.
+- **`src/screens/ScanSessionScreen.tsx`:** Composes CoverageBanner, ScanProgress, UnscannableSummaryCard, DuplicateGroupListItem, DuplicateGroupDetailScreen, KeeperEducationSheet from controller state.
+- **`App.tsx`:** Uses mock engine + `ScanSessionScreen` until M2-08 permission flows and live orchestrator land.
+- **Catalog:** `getCatalogSnapshot()` on port — mock populated; native returns empty until post–M1-12 orchestrator adds query bridge methods.
+- **Tests:** `npm test -- --testPathPattern='scanSession|ScanSession'`; AC-a11y-coverage-01/03 via reducer, AC-action-keeper-02, A11Y-04/05 via progress integration.
+
 ---
 
 ## 9. Milestones and definition of done
