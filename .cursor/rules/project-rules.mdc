@@ -418,6 +418,14 @@ New code must land in these areas unless architecture is amended first.
 - **Run:** `npm run test:a11y` (`jest --testPathPattern='__tests__/a11y/'`); included in full `npm test`.
 - **Tests:** `__tests__/a11y/m2GateComponents.a11y.test.tsx`, `__tests__/a11y/a11yGate.test.tsx`.
 
+### Manual VoiceOver / TalkBack smoke matrix (M2-11)
+
+- **`tests/manual/m2-voiceover-talkback-smoke-matrix.md`:** QA-executable matrix (33 rows) mapping `M2-SMOKE-*` → `A11Y-*` / `AC-a11y-*`; setup appendix (permission variants, mock scan, rescan QA build, dynamic type, RTL, reduced motion).
+- **Prerequisite:** `npm run test:a11y` green before manual session (M2-10).
+- **Blocked rows:** M2-SMOKE-22, 27–29 (M2-12/13); M2-SMOKE-30–31 (M3); M2-SMOKE-18 until `reducedMotion` wired from shell.
+- **Sign-off:** QA fills §6 table; Accessibility approves when all non-blocked rows pass on iOS VoiceOver + Android TalkBack.
+- **Re-run:** After M2-12, M2-13, M3 delete/path components, or catalog a11y changes.
+
 ---
 
 ## 9. Milestones and definition of done
