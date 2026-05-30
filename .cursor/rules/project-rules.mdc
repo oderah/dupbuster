@@ -409,6 +409,15 @@ New code must land in these areas unless architecture is amended first.
 - **Tokens:** `component.rescanPromptBanner.minHeight` (matches coverage banner).
 - **Tests:** `npm test -- --testPathPattern='RescanPrompt|rescanPrompt|rescanPromptSession'`.
 
+### Automated a11y suite (M2-10)
+
+- **`src/testing/a11yGate/`:** DupBuster A11yGate — Jest equivalent of `react-native-accessibility-engine` (RNAE 3.2.0 breaks on React 19 at import time via `isReactTestInstance` prototype init). Rules mirror RNAE ids; all gate rules are **critical** (zero violations required).
+- **Matcher:** `expect(root).toHaveZeroCriticalA11yViolations()` registered in `jest.setup.js` via `registerA11yGateMatchers()`.
+- **Gate components:** `CoverageBanner` (partial / limited-library / denied), `ScanProgress` (hashing / paused / video_content), `KeeperSelector` (default + remember-session), `RescanPromptBanner`. `DeleteConfirmModal` case is `it.todo` until M3.
+- **Type detection:** `isPressableType` / `isTextType` match by component `displayName`/`name` — reference equality fails across Jest module boundaries for RN primitives.
+- **Run:** `npm run test:a11y` (`jest --testPathPattern='__tests__/a11y/'`); included in full `npm test`.
+- **Tests:** `__tests__/a11y/m2GateComponents.a11y.test.tsx`, `__tests__/a11y/a11yGate.test.tsx`.
+
 ---
 
 ## 9. Milestones and definition of done
@@ -462,6 +471,12 @@ Fixture layout per `docs/implementation-plan.md` §9.2. Add new fixtures when ad
 | Following symlinks for duplicate detection | Requirements §4 | Index symlink node only; `is_symlink` |
 | JS-thread hashing or SQLite writes for scan path | Performance architecture | Native ScanEngine |
 | Second catalog source of truth | FR-IX-01 | Single SQLite index |
+
+### Testing (M2 a11y)
+
+| Banned | Why | Use instead |
+|-----|-----|----|
+| `react-native-accessibility-engine` in Jest (React 19) | Package init calls `react-test-renderer.create` without `act()` → suite fails before tests run | `src/testing/a11yGate` + `npm run test:a11y` |
 
 ### Product scope (defer list — requires new debate)
 
