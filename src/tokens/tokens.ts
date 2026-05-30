@@ -76,6 +76,9 @@ export const tokens = {
     coverageBanner: {
       minHeight: 56,
     },
+    rescanPromptBanner: {
+      minHeight: 56,
+    },
     scanProgress: {
       height: 64,
     },

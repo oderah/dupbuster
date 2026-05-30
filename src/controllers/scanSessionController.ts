@@ -9,8 +9,11 @@ import {
   reduceScanSessionCloseGroup,
   reduceScanSessionDismissCoverage,
   reduceScanSessionDismissKeeperEducation,
+  reduceScanSessionDismissRescanPrompt,
   reduceScanSessionMarkCoverageDisplayed,
+  reduceScanSessionMarkRescanPromptDisplayed,
   reduceScanSessionOnCatalogLoaded,
+  reduceScanSessionOnCatalogMetaLoaded,
   reduceScanSessionOnProgress,
   reduceScanSessionOnScanError,
   reduceScanSessionOnScanStarted,
@@ -113,8 +116,16 @@ export class ScanSessionController {
     this.dispatch(reduceScanSessionDismissCoverage(this.state));
   }
 
+  dismissRescanPrompt(): void {
+    this.dispatch(reduceScanSessionDismissRescanPrompt(this.state));
+  }
+
   markCoverageBannerDisplayed(): void {
     this.dispatch(reduceScanSessionMarkCoverageDisplayed(this.state));
+  }
+
+  markRescanPromptDisplayed(): void {
+    this.dispatch(reduceScanSessionMarkRescanPromptDisplayed(this.state));
   }
 
   openGroupDetail(groupId: number): void {
@@ -162,7 +173,7 @@ export class ScanSessionController {
   private async refreshCatalogMeta(): Promise<void> {
     try {
       const catalogMeta = await this.engine.getCatalogMeta();
-      this.dispatch({...this.state, catalogMeta});
+      this.dispatch(reduceScanSessionOnCatalogMetaLoaded(this.state, catalogMeta));
     } catch {
       // Native stub may reject until DB is ready; shell stays usable.
     }

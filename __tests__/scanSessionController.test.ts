@@ -103,4 +103,21 @@ describe('ScanSessionController', () => {
       101,
     );
   });
+
+  it('loads rescan prompt from catalog meta on init (M2-09)', async () => {
+    controller.dispose();
+    const engine = createMockScanEnginePort({
+      catalogMeta: {schemaVersion: 2, fullRescanRequired: true},
+      simulateScan: false,
+    });
+    controller = createScanSessionController(engine);
+    await new Promise<void>(resolve => {
+      setTimeout(resolve, 0);
+    });
+    expect(controller.getState().rescanPresentation).toEqual({
+      rescanSessionKey: 'schema:2',
+      firstDisplayAlertEligible: true,
+      dismissedForSession: false,
+    });
+  });
 });

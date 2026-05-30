@@ -4,6 +4,7 @@ import type {KeeperSelectionState} from './keeper';
 import type {CatalogMeta, ScanPhase, ScanProgressEvent, ScanRootMode, ScanStartOptions} from './scanEngine';
 import type {UnscannableCountsByReason} from './unscannableSummary';
 import type {CoverageBannerSessionState} from '../controllers/coverageSessionState';
+import type {RescanPromptPresentation, RescanPromptSessionState} from '../controllers/rescanPromptSessionState';
 import type {ScanProgressA11yState} from '../controllers/scanProgressA11y';
 import type {KeeperEducationSessionState} from '../controllers/keeperEducationSession';
 
@@ -32,6 +33,8 @@ export type ScanSessionState = {
   limitedLibraryCount?: number;
   coverageBannerSession: CoverageBannerSessionState;
   coveragePresentation: ScanSessionCoveragePresentation | null;
+  rescanPromptSession: RescanPromptSessionState;
+  rescanPresentation: RescanPromptPresentation | null;
   catalogMeta: CatalogMeta | null;
   duplicateGroups: DuplicateGroupSummary[];
   unscannableCounts: UnscannableCountsByReason;

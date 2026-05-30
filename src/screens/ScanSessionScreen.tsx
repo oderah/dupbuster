@@ -11,6 +11,7 @@ import {
 import {CoverageBanner} from '../components/CoverageBanner';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
 import {KeeperEducationSheet} from '../components/KeeperEducationSheet';
+import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
 import {ScanStatusChip} from '../components/ScanStatusChip';
 import {UnscannableSummaryCard} from '../components/UnscannableSummaryCard';
@@ -52,6 +53,10 @@ export function ScanSessionScreen({
     state.coveragePresentation != null &&
     !state.coveragePresentation.dismissedForSession;
 
+  const showRescanPrompt =
+    state.rescanPresentation != null &&
+    !state.rescanPresentation.dismissedForSession;
+
   const showUnscannableSummary =
     state.phase === 'complete' ||
     state.phase === 'error' ||
@@ -76,6 +81,22 @@ export function ScanSessionScreen({
           onExpandCoverage={onExpandCoverage}
           onOpenSettings={onOpenSettings}
           testID={`${testID}-coverage-banner`}
+        />
+      ) : null}
+
+      {showRescanPrompt && state.rescanPresentation ? (
+        <RescanPromptBanner
+          rescanSessionKey={state.rescanPresentation.rescanSessionKey}
+          firstDisplayAlertEligible={
+            state.rescanPresentation.firstDisplayAlertEligible
+          }
+          dismissedForSession={state.rescanPresentation.dismissedForSession}
+          onDismiss={() => controller.dismissRescanPrompt()}
+          onRescan={() => {
+            controller.markRescanPromptDisplayed();
+            onStartScan();
+          }}
+          testID={`${testID}-rescan-prompt-banner`}
         />
       ) : null}
 

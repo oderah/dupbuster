@@ -1,7 +1,9 @@
 import {
   createInitialScanSessionState,
   reduceScanSessionDismissCoverage,
+  reduceScanSessionDismissRescanPrompt,
   reduceScanSessionOnCatalogLoaded,
+  reduceScanSessionOnCatalogMetaLoaded,
   reduceScanSessionOnProgress,
   reduceScanSessionOnScanError,
   reduceScanSessionOpenGroup,
@@ -64,6 +66,22 @@ describe('scanSessionReducer', () => {
     expect(state.duplicateGroups).toHaveLength(1);
     expect(state.unscannableCounts.HASH_TIMEOUT).toBe(1);
     expect(state.groupDetailsById[1]).toBeDefined();
+    expect(state.rescanPresentation).toBeNull();
+  });
+
+  it('surfaces rescan prompt when catalog meta requires full rescan (FR-IX-05)', () => {
+    let state = createInitialScanSessionState();
+    state = reduceScanSessionOnCatalogMetaLoaded(state, {
+      schemaVersion: 2,
+      fullRescanRequired: true,
+    });
+    expect(state.rescanPresentation).toEqual({
+      rescanSessionKey: 'schema:2',
+      firstDisplayAlertEligible: true,
+      dismissedForSession: false,
+    });
+    state = reduceScanSessionDismissRescanPrompt(state);
+    expect(state.rescanPresentation?.dismissedForSession).toBe(true);
   });
 
   it('applies remember-largest preset when opening group detail (FR-AC-05)', () => {

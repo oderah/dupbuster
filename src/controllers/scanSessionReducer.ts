@@ -6,6 +6,12 @@ import {
   resolveCoverageBannerPresentation,
 } from './coverageSessionState';
 import {
+  createRescanPromptSessionState,
+  dismissRescanPromptForSession,
+  markRescanPromptDisplayed,
+  resolveRescanPromptPresentation,
+} from './rescanPromptSessionState';
+import {
   applyKeeperPreset,
   createKeeperSelectionState,
   selectKeeperMember,
@@ -59,14 +65,27 @@ function applyProgressEvent(
   };
 }
 
+function applyCatalogMeta(
+  state: ScanSessionState,
+  catalogMeta: CatalogMeta | null,
+): ScanSessionState {
+  return {
+    ...state,
+    catalogMeta,
+    rescanPresentation: resolveRescanPromptPresentation(
+      catalogMeta,
+      state.rescanPromptSession,
+    ),
+  };
+}
+
 function mergeCatalogIntoState(
   state: ScanSessionState,
   catalog: ScanCatalogSnapshot,
   catalogMeta: CatalogMeta | null,
 ): ScanSessionState {
   return {
-    ...state,
-    catalogMeta,
+    ...applyCatalogMeta(state, catalogMeta),
     duplicateGroups: catalog.duplicateGroups,
     unscannableCounts: catalog.unscannableCounts,
     groupDetailsById: catalog.groupDetailsById,
@@ -88,6 +107,7 @@ export function createInitialScanSessionState(
   } = {},
 ): ScanSessionState {
   const coverageBannerSession = createCoverageBannerSessionState();
+  const rescanPromptSession = createRescanPromptSessionState();
   const coverageVariant = options.coverageVariant ?? null;
   const a11y = createScanProgressA11yState();
   const progress = {
@@ -114,6 +134,8 @@ export function createInitialScanSessionState(
       options.limitedLibraryCount,
       coverageBannerSession,
     ),
+    rescanPromptSession,
+    rescanPresentation: null,
     catalogMeta: null,
     duplicateGroups: [],
     unscannableCounts: {},
@@ -151,6 +173,13 @@ export function reduceScanSessionOnCatalogLoaded(
   catalogMeta: CatalogMeta | null,
 ): ScanSessionState {
   return mergeCatalogIntoState(state, catalog, catalogMeta);
+}
+
+export function reduceScanSessionOnCatalogMetaLoaded(
+  state: ScanSessionState,
+  catalogMeta: CatalogMeta | null,
+): ScanSessionState {
+  return applyCatalogMeta(state, catalogMeta);
 }
 
 export function reduceScanSessionOnScanError(
@@ -221,6 +250,45 @@ export function reduceScanSessionDismissCoverage(
           firstDisplayAlertEligible: false,
         }
       : null,
+  };
+}
+
+export function reduceScanSessionDismissRescanPrompt(
+  state: ScanSessionState,
+): ScanSessionState {
+  const rescanPromptSession = dismissRescanPromptForSession(
+    state.rescanPromptSession,
+  );
+  return {
+    ...state,
+    rescanPromptSession,
+    rescanPresentation: state.rescanPresentation
+      ? {
+          ...state.rescanPresentation,
+          dismissedForSession: true,
+          firstDisplayAlertEligible: false,
+        }
+      : null,
+  };
+}
+
+export function reduceScanSessionMarkRescanPromptDisplayed(
+  state: ScanSessionState,
+): ScanSessionState {
+  const rescanPromptSession = markRescanPromptDisplayed(
+    state.rescanPresentation?.rescanSessionKey ?? '',
+    state.rescanPromptSession,
+  );
+  const rescanPresentation = state.rescanPresentation
+    ? {
+        ...state.rescanPresentation,
+        firstDisplayAlertEligible: false,
+      }
+    : null;
+  return {
+    ...state,
+    rescanPromptSession,
+    rescanPresentation,
   };
 }
 

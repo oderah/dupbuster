@@ -399,6 +399,16 @@ New code must land in these areas unless architecture is amended first.
 - **Limited-library count:** JS permission layer uses `0` placeholder until native catalog exposes authorized PHAsset count.
 - **Tests:** `npm test -- --testPathPattern='scanPermission|ScanPermission'`; `jest.setup.js` mocks permission + picker native modules.
 
+### RescanPromptBanner (M2-09)
+
+- **`src/components/RescanPromptBanner.tsx`:** Presentational banner when `catalogMeta.fullRescanRequired` (FR-IX-05 / US-15); copy from `rescan.required`; rescan CTA uses `notification.scan.title`; caution surface; dismiss reuses `a11y.coverage.dismiss` / `dismissHint`.
+- **`src/controllers/rescanPromptSessionState.ts`:** Session dismiss + first-display alert keyed by `schema:${schemaVersion}`.
+- **`src/types/rescanPromptBanner.ts`:** Component props.
+- **`ScanSessionController`:** `refreshCatalogMeta` → `reduceScanSessionOnCatalogMetaLoaded`; `dismissRescanPrompt` / `markRescanPromptDisplayed`.
+- **`ScanSessionScreen`:** Renders below `CoverageBanner`; `onRescan` delegates to permission-driven `onStartScan`.
+- **Tokens:** `component.rescanPromptBanner.minHeight` (matches coverage banner).
+- **Tests:** `npm test -- --testPathPattern='RescanPrompt|rescanPrompt|rescanPromptSession'`.
+
 ---
 
 ## 9. Milestones and definition of done
