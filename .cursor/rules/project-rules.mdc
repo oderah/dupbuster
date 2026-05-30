@@ -380,9 +380,24 @@ New code must land in these areas unless architecture is amended first.
 - **`src/types/scanSession.ts`**, **`src/types/scanCatalog.ts`:** Session + catalog read models (not bridge payloads).
 - **`src/hooks/useScanSessionController.ts`:** React subscription hook with dispose on unmount.
 - **`src/screens/ScanSessionScreen.tsx`:** Composes CoverageBanner, ScanProgress, UnscannableSummaryCard, DuplicateGroupListItem, DuplicateGroupDetailScreen, KeeperEducationSheet from controller state.
-- **`App.tsx`:** Uses mock engine + `ScanSessionScreen` until M2-08 permission flows and live orchestrator land.
+- **`App.tsx`:** Uses `createNativeScanPermissionPort` + mock scan engine until live orchestrator catalog bridge lands.
 - **Catalog:** `getCatalogSnapshot()` on port — mock populated; native returns empty until post–M1-12 orchestrator adds query bridge methods.
 - **Tests:** `npm test -- --testPathPattern='scanSession|ScanSession'`; AC-a11y-coverage-01/03 via reducer, AC-action-keeper-02, A11Y-04/05 via progress integration.
+
+### Permission flows (M2-08)
+
+- **`src/types/scanPermission.ts`:** `ScanPermissionSnapshot`, injectable `ScanPermissionPort`.
+- **`src/permissions/resolveCoverageFromPermission.ts`:** Maps snapshot → `CoverageBanner` variant (`partial` / `denied` / `limited-library` / hidden on iOS full grant).
+- **`src/permissions/buildScanStartRequest.ts`:** Mode B (`platform_discovery`) vs Mode A (`user_selected`) from snapshot.
+- **`src/permissions/scanPermissionPort.ts`:** `createMockScanPermissionPort` for Jest/shell.
+- **`src/permissions/nativeScanPermissionPort.ts`:** Production port — `react-native-permissions` (media + iOS `openPhotoPicker`), `@react-native-documents/picker` `pickDirectory({requestLongTermAccess:true})`, `Linking.openSettings`, `AppState` refresh.
+- **`src/hooks/useScanPermissionFlow.ts`:** Syncs coverage into `ScanSessionController`; `handleStartScan` requests grants then starts scan; banner CTAs call expand/settings handlers.
+- **`ScanSessionScreen`:** Requires `onStartScan` / `onExpandCoverage` / `onOpenSettings` from permission flow (no demo start flag).
+- **`App.tsx`:** `createNativeScanPermissionPort` + mock scan engine until orchestrator catalog bridge lands.
+- **Manifests:** Android `READ_MEDIA_*` + legacy `READ_EXTERNAL_STORAGE` (maxSdk 32); iOS `NSPhotoLibraryUsageDescription` from `denied.blocking`; Podfile `setup_permissions(['PhotoLibrary'])`.
+- **Dependencies:** `react-native-permissions`, `@react-native-documents/picker` — iOS requires `pod install` after Podfile change.
+- **Limited-library count:** JS permission layer uses `0` placeholder until native catalog exposes authorized PHAsset count.
+- **Tests:** `npm test -- --testPathPattern='scanPermission|ScanPermission'`; `jest.setup.js` mocks permission + picker native modules.
 
 ---
 

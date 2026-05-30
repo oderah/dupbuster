@@ -1,34 +1,35 @@
 /**
- * DupBuster scan shell — wires ScanSessionController to the M2 UI catalog.
+ * DupBuster scan shell — wires ScanSessionController + permission flows (M2-08).
  */
 import React, {useMemo} from 'react';
 import {StatusBar, StyleSheet, useColorScheme} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 
+import {useScanPermissionFlow} from './src/hooks/useScanPermissionFlow';
 import {useScanSessionController} from './src/hooks/useScanSessionController';
+import {createNativeScanPermissionPort} from './src/permissions/nativeScanPermissionPort';
 import {createMockScanEnginePort} from './src/native/scanEnginePort';
 import {ScanSessionScreen} from './src/screens/ScanSessionScreen';
 
 function AppContent(): React.JSX.Element {
   const engine = useMemo(() => createMockScanEnginePort(), []);
-  const sessionOptions = useMemo(
-    () => ({coverageVariant: 'partial' as const}),
-    [],
-  );
-  const {state, controller} = useScanSessionController(engine, sessionOptions);
+  const permissionPort = useMemo(() => createNativeScanPermissionPort(), []);
+  const {state, controller} = useScanSessionController(engine);
+  const {handleStartScan, handleExpandCoverage, handleOpenSettings} =
+    useScanPermissionFlow(controller, permissionPort);
 
   return (
     <ScanSessionScreen
       state={state}
       controller={controller}
-      showStartScanControl
       onStartScan={() => {
-        controller
-          .startScan({
-            mode: 'platform_discovery',
-            roots: [],
-          })
-          .catch(() => {});
+        handleStartScan().catch(() => {});
+      }}
+      onExpandCoverage={() => {
+        handleExpandCoverage().catch(() => {});
+      }}
+      onOpenSettings={() => {
+        handleOpenSettings().catch(() => {});
       }}
     />
   );

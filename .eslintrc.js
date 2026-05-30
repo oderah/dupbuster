@@ -7,5 +7,6 @@ module.exports = {
     '**/.cxx/**',
     'ios/Pods/**',
     'coverage/',
+    'jest.setup.js',
   ],
 };

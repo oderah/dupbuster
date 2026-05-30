@@ -23,9 +23,9 @@ export type ScanSessionScreenProps = {
   state: ScanSessionState;
   controller: ScanSessionController;
   reducedMotion?: boolean;
-  /** Dev/demo harness — M2-08 wires permission-driven start. */
-  showStartScanControl?: boolean;
-  onStartScan?: () => void;
+  onStartScan: () => void;
+  onExpandCoverage: () => void;
+  onOpenSettings: () => void;
   testID?: string;
 };
 
@@ -33,8 +33,9 @@ export function ScanSessionScreen({
   state,
   controller,
   reducedMotion = false,
-  showStartScanControl = false,
   onStartScan,
+  onExpandCoverage,
+  onOpenSettings,
   testID = 'scan-session',
 }: ScanSessionScreenProps): React.JSX.Element {
   const selectedGroup =
@@ -72,8 +73,8 @@ export function ScanSessionScreen({
           dismissedForSession={state.coveragePresentation.dismissedForSession}
           limitedLibraryCount={state.limitedLibraryCount}
           onDismiss={() => controller.dismissCoverageBanner()}
-          onExpandCoverage={() => controller.markCoverageBannerDisplayed()}
-          onOpenSettings={() => controller.markCoverageBannerDisplayed()}
+          onExpandCoverage={onExpandCoverage}
+          onOpenSettings={onOpenSettings}
           testID={`${testID}-coverage-banner`}
         />
       ) : null}
@@ -98,7 +99,7 @@ export function ScanSessionScreen({
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         accessibilityLabel="Duplicate scan results">
-        {showStartScanControl && state.phase === 'idle' ? (
+        {state.phase === 'idle' ? (
           <Pressable
             testID={`${testID}-start-scan`}
             accessibilityRole="button"
