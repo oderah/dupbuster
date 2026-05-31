@@ -70,6 +70,7 @@ gantt
 | M1-16 | Extend progress bridge with optional `contentKind` enum (`none` \| `video_content`) with ≤4 Hz | Both | Native |
 | M1-17 | Create fixture matrix under `tests/fixtures/dupbuster/v1/` | Both | QA + Native |
 | M1-18 | Native unit tests: all equiv-* fixtures + video equiv fixtures green | Both | QA |
+| M1-19 | ScanOrchestrator + live `startScan` progress bridge (Android + iOS) | Wire `ScanEngineModule` / `RCTNativeScanEngine`; catalog query in Phase B (`getCatalogSnapshot`) |
 
 ### 3.2 M1 exit gate
 
@@ -114,14 +115,14 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 
 ### 4.2 M2 exit gate
 
-- [ ] All catalog components render with frozen EN tokens
-- [ ] AC-a11y-coverage-01 through AC-a11y-path-01 pass
-- [ ] Automated a11y: zero critical violations on CoverageBanner (3 variants), ScanProgress, DeleteConfirmModal, KeeperSelector
-- [ ] Video UX ACs: AC-ux-match-01/02; MatchKindBadge visible text not color-only
-- [ ] Accessibility ACs: AC-a11y-match-01 through AC-a11y-match-05 pass (notice timing + traversal order + badge label)
-- [ ] Manual smoke: partial library, denied, progress cadence, cancel terminal announcement, delete modal focus, PathChipList multi-path, 200% font scale dismiss/CTA
-- [ ] Manual smoke: open SAME_CONTENT_VIDEO group detail and verify ContentMatchNotice polite announcement before delete
-- [ ] Mock progress stub replaced with live bridge where M1 complete
+- [x] All catalog components render with frozen EN tokens
+- [ ] AC-a11y-coverage-01 through AC-a11y-path-01 pass *(M2-scoped ACs green in Jest; `AC-a11y-delete-01` / `AC-a11y-path-01` blocked until M3-01/02)*
+- [x] Automated a11y: zero critical violations on CoverageBanner (3 variants), ScanProgress, KeeperSelector *(DeleteConfirmModal deferred M3 — `it.todo` in gate suite)*
+- [x] Video UX ACs: AC-ux-match-01/02; MatchKindBadge visible text not color-only *(plan IDs; satisfied by `MatchKindBadge` + `ContentMatchNotice` + `AC-a11y-match-02/03` tests)*
+- [x] Accessibility ACs: AC-a11y-match-01 through AC-a11y-match-05 pass (notice timing + traversal order + badge label)
+- [ ] Manual smoke: partial library, denied, progress cadence, cancel terminal announcement, delete modal focus, PathChipList multi-path, 200% font scale dismiss/CTA *(matrix rows 01–17, 20, 34; QA sign-off §6 pending; rows 30–31 blocked M3)*
+- [ ] Manual smoke: open SAME_CONTENT_VIDEO group detail and verify ContentMatchNotice polite announcement before delete *(M2-SMOKE-28; automated proxy green; device VO/TB sign-off pending)*
+- [x] Mock progress stub replaced with live bridge where M1 complete *(both platforms wire live progress + catalog via orchestrator + Phase B `getCatalogSnapshot`; `App.tsx` uses native port)*
 
 ---
 

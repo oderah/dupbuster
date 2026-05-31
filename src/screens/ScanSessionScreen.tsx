@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import {
   Modal,
   Pressable,
@@ -10,7 +10,6 @@ import {
 
 import {CoverageBanner} from '../components/CoverageBanner';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
-import {KeeperEducationSheet} from '../components/KeeperEducationSheet';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
 import {ScanStatusChip} from '../components/ScanStatusChip';
@@ -19,6 +18,11 @@ import type {ScanSessionController} from '../controllers/scanSessionController';
 import {DuplicateGroupDetailScreen} from '../screens/DuplicateGroupDetailScreen';
 import {tokens} from '../tokens/tokens';
 import type {ScanSessionState} from '../types/scanSession';
+
+const LazyKeeperEducationSheet = React.lazy(async () => {
+  const module = await import('../components/KeeperEducationSheet');
+  return {default: module.KeeperEducationSheet};
+});
 
 export type ScanSessionScreenProps = {
   state: ScanSessionState;
@@ -181,12 +185,16 @@ export function ScanSessionScreen({
         ) : null}
       </Modal>
 
-      <KeeperEducationSheet
-        visible={state.keeperEducationVisible}
-        matchKind={selectedGroup?.matchKind ?? 'EXACT_BYTES'}
-        onDismiss={() => controller.dismissKeeperEducation()}
-        testID={`${testID}-keeper-education`}
-      />
+      {state.keeperEducationVisible ? (
+        <Suspense fallback={null}>
+          <LazyKeeperEducationSheet
+            visible
+            matchKind={selectedGroup?.matchKind ?? 'EXACT_BYTES'}
+            onDismiss={() => controller.dismissKeeperEducation()}
+            testID={`${testID}-keeper-education`}
+          />
+        </Suspense>
+      ) : null}
     </View>
   );
 }

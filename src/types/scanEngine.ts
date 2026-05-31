@@ -3,6 +3,11 @@
  */
 export type {
   CatalogMeta,
+  CatalogSnapshot,
+  CatalogSnapshotGroupDetail,
+  CatalogSnapshotGroupSummary,
+  CatalogSnapshotMember,
+  CatalogSnapshotThumbnail,
   DeleteDuplicatesCommand,
   DeleteDuplicatesResult,
   MatchKind,

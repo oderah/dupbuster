@@ -1,9 +1,8 @@
-#import <Foundation/Foundation.h>
 #import <NativeScanEngineSpec/NativeScanEngineSpec.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTNativeScanEngine : NSObject <NativeScanEngineSpec>
+@interface RCTNativeScanEngine : NativeScanEngineSpecBase <NativeScanEngineSpec>
 
 @end
 

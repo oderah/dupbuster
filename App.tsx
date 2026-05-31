@@ -5,23 +5,27 @@ import React, {useMemo} from 'react';
 import {StatusBar, StyleSheet, useColorScheme} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 
+import {useReducedMotion} from './src/hooks/useReducedMotion';
 import {useScanPermissionFlow} from './src/hooks/useScanPermissionFlow';
 import {useScanSessionController} from './src/hooks/useScanSessionController';
 import {createNativeScanPermissionPort} from './src/permissions/nativeScanPermissionPort';
-import {createMockScanEnginePort} from './src/native/scanEnginePort';
+import {createNativeScanEnginePort} from './src/native/scanEnginePort';
+import NativeScanEngine from './src/native/NativeScanEngine';
 import {ScanSessionScreen} from './src/screens/ScanSessionScreen';
 
 function AppContent(): React.JSX.Element {
-  const engine = useMemo(() => createMockScanEnginePort(), []);
+  const engine = useMemo(() => createNativeScanEnginePort(NativeScanEngine), []);
   const permissionPort = useMemo(() => createNativeScanPermissionPort(), []);
   const {state, controller} = useScanSessionController(engine);
   const {handleStartScan, handleExpandCoverage, handleOpenSettings} =
     useScanPermissionFlow(controller, permissionPort);
+  const reducedMotion = useReducedMotion();
 
   return (
     <ScanSessionScreen
       state={state}
       controller={controller}
+      reducedMotion={reducedMotion}
       onStartScan={() => {
         handleStartScan().catch(() => {});
       }}

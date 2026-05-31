@@ -82,6 +82,45 @@ export type CatalogMeta = {
   fullRescanRequired: boolean;
 };
 
+/** Catalog read bridge (Phase B) — separate from progress/error events. */
+export type CatalogSnapshotThumbnail = {
+  fileEntryId: Double;
+  mediaTypeHint: string;
+  thumbnailUri?: string;
+};
+
+export type CatalogSnapshotGroupSummary = {
+  groupId: Double;
+  matchKind: string;
+  memberCount: Double;
+  reclaimableBytesEst: Double;
+  thumbnails: ReadonlyArray<CatalogSnapshotThumbnail>;
+};
+
+export type CatalogSnapshotMember = {
+  fileEntryId: Double;
+  displayName: string;
+  sizeBytes: Double;
+  mtimeMs: Double;
+  pathLength: Double;
+  mediaTypeHint: string;
+  thumbnailUri?: string;
+};
+
+export type CatalogSnapshotGroupDetail = {
+  groupId: Double;
+  matchKind: string;
+  memberCount: Double;
+  reclaimableBytesEst: Double;
+  members: ReadonlyArray<CatalogSnapshotMember>;
+};
+
+export type CatalogSnapshot = {
+  duplicateGroups: ReadonlyArray<CatalogSnapshotGroupSummary>;
+  unscannableCounts: Object;
+  groupDetailsById: Object;
+};
+
 export interface Spec extends TurboModule {
   readonly onScanProgress: EventEmitter<ScanProgressEvent>;
   readonly onScanError: EventEmitter<ScanErrorEvent>;
@@ -92,6 +131,7 @@ export interface Spec extends TurboModule {
   cancelScan(scanRunId: Double): Promise<void>;
   deleteDuplicates(command: DeleteDuplicatesCommand): Promise<DeleteDuplicatesResult>;
   getCatalogMeta(): Promise<CatalogMeta>;
+  getCatalogSnapshot(): Promise<CatalogSnapshot>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('NativeScanEngine');

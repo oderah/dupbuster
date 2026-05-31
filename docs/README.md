@@ -42,7 +42,7 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - **Events (native → JS):** `onScanProgress`, `onScanError` — bridge law: no paths, hashes, or file bytes on events.
 - **Codegen:** `package.json` → `codegenConfig` (`ScanEngineSpec`, `jsSrcsDir`: `src/native`). Regenerated on Android build via `generateCodegenArtifactsFromSchema`.
 - **iOS:** After pulling, run `cd ios && bundle exec pod install` on macOS so codegen + `modulesProvider` link `RCTNativeScanEngine`.
-- Stubs reject scan/delete commands until scan orchestrator wiring (M1-12+) / M3 delete; `getCatalogMeta` reads live catalog metadata from IndexWriter (M1-09).
+- Stubs reject **delete** until M3; **`startScan` / pause / resume / cancel** wired on Android and iOS via M1-19 orchestrator.
 
 ### UriValidator (M1-03)
 
@@ -180,7 +180,23 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 - `findResumableRun` returns latest `running` or `paused` row (process-kill relaunch); `abandonForRestart` clears resumability.
 - No second active `scan_run` for the same `root_id` + `generation`.
 - **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests` — native resume store (full restart prompt AC is M3).
-- Scan pipeline orchestrator + `startScan` wiring follows in a later M1 task.
+- Scan pipeline orchestrator + `startScan` wiring: **M1-19** — Android `scan/ScanOrchestrator.kt`, iOS `ScanEngine/Scan/DBScanOrchestrator.m`.
+
+### ScanOrchestrator (M1-19)
+
+| Piece | Android | iOS |
+|-------|---------|-----|
+| Orchestrator | `scan/ScanOrchestrator.kt` | `Scan/DBScanOrchestrator.m` |
+| Factory | `ScanOrchestratorFactory.kt` | `Scan/DBScanOrchestratorFactory.m` |
+| Bridge wiring | `ScanEngineModule.kt` | `RCTNativeScanEngine.mm` (`NativeScanEngineSpecBase`) |
+| Progress | `ScanProgressBridge` | `DBScanProgressBridge` |
+| Errors | `ScanErrorBridgeMapper` | `DBScanErrorBridgeMapper` |
+
+- Pipeline: discovery → stat → hash → index → grouper; runs off the JS thread.
+- Mode A (`user_selected`) + Mode B (`platform_discovery`) via production discovery runner.
+- **`getCatalogSnapshot`:** live on both platforms via `CatalogReader` (Phase B); `App.tsx` uses native port.
+- `resumeScanRunId` rejected until resume wiring; production `VideoFrameExtractor` not wired (RAW_BYTES only for video until decode lands).
+- **Tests:** Android `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.scan.*'` + `--tests 'com.dupbuster.scanengine.index.CatalogReaderTest'`; iOS `DupbusterScanEngineTests`.
 
 ### VideoFingerprinter (M1-13)
 
@@ -238,11 +254,31 @@ Native ScanEngine code lives under `android/.../scanengine/` and `ios/ScanEngine
 
 Implementation proceeds in milestones as defined in `docs/implementation-plan.md`.
 
-- **M1** (in progress): Native ScanEngine spike (discovery, hashing, SQLite index, progress throttle, checkpoint, video fingerprinting)
-- **M2**: React Native shell + UX catalog (can stub progress until bridge is live)
+- **M1** (exit gate ✅): Native ScanEngine — discovery, hashing, SQLite index, progress throttle, checkpoint, video fingerprinting, fixture matrix
+- **M2** (tasks ✅, exit gate partial): RN shell + UX catalog — M2-01…M2-14 complete; automated gate + live bridge green; manual smoke sign-off pending (see below)
 - **M3**: Actions + integrity (two-step delete, TOCTOU, permission-revoke pause/resume)
 - **M4**: Background + release hardening (Android FGS, redaction gate, store checklist)
 - **M5**: Deliverable docs (this folder)
+
+### M2 exit gate verification (2026-05-29)
+
+**Automated (green on `dev`):**
+
+| Check | Command / evidence |
+|-------|-------------------|
+| Lint | `npm run lint` |
+| Full Jest | `npm test` — 187 passed, 1 todo (`DeleteConfirmModal` M3) |
+| A11y gate | `npm run test:a11y` — zero critical violations on M2 gate components |
+| Frozen tokens | `__tests__/tokens.test.ts` — requirements §9 + architecture §9.3 verbatim |
+| Coverage / progress / keeper ACs | `CoverageBanner`, `scanProgressA11y`, `KeeperSelector` tests |
+| Match-kind ACs | `MatchKindBadge`, `ContentMatchNotice`, `DuplicateGroup*` tests |
+
+**Still open for M2 sign-off:**
+
+| Exit-gate bullet | Blocker |
+|------------------|---------|
+| Manual smoke matrix | QA executes `tests/manual/m2-voiceover-talkback-smoke-matrix.md` §5–§6 on iOS VoiceOver + Android TalkBack; rows 30–31 blocked M3 |
+| `AC-a11y-delete-01` / `AC-a11y-path-01` | M3-01 `DeleteConfirmModal`, M3-02 `PathChipList` |
 
 ## Working on a milestone
 

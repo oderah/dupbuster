@@ -86,6 +86,45 @@ export type CatalogMeta = {
   fullRescanRequired: boolean;
 };
 
+/** Catalog read bridge (Phase B) — aligned with [NativeScanEngine.ts]. */
+export type CatalogSnapshotThumbnail = {
+  fileEntryId: number;
+  mediaTypeHint: MediaTypeHint;
+  thumbnailUri?: string;
+};
+
+export type CatalogSnapshotGroupSummary = {
+  groupId: number;
+  matchKind: MatchKind;
+  memberCount: number;
+  reclaimableBytesEst: number;
+  thumbnails: readonly CatalogSnapshotThumbnail[];
+};
+
+export type CatalogSnapshotMember = {
+  fileEntryId: number;
+  displayName: string;
+  sizeBytes: number;
+  mtimeMs: number;
+  pathLength: number;
+  mediaTypeHint: MediaTypeHint;
+  thumbnailUri?: string;
+};
+
+export type CatalogSnapshotGroupDetail = {
+  groupId: number;
+  matchKind: MatchKind;
+  memberCount: number;
+  reclaimableBytesEst: number;
+  members: readonly CatalogSnapshotMember[];
+};
+
+export type CatalogSnapshot = {
+  duplicateGroups: readonly CatalogSnapshotGroupSummary[];
+  unscannableCounts: Partial<Record<UnscannableReason, number>>;
+  groupDetailsById: Readonly<Record<number, CatalogSnapshotGroupDetail>>;
+};
+
 export const TERMINAL_SCAN_PHASES = [
   'complete',
   'cancelled',

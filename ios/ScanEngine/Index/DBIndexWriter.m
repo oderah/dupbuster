@@ -56,6 +56,69 @@
   return (NSInteger)sqlite3_last_insert_rowid(db);
 }
 
+- (nullable NSNumber *)findScanRootIdForUriOrGrant:(NSString *)uriOrGrant
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(db, "SELECT id FROM scan_root WHERE uri_or_grant = ? ORDER BY id DESC LIMIT 1", -1, &stmt, NULL);
+  sqlite3_bind_text(stmt, 1, uriOrGrant.UTF8String, -1, SQLITE_TRANSIENT);
+  NSNumber *rootId = nil;
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    rootId = @(sqlite3_column_int64(stmt, 0));
+  }
+  sqlite3_finalize(stmt);
+  return rootId;
+}
+
+- (NSInteger)findOrInsertScanRootWithUriOrGrant:(NSString *)uriOrGrant mode:(NSString *)mode
+{
+  NSNumber *existing = [self findScanRootIdForUriOrGrant:uriOrGrant];
+  if (existing != nil) {
+    return existing.integerValue;
+  }
+  return [self insertScanRootWithUriOrGrant:uriOrGrant mode:mode platformReason:nil];
+}
+
+- (NSInteger)nextGenerationForRootId:(NSInteger)rootId
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(
+      db, "SELECT COALESCE(MAX(generation), 0) + 1 FROM scan_run WHERE root_id = ?", -1, &stmt, NULL);
+  sqlite3_bind_int64(stmt, 1, rootId);
+  NSInteger generation = 1;
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    generation = sqlite3_column_int(stmt, 0);
+  }
+  sqlite3_finalize(stmt);
+  return generation;
+}
+
+- (BOOL)updateScanRunCheckpoint:(NSInteger)scanRunId
+                lastProcessedId:(int64_t)lastProcessedId
+                          error:(NSError **)error
+{
+  return [_checkpointStore saveCheckpointForRunId:scanRunId lastProcessedId:lastProcessedId error:error];
+}
+
+- (BOOL)completeScanRunWithId:(NSInteger)scanRunId error:(NSError **)error
+{
+  int64_t endedAtMs = (int64_t)(NSDate.date.timeIntervalSince1970 * 1000);
+  return [_checkpointStore markCompleteRunWithId:scanRunId endedAtMs:endedAtMs error:error];
+}
+
+- (NSInteger)upsertUnscannableWithReason:(NSString *)reason
+                                  staged:(DBStagedFile *)staged
+                              generation:(NSInteger)generation
+{
+  return [self upsertFileEntryWithStaged:staged
+                              generation:generation
+                           fingerprintId:0
+                   rawContentFingerprintId:0
+                       unscannableReason:reason
+                               isSymlink:staged.isSymlink];
+}
+
 - (NSInteger)beginScanRunWithGeneration:(NSInteger)generation rootId:(NSInteger)rootId
 {
   NSError *error = nil;

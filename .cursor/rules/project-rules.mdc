@@ -166,6 +166,7 @@ New code must land in these areas unless architecture is amended first.
 - **Sign-off:** `./build.sh` not yet present — use `npm run lint` and `npm test` until M4 adds unified build script.
 - **WSL Android builds:** Gradle/CMake in WSL require a **Linux** Android SDK (`sdk.dir` like `/home/<you>/Android/Sdk`) with NDK prebuilt `toolchains/llvm/prebuilt/linux-x86_64`. A Windows SDK mounted at `/mnt/c/...` only has `windows-x86_64` — native modules (RN New Architecture) fail with missing `clang`. **Do not** symlink `windows-x86_64` as `linux-x86_64`. Use Windows SDK only when building from **Windows** (PowerShell), with `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk`. Template: `android/local.properties.example`.
 - **WSL emulator + build:** Linux SDK at `~/Android/Sdk` for Gradle/NDK (`sdk.dir` in `local.properties`). Run `bash scripts/setup-wsl-adb.sh` to install ELF `scripts/adb-proxy` as `platform-tools/adb` (forwards to Windows `adb.exe`; CRLF-safe `devices` output). Use `npm run android` → `scripts/run-android-wsl.sh` (`assembleDebug` + `adb install`) because Gradle `installDebug` uses DDMLib on WSL port 5037 and cannot see the Windows emulator. Fallback: `npm run android:rn` (stock RN; needs DDMLib bridge fix). Do not use shell `alias adb` for Gradle.
+- **Metro after emulator restart:** `adb reverse tcp:8081 tcp:8081` is cleared when the emulator reboots → red screen **Unable to load script**. Run `npm run android:connect` (or re-run `npm run android`) with Metro up (`npm start`). Reload app (R R).
 - **NDK version:** set via `ndkVersion` in `android/build.gradle` + `android/app/build.gradle`; do **not** use `ndk.dir` in `local.properties` (deprecated CXX5106).
 
 ### 8.2 ScanEngine Turbo Module interface (M1-02)
@@ -174,7 +175,8 @@ New code must land in these areas unless architecture is amended first.
 - **Codegen:** `package.json` → `codegenConfig.name` = `ScanEngineSpec`, `jsSrcsDir` = `src/native`, `android.javaPackageName` = `com.dupbuster.scanengine`, iOS `modulesProvider.NativeScanEngine` → `RCTNativeScanEngine`.
 - **Codegen constraint:** Bridge types for the spec must live **inline** in `NativeScanEngine.ts` (codegen does not follow imports from sibling files). Keep `scanEngineBridge.types.ts` aligned manually for Jest/controllers.
 - **Android registration:** `ScanEnginePackage` in `MainApplication` `PackageList` (not autolinked).
-- **Bridge surface:** Commands `startScan` / `pauseScan` / `resumeScan` / `cancelScan` / `deleteDuplicates` / `getCatalogMeta`; events `onScanProgress` / `onScanError` per `docs/architecture.md` §6.5 and §11.
+- **Bridge surface:** Commands `startScan` / `pauseScan` / `resumeScan` / `cancelScan` / `deleteDuplicates` / `getCatalogMeta` / `getCatalogSnapshot`; events `onScanProgress` / `onScanError` per `docs/architecture.md` §6.5 and §11.
+- **Codegen EventEmitter:** Turbo Module event emitters are **callable** `(handler) => { remove() }`, not `{ addListener }`. `createNativeScanEnginePort` normalizes progress/error payloads and binds native methods. Orchestrator emits must run on the RN module thread (`runOnNativeModulesQueueThread` Android; main queue iOS) — not the scan executor thread.
 
 ### 8.3 UriValidator (M1-03)
 
@@ -272,7 +274,7 @@ New code must land in these areas unless architecture is amended first.
 - **`contentKind`:** Hashing phase only — `video_content` during `VIDEO_CONTENT_V1` pass; `none` for other hashing work; omitted elsewhere.
 - **Bridge law:** `assertBridgeSafePayload` — contract keys only; no paths/hashes/bytes.
 - **Tests:** `ScanProgressContentKindPolicyTest`, `ScanProgressBridgeMapperTest`, extended throttle tests; fixture `integrity-progress-02.json` (AC-integrity-progress-02).
-- **Orchestrator:** Call `ScanProgressBridge.reportHashingProgress(...)` when pipeline wiring lands (post–M1-12).
+- **Orchestrator:** `ScanOrchestrator` (M1-19) calls `ScanProgressBridge.reportHashingProgress(...)` during hashing.
 
 ### CheckpointStore (M1-12)
 
@@ -281,7 +283,30 @@ New code must land in these areas unless architecture is amended first.
 - **API:** `beginRun` / `saveCheckpoint` / `findResumableRun` / `pauseRun` / `resumeRun` / `abandonForRestart`; rejects conflicting active runs for same `root_id` + `generation`.
 - **IndexWriter:** `beginScanRun` / `updateScanRunCheckpoint` / `completeScanRun` delegate to `CheckpointStore`.
 - **Tests:** `CheckpointStoreTest` / `DBCheckpointStoreTests`; fixture `integrity-resume-01.json` (native resume data layer; full AC-integrity-resume-01 UI prompt is M3).
-- **Orchestrator:** Pipeline wiring (`startScan` → stages → throttled `onScanProgress`) is post–M1-12; store is ready for orchestrator consumption.
+
+### ScanOrchestrator (M1-19)
+
+- **Android package:** `com.dupbuster.scanengine.scan` — `ScanOrchestrator`, `ScanOrchestratorFactory`, `ScanStartRequestParser`, `ScanRootResolver`, `ProductionScanDiscoveryRunner`.
+- **iOS package:** `ScanEngine/Scan/` — `DBScanOrchestrator`, `DBScanOrchestratorFactory`, `DBScanStartRequestParser`, `DBScanRootResolver`, `DBProductionScanDiscoveryRunner`.
+- **Module:** `ScanEngineModule` / `RCTNativeScanEngine` delegate `startScan` / `pauseScan` / `resumeScan` / `cancelScan` to orchestrator; `deleteDuplicates` still M3 stub.
+- **Bridge helpers:** `ScanProgressBridge` / `DBScanProgressBridge`, `ScanErrorBridgeMapper` / `DBScanErrorBridgeMapper`; iOS module extends `NativeScanEngineSpecBase` for `emitOnScanProgress` / `emitOnScanError`.
+- **Pipeline:** discovery → stat → hash (`SqliteSizeBucketIndex` / `SqliteDurationBucketIndex`) → `IndexWriter` → `Grouper`; background executor/queue; phase progress via progress bridge (flush on phase transitions).
+- **Errors:** bridge-safe `onScanError` (`fileEntryId`, `unscannableReason`, optional `scanRunId` only).
+- **Not in M1-19:** `resumeScanRunId`, production `VideoFrameExtractor` (video hashes `RAW_BYTES` only until decode wired).
+- **Tests:** Android `ScanOrchestratorTest`, `ScanStartRequestParserTest` — `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.scan.*'`; iOS `DBScanOrchestratorTests`, `DBScanStartRequestParserTests` — Xcode `DupbusterScanEngineTests` target.
+
+### CatalogReader + `getCatalogSnapshot` bridge (Phase B)
+
+- **Android:** `com.dupbuster.scanengine.index.CatalogReader` — reads `duplicate_group`, `duplicate_member`, `file_entry`, unscannable aggregates from SQLite.
+- **iOS:** `ScanEngine/Index/DBCatalogReader` — same queries via `sqlite3`.
+- **Bridge mappers:** `CatalogSnapshotBridgeMapper` / `DBCatalogSnapshotBridgeMapper` — `JavaOnlyMap`/`NSDictionary` payloads; thumbnail slots expose only `fileEntryId`, `mediaTypeHint`, optional `thumbnailUri` (full member rows in `groupDetailsById`).
+- **Android EventEmitter maps:** `JavaOnlyMap` is OK for `Promise.resolve` (e.g. catalog snapshot) but **not** for codegen `emitOnScanProgress` / `emitOnScanError` — convert to `Arguments.createMap()` (`WritableNativeMap`) in `ScanEngineModule.toEventEmitterMap` before emit; otherwise RN crashes with `Cannot convert argument of type class JavaOnlyMap`.
+- **Turbo Module:** `getCatalogSnapshot()` added to `NativeScanEngine.ts` codegen spec; maps to `ScanCatalogSnapshot` via `mapCatalogSnapshot` in `scanEnginePort.ts`.
+- **Media hint:** Derived from `display_name` + `duration_ms > 0` → video; not stored in SQLite.
+- **`pathLength`:** `uri_or_path.length` for shortest-path keeper preset (FR-AC-02).
+- **Bridge law:** Separate read API from progress/error events; allowed fields only per mapper allowlists.
+- **`App.tsx`:** Uses `createNativeScanEnginePort(NativeScanEngine)`; Jest keeps `createMockScanEnginePort`.
+- **Tests:** `CatalogReaderTest`, `CatalogSnapshotBridgeMapperTest` / `DBCatalogReaderTests`; `__tests__/scanEnginePort.test.ts` for JS mapper.
 
 ### VideoFingerprinter (M1-13)
 
@@ -376,12 +401,12 @@ New code must land in these areas unless architecture is amended first.
 
 - **`src/controllers/scanSessionController.ts`:** `ScanSessionController` class — phase state machine, native progress/error subscriptions, catalog refresh on terminal phases, coverage session keys, keeper/group detail wiring.
 - **`src/controllers/scanSessionReducer.ts`:** Pure reducers for progress/a11y (`advanceScanProgressA11y`), coverage escalation (A11Y-03), `PERMISSION_DENIED` → denied banner, catalog merge, keeper education gate (AC-action-keeper-02).
-- **`src/native/scanEnginePort.ts`:** Injectable `ScanEnginePort`; `createNativeScanEnginePort` (live bridge; empty catalog until orchestrator query APIs); `createMockScanEnginePort` (deterministic mock progress + catalog for RN shell).
+- **`src/native/scanEnginePort.ts`:** Injectable `ScanEnginePort`; `createNativeScanEnginePort` (live bridge + `getCatalogSnapshot`); `createMockScanEnginePort` (deterministic mock progress + catalog for Jest).
 - **`src/types/scanSession.ts`**, **`src/types/scanCatalog.ts`:** Session + catalog read models (not bridge payloads).
 - **`src/hooks/useScanSessionController.ts`:** React subscription hook with dispose on unmount.
 - **`src/screens/ScanSessionScreen.tsx`:** Composes CoverageBanner, ScanProgress, UnscannableSummaryCard, DuplicateGroupListItem, DuplicateGroupDetailScreen, KeeperEducationSheet from controller state.
-- **`App.tsx`:** Uses `createNativeScanPermissionPort` + mock scan engine until live orchestrator catalog bridge lands.
-- **Catalog:** `getCatalogSnapshot()` on port — mock populated; native returns empty until post–M1-12 orchestrator adds query bridge methods.
+- **`App.tsx`:** Uses `createNativeScanPermissionPort` + `createNativeScanEnginePort(NativeScanEngine)`.
+- **Catalog:** `getCatalogSnapshot()` on port reads SQLite via native `CatalogReader` after terminal scan phases.
 - **Tests:** `npm test -- --testPathPattern='scanSession|ScanSession'`; AC-a11y-coverage-01/03 via reducer, AC-action-keeper-02, A11Y-04/05 via progress integration.
 
 ### Permission flows (M2-08)
@@ -393,7 +418,7 @@ New code must land in these areas unless architecture is amended first.
 - **`src/permissions/nativeScanPermissionPort.ts`:** Production port — `react-native-permissions` (media + iOS `openPhotoPicker`), `@react-native-documents/picker` `pickDirectory({requestLongTermAccess:true})`, `Linking.openSettings`, `AppState` refresh.
 - **`src/hooks/useScanPermissionFlow.ts`:** Syncs coverage into `ScanSessionController`; `handleStartScan` requests grants then starts scan; banner CTAs call expand/settings handlers.
 - **`ScanSessionScreen`:** Requires `onStartScan` / `onExpandCoverage` / `onOpenSettings` from permission flow (no demo start flag).
-- **`App.tsx`:** `createNativeScanPermissionPort` + mock scan engine until orchestrator catalog bridge lands.
+- **`App.tsx`:** `createNativeScanPermissionPort` + native scan engine port (catalog read live via Phase B).
 - **Manifests:** Android `READ_MEDIA_*` + legacy `READ_EXTERNAL_STORAGE` (maxSdk 32); iOS `NSPhotoLibraryUsageDescription` from `denied.blocking`; Podfile `setup_permissions(['PhotoLibrary'])`.
 - **Dependencies:** `react-native-permissions`, `@react-native-documents/picker` — iOS requires `pod install` after Podfile change.
 - **Limited-library count:** JS permission layer uses `0` placeholder until native catalog exposes authorized PHAsset count.
@@ -422,7 +447,7 @@ New code must land in these areas unless architecture is amended first.
 
 - **`tests/manual/m2-voiceover-talkback-smoke-matrix.md`:** QA-executable matrix (33 rows) mapping `M2-SMOKE-*` → `A11Y-*` / `AC-a11y-*`; setup appendix (permission variants, mock scan, rescan QA build, dynamic type, RTL, reduced motion).
 - **Prerequisite:** `npm run test:a11y` green before manual session (M2-10).
-- **Blocked rows:** M2-SMOKE-29 partial (re-verify notice-before-delete when M3 delete lands); M2-SMOKE-30–31 (M3); M2-SMOKE-18 until `reducedMotion` wired from shell.
+- **Blocked rows:** M2-SMOKE-29 partial (re-verify notice-before-delete when M3 delete lands); M2-SMOKE-30–31 (M3).
 - **Sign-off:** QA fills §6 table; Accessibility approves when all non-blocked rows pass on iOS VoiceOver + Android TalkBack.
 - **Re-run:** After M3 delete/path components, or catalog a11y changes.
 

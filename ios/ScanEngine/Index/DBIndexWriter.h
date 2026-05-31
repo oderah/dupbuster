@@ -19,7 +19,23 @@ NS_ASSUME_NONNULL_BEGIN
                                      mode:(NSString *)mode
                            platformReason:(nullable NSString *)platformReason;
 
+- (nullable NSNumber *)findScanRootIdForUriOrGrant:(NSString *)uriOrGrant;
+
+- (NSInteger)findOrInsertScanRootWithUriOrGrant:(NSString *)uriOrGrant mode:(NSString *)mode;
+
+- (NSInteger)nextGenerationForRootId:(NSInteger)rootId;
+
 - (NSInteger)beginScanRunWithGeneration:(NSInteger)generation rootId:(NSInteger)rootId;
+
+- (BOOL)updateScanRunCheckpoint:(NSInteger)scanRunId
+                lastProcessedId:(int64_t)lastProcessedId
+                          error:(NSError *_Nullable *_Nullable)error;
+
+- (BOOL)completeScanRunWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
+
+- (NSInteger)upsertUnscannableWithReason:(NSString *)reason
+                                  staged:(DBStagedFile *)staged
+                              generation:(NSInteger)generation;
 
 - (NSInteger)persistHashPipelineResult:(DBHashPipelineResult *)result
                                 staged:(DBStagedFile *)staged

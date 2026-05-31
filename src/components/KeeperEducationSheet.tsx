@@ -10,6 +10,8 @@ import {
 import {tokens} from '../tokens/tokens';
 import type {KeeperEducationSheetProps} from '../types/keeper';
 
+const keeperEducation = tokens.keeper.education;
+
 export function KeeperEducationSheet({
   visible,
   matchKind,
@@ -30,29 +32,29 @@ export function KeeperEducationSheet({
         <Pressable
           style={styles.backdropPress}
           accessibilityRole="button"
-          accessibilityLabel={tokens.keeper.education.dismiss}
+          accessibilityLabel={keeperEducation.dismiss}
           onPress={onDismiss}
         />
         <View style={styles.sheet} accessibilityRole="alert">
           <Text style={styles.title} maxFontSizeMultiplier={1.3}>
-            {tokens.keeper.education.title}
+            {keeperEducation.title}
           </Text>
           <Text style={styles.body} maxFontSizeMultiplier={1.3}>
-            {tokens.keeper.education.general}
+            {keeperEducation.general}
           </Text>
           {showVideoEducation ? (
             <Text style={styles.body} maxFontSizeMultiplier={1.3}>
-              {tokens.keeper.education.videoContent}
+              {keeperEducation.videoContent}
             </Text>
           ) : null}
           <Pressable
             testID={`${testID}-dismiss`}
             accessibilityRole="button"
-            accessibilityLabel={tokens.keeper.education.dismiss}
+            accessibilityLabel={keeperEducation.dismiss}
             onPress={onDismiss}
             style={styles.dismissButton}>
             <Text style={styles.dismissLabel} maxFontSizeMultiplier={1.3}>
-              {tokens.keeper.education.dismiss}
+              {keeperEducation.dismiss}
             </Text>
           </Pressable>
         </View>

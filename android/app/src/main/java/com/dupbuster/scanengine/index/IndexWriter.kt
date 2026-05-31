@@ -41,6 +41,43 @@ class IndexWriter(private val database: CatalogDatabase) {
     return database.writable().insert("scan_root", null, values)
   }
 
+  fun findScanRootId(uriOrGrant: String): Long? {
+    database
+        .readable()
+        .query(
+            "scan_root",
+            arrayOf("id"),
+            "uri_or_grant = ?",
+            arrayOf(uriOrGrant),
+            null,
+            null,
+            "id DESC",
+            "1",
+        )
+        .use { cursor ->
+      return if (cursor.moveToFirst()) cursor.getLong(0) else null
+    }
+  }
+
+  fun findOrInsertScanRoot(
+      uriOrGrant: String,
+      mode: ScanRootMode,
+      platformReason: String? = null,
+  ): Long = findScanRootId(uriOrGrant) ?: insertScanRoot(uriOrGrant, mode, platformReason)
+
+  /** Next scan generation for [rootId] (architecture §6.2 incremental scan). */
+  fun nextGenerationForRoot(rootId: Long): Int {
+    database
+        .readable()
+        .rawQuery(
+            "SELECT COALESCE(MAX(generation), 0) + 1 FROM scan_run WHERE root_id = ?",
+            arrayOf(rootId.toString()),
+        )
+        .use { cursor ->
+      return if (cursor.moveToFirst()) cursor.getInt(0) else 1
+    }
+  }
+
   fun beginScanRun(
       generation: Int,
       rootId: Long? = null,

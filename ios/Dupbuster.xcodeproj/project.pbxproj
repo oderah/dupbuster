@@ -119,6 +119,31 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		D4F8A3602B68210000A75B9A /* DBScanStartRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */; };
+		D4F8A3612B68210000A75B9A /* DBScanStartRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */; };
+		D4F8A3622B68210000A75B9A /* DBScanStartRequestParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3432B68210000A75B9A /* DBScanStartRequestParser.m */; };
+		D4F8A3632B68210000A75B9A /* DBScanStartRequestParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3432B68210000A75B9A /* DBScanStartRequestParser.m */; };
+		D4F8A3642B68210000A75B9A /* DBScanRootResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3452B68210000A75B9A /* DBScanRootResolver.m */; };
+		D4F8A3652B68210000A75B9A /* DBScanRootResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3452B68210000A75B9A /* DBScanRootResolver.m */; };
+		D4F8A3662B68210000A75B9A /* DBScanSessionControl.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3472B68210000A75B9A /* DBScanSessionControl.m */; };
+		D4F8A3672B68210000A75B9A /* DBScanSessionControl.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3472B68210000A75B9A /* DBScanSessionControl.m */; };
+		D4F8A3682B68210000A75B9A /* DBProductionScanDiscoveryRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3492B68210000A75B9A /* DBProductionScanDiscoveryRunner.m */; };
+		D4F8A3692B68210000A75B9A /* DBProductionScanDiscoveryRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3492B68210000A75B9A /* DBProductionScanDiscoveryRunner.m */; };
+		D4F8A36A2B68210000A75B9A /* DBScanOrchestrator.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34B2B68210000A75B9A /* DBScanOrchestrator.m */; };
+		D4F8A36B2B68210000A75B9A /* DBScanOrchestrator.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34B2B68210000A75B9A /* DBScanOrchestrator.m */; };
+		D4F8A36C2B68210000A75B9A /* DBScanOrchestratorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34D2B68210000A75B9A /* DBScanOrchestratorFactory.m */; };
+		D4F8A36D2B68210000A75B9A /* DBScanOrchestratorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34D2B68210000A75B9A /* DBScanOrchestratorFactory.m */; };
+		D4F8A36E2B68210000A75B9A /* DBScanErrorBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34F2B68210000A75B9A /* DBScanErrorBridgeMapper.m */; };
+		D4F8A36F2B68210000A75B9A /* DBScanErrorBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A34F2B68210000A75B9A /* DBScanErrorBridgeMapper.m */; };
+		D4F8A3702B68210000A75B9A /* DBScanProgressBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3512B68210000A75B9A /* DBScanProgressBridge.m */; };
+		D4F8A3712B68210000A75B9A /* DBScanProgressBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3512B68210000A75B9A /* DBScanProgressBridge.m */; };
+		D4F8A3722B68210000A75B9A /* DBScanStartRequestParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3522B68210000A75B9A /* DBScanStartRequestParserTests.m */; };
+		D4F8A3732B68210000A75B9A /* DBScanOrchestratorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3532B68210000A75B9A /* DBScanOrchestratorTests.m */; };
+		D4F8A3742B68220000A75B9A /* DBCatalogReader.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3552B68220000A75B9A /* DBCatalogReader.m */; };
+		D4F8A3752B68220000A75B9A /* DBCatalogReader.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3552B68220000A75B9A /* DBCatalogReader.m */; };
+		D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
+		D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
+		D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -242,6 +267,31 @@
 		D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoContentMatcherTests.m; path = ScanEngineTests/DBVideoContentMatcherTests.m; sourceTree = "<group>"; };
 		D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinterTests.m; path = ScanEngineTests/DBVideoFingerprinterTests.m; sourceTree = "<group>"; };
 		D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBEquivFixturesTests.m; path = ScanEngineTests/DBEquivFixturesTests.m; sourceTree = "<group>"; };
+		D4F8A3402B68210000A75B9A /* DBScanStartRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanStartRequest.h; path = ScanEngine/Scan/DBScanStartRequest.h; sourceTree = "<group>"; };
+		D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequest.m; path = ScanEngine/Scan/DBScanStartRequest.m; sourceTree = "<group>"; };
+		D4F8A3422B68210000A75B9A /* DBScanStartRequestParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanStartRequestParser.h; path = ScanEngine/Scan/DBScanStartRequestParser.h; sourceTree = "<group>"; };
+		D4F8A3432B68210000A75B9A /* DBScanStartRequestParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequestParser.m; path = ScanEngine/Scan/DBScanStartRequestParser.m; sourceTree = "<group>"; };
+		D4F8A3442B68210000A75B9A /* DBScanRootResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanRootResolver.h; path = ScanEngine/Scan/DBScanRootResolver.h; sourceTree = "<group>"; };
+		D4F8A3452B68210000A75B9A /* DBScanRootResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanRootResolver.m; path = ScanEngine/Scan/DBScanRootResolver.m; sourceTree = "<group>"; };
+		D4F8A3462B68210000A75B9A /* DBScanSessionControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanSessionControl.h; path = ScanEngine/Scan/DBScanSessionControl.h; sourceTree = "<group>"; };
+		D4F8A3472B68210000A75B9A /* DBScanSessionControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanSessionControl.m; path = ScanEngine/Scan/DBScanSessionControl.m; sourceTree = "<group>"; };
+		D4F8A3482B68210000A75B9A /* DBProductionScanDiscoveryRunner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBProductionScanDiscoveryRunner.h; path = ScanEngine/Scan/DBProductionScanDiscoveryRunner.h; sourceTree = "<group>"; };
+		D4F8A3492B68210000A75B9A /* DBProductionScanDiscoveryRunner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBProductionScanDiscoveryRunner.m; path = ScanEngine/Scan/DBProductionScanDiscoveryRunner.m; sourceTree = "<group>"; };
+		D4F8A34A2B68210000A75B9A /* DBScanOrchestrator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanOrchestrator.h; path = ScanEngine/Scan/DBScanOrchestrator.h; sourceTree = "<group>"; };
+		D4F8A34B2B68210000A75B9A /* DBScanOrchestrator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanOrchestrator.m; path = ScanEngine/Scan/DBScanOrchestrator.m; sourceTree = "<group>"; };
+		D4F8A34C2B68210000A75B9A /* DBScanOrchestratorFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanOrchestratorFactory.h; path = ScanEngine/Scan/DBScanOrchestratorFactory.h; sourceTree = "<group>"; };
+		D4F8A34D2B68210000A75B9A /* DBScanOrchestratorFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanOrchestratorFactory.m; path = ScanEngine/Scan/DBScanOrchestratorFactory.m; sourceTree = "<group>"; };
+		D4F8A34E2B68210000A75B9A /* DBScanErrorBridgeMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanErrorBridgeMapper.h; path = ScanEngine/Bridge/DBScanErrorBridgeMapper.h; sourceTree = "<group>"; };
+		D4F8A34F2B68210000A75B9A /* DBScanErrorBridgeMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanErrorBridgeMapper.m; path = ScanEngine/Bridge/DBScanErrorBridgeMapper.m; sourceTree = "<group>"; };
+		D4F8A3502B68210000A75B9A /* DBScanProgressBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanProgressBridge.h; path = ScanEngine/Bridge/DBScanProgressBridge.h; sourceTree = "<group>"; };
+		D4F8A3512B68210000A75B9A /* DBScanProgressBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanProgressBridge.m; path = ScanEngine/Bridge/DBScanProgressBridge.m; sourceTree = "<group>"; };
+		D4F8A3522B68210000A75B9A /* DBScanStartRequestParserTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequestParserTests.m; path = ScanEngineTests/DBScanStartRequestParserTests.m; sourceTree = "<group>"; };
+		D4F8A3532B68210000A75B9A /* DBScanOrchestratorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanOrchestratorTests.m; path = ScanEngineTests/DBScanOrchestratorTests.m; sourceTree = "<group>"; };
+		D4F8A3542B68220000A75B9A /* DBCatalogReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogReader.h; path = ScanEngine/Index/DBCatalogReader.h; sourceTree = "<group>"; };
+		D4F8A3552B68220000A75B9A /* DBCatalogReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogReader.m; path = ScanEngine/Index/DBCatalogReader.m; sourceTree = "<group>"; };
+		D4F8A3562B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogSnapshotBridgeMapper.h; path = ScanEngine/Bridge/DBCatalogSnapshotBridgeMapper.h; sourceTree = "<group>"; };
+		D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogSnapshotBridgeMapper.m; path = ScanEngine/Bridge/DBCatalogSnapshotBridgeMapper.m; sourceTree = "<group>"; };
+		D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogReaderTests.m; path = ScanEngineTests/DBCatalogReaderTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -300,8 +350,30 @@
 				D4F8A2862B68160000A75B9A /* Hash */,
 				D4F8A2AE2B68180000A75B9A /* Index */,
 				D4F8A2D02B681A0000A75B9A /* Bridge */,
+				D4F8A33F2B68210000A75B9A /* Scan */,
 			);
 			name = ScanEngine;
+			sourceTree = "<group>";
+		};
+		D4F8A33F2B68210000A75B9A /* Scan */ = {
+			isa = PBXGroup;
+			children = (
+				D4F8A3402B68210000A75B9A /* DBScanStartRequest.h */,
+				D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */,
+				D4F8A3422B68210000A75B9A /* DBScanStartRequestParser.h */,
+				D4F8A3432B68210000A75B9A /* DBScanStartRequestParser.m */,
+				D4F8A3442B68210000A75B9A /* DBScanRootResolver.h */,
+				D4F8A3452B68210000A75B9A /* DBScanRootResolver.m */,
+				D4F8A3462B68210000A75B9A /* DBScanSessionControl.h */,
+				D4F8A3472B68210000A75B9A /* DBScanSessionControl.m */,
+				D4F8A3482B68210000A75B9A /* DBProductionScanDiscoveryRunner.h */,
+				D4F8A3492B68210000A75B9A /* DBProductionScanDiscoveryRunner.m */,
+				D4F8A34A2B68210000A75B9A /* DBScanOrchestrator.h */,
+				D4F8A34B2B68210000A75B9A /* DBScanOrchestrator.m */,
+				D4F8A34C2B68210000A75B9A /* DBScanOrchestratorFactory.h */,
+				D4F8A34D2B68210000A75B9A /* DBScanOrchestratorFactory.m */,
+			);
+			name = Scan;
 			sourceTree = "<group>";
 		};
 		D4F8A2262B68130000A75B9A /* Discovery */ = {
@@ -387,6 +459,12 @@
 				D4F8A3212B681F0000A75B9A /* DBScanProgressContentKindPolicy.m */,
 				D4F8A3222B681F0000A75B9A /* DBScanProgressBridgeMapper.h */,
 				D4F8A3232B681F0000A75B9A /* DBScanProgressBridgeMapper.m */,
+				D4F8A34E2B68210000A75B9A /* DBScanErrorBridgeMapper.h */,
+				D4F8A34F2B68210000A75B9A /* DBScanErrorBridgeMapper.m */,
+				D4F8A3502B68210000A75B9A /* DBScanProgressBridge.h */,
+				D4F8A3512B68210000A75B9A /* DBScanProgressBridge.m */,
+				D4F8A3562B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.h */,
+				D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */,
 			);
 			name = Bridge;
 			sourceTree = "<group>";
@@ -404,6 +482,8 @@
 				D4F8A2A82B68180000A75B9A /* DBCatalogDatabase.m */,
 				D4F8A2A92B68180000A75B9A /* DBIndexWriter.h */,
 				D4F8A2AA2B68180000A75B9A /* DBIndexWriter.m */,
+				D4F8A3542B68220000A75B9A /* DBCatalogReader.h */,
+				D4F8A3552B68220000A75B9A /* DBCatalogReader.m */,
 				D4F8A2AB2B68180000A75B9A /* DBSqliteSizeBucketIndex.h */,
 				D4F8A2AC2B68180000A75B9A /* DBSqliteSizeBucketIndex.m */,
 				D4F8A3122B681D0000A75B9A /* DBSqliteDurationBucketIndex.h */,
@@ -458,6 +538,9 @@
 				D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */,
 				D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */,
 				D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */,
+				D4F8A3522B68210000A75B9A /* DBScanStartRequestParserTests.m */,
+				D4F8A3532B68210000A75B9A /* DBScanOrchestratorTests.m */,
+				D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -728,6 +811,20 @@
 				D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */,
 				D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */,
 				D4F8A3312B68200000A75B9A /* DBEquivFixturesTests.m in Sources */,
+				D4F8A3602B68210000A75B9A /* DBScanStartRequest.m in Sources */,
+				D4F8A3622B68210000A75B9A /* DBScanStartRequestParser.m in Sources */,
+				D4F8A3642B68210000A75B9A /* DBScanRootResolver.m in Sources */,
+				D4F8A3662B68210000A75B9A /* DBScanSessionControl.m in Sources */,
+				D4F8A3682B68210000A75B9A /* DBProductionScanDiscoveryRunner.m in Sources */,
+				D4F8A36A2B68210000A75B9A /* DBScanOrchestrator.m in Sources */,
+				D4F8A36C2B68210000A75B9A /* DBScanOrchestratorFactory.m in Sources */,
+				D4F8A36E2B68210000A75B9A /* DBScanErrorBridgeMapper.m in Sources */,
+				D4F8A3702B68210000A75B9A /* DBScanProgressBridge.m in Sources */,
+				D4F8A3722B68210000A75B9A /* DBScanStartRequestParserTests.m in Sources */,
+				D4F8A3732B68210000A75B9A /* DBScanOrchestratorTests.m in Sources */,
+				D4F8A3752B68220000A75B9A /* DBCatalogReader.m in Sources */,
+				D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
+				D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -782,6 +879,17 @@
 				D4F8A2E72B681B0000A75B9A /* DBScanRunStatus.m in Sources */,
 				D4F8A2E82B681B0000A75B9A /* DBScanRunSnapshot.m in Sources */,
 				D4F8A2E92B681B0000A75B9A /* DBCheckpointStore.m in Sources */,
+				D4F8A3612B68210000A75B9A /* DBScanStartRequest.m in Sources */,
+				D4F8A3632B68210000A75B9A /* DBScanStartRequestParser.m in Sources */,
+				D4F8A3652B68210000A75B9A /* DBScanRootResolver.m in Sources */,
+				D4F8A3672B68210000A75B9A /* DBScanSessionControl.m in Sources */,
+				D4F8A3692B68210000A75B9A /* DBProductionScanDiscoveryRunner.m in Sources */,
+				D4F8A36B2B68210000A75B9A /* DBScanOrchestrator.m in Sources */,
+				D4F8A36D2B68210000A75B9A /* DBScanOrchestratorFactory.m in Sources */,
+				D4F8A36F2B68210000A75B9A /* DBScanErrorBridgeMapper.m in Sources */,
+				D4F8A3712B68210000A75B9A /* DBScanProgressBridge.m in Sources */,
+				D4F8A3742B68220000A75B9A /* DBCatalogReader.m in Sources */,
+				D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

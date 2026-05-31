@@ -13,7 +13,7 @@ This matrix covers screen-reader behavior that Jest cannot assert: interruption 
 | Item | Detail |
 |------|--------|
 | Build | Debug/internal build from current `dev` branch (`npm run android` / `npm run ios`) |
-| M2 shell | `App.tsx` uses `createMockScanEnginePort()` until live orchestrator catalog bridge lands — progress + duplicate groups come from mock data |
+| M2 shell | `App.tsx` uses `createNativeScanEnginePort(NativeScanEngine)` — progress + duplicate groups from live scan/catalog |
 | Automated gate | `npm run test:a11y` passes before manual session |
 | Devices | **One iOS 15+** device/simulator with VoiceOver; **One Android API 26+** device/emulator with TalkBack |
 | Screen readers | iOS: Settings → Accessibility → VoiceOver. Android: Settings → Accessibility → TalkBack |
@@ -118,7 +118,7 @@ Relaunch app, run S4, inspect progress track direction.
 | iOS | Settings → Accessibility → Motion → **Reduce Motion** ON |
 | Android | Settings → Accessibility → **Remove animations** (or Reduce motion if present) ON |
 
-Run S4; progress indicator should use **static pulse dot** instead of animated fill (`ScanProgress` `reducedMotion` follows system when wired from shell — if not yet wired from `App.tsx`, verify via component test A11Y-09 and mark row **Blocked** with note).
+Run S4; progress indicator should use **static pulse dot** instead of animated fill (`ScanProgress` `reducedMotion` follows system via `useReducedMotion` in `App.tsx`).
 
 ### S11 — Open duplicate group detail
 
@@ -142,7 +142,6 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | M2-SMOKE-30 | M3-01 | `DeleteConfirmModal` not implemented |
 | M2-SMOKE-31 | M3-02 | `PathChipList` not implemented |
 | M2-SMOKE-29 (delete focus order) | M3 | Delete button not implemented — notice-before-delete partial until M3 |
-| M2-SMOKE-18 | Shell wiring | `reducedMotion` prop not passed from `App.tsx` — verify A11Y-09 via automated tests until wired |
 
 ---
 

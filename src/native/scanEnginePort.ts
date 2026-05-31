@@ -1,12 +1,23 @@
 import type {ScanCatalogSnapshot} from '../types/scanCatalog';
-import {EMPTY_CATALOG_SNAPSHOT} from '../types/scanCatalog';
+import type {DuplicateGroupDetail, DuplicateGroupMember, DuplicateGroupSummary, DuplicateGroupThumbnail} from '../types/duplicateGroup';
 import type {
   CatalogMeta,
+  CatalogSnapshot,
+  CatalogSnapshotGroupDetail,
+  CatalogSnapshotGroupSummary,
+  CatalogSnapshotMember,
+  CatalogSnapshotThumbnail,
+  MatchKind,
+  MediaTypeHint,
   ScanErrorEvent,
+  ScanPhase,
+  ScanProgressContentKind,
   ScanProgressEvent,
   ScanStartOptions,
   ScanStartResult,
+  UnscannableReason,
 } from '../types/scanEngine';
+import {MATCH_KINDS, MEDIA_TYPE_HINTS, UNSCANNABLE_REASONS} from '../types/scanEngine';
 
 export type ScanEngineUnsubscribe = () => void;
 
@@ -291,42 +302,266 @@ export function createMockScanEnginePort(
   };
 }
 
+function isMatchKind(value: string): value is MatchKind {
+  return (MATCH_KINDS as readonly string[]).includes(value);
+}
+
+function isMediaTypeHint(value: string): value is MediaTypeHint {
+  return (MEDIA_TYPE_HINTS as readonly string[]).includes(value);
+}
+
+function isUnscannableReason(value: string): value is UnscannableReason {
+  return (UNSCANNABLE_REASONS as readonly string[]).includes(value);
+}
+
+function mapCatalogThumbnail(
+  thumbnail: CatalogSnapshotThumbnail,
+): DuplicateGroupThumbnail {
+  return {
+    fileEntryId: thumbnail.fileEntryId,
+    mediaTypeHint: isMediaTypeHint(thumbnail.mediaTypeHint)
+      ? thumbnail.mediaTypeHint
+      : 'other',
+    thumbnailUri: thumbnail.thumbnailUri ?? null,
+  };
+}
+
+function mapCatalogMember(member: CatalogSnapshotMember): DuplicateGroupMember {
+  return {
+    fileEntryId: member.fileEntryId,
+    displayName: member.displayName,
+    sizeBytes: member.sizeBytes,
+    mtimeMs: member.mtimeMs,
+    pathLength: member.pathLength,
+    mediaTypeHint: isMediaTypeHint(member.mediaTypeHint)
+      ? member.mediaTypeHint
+      : 'other',
+    thumbnailUri: member.thumbnailUri ?? null,
+  };
+}
+
+function mapCatalogGroupSummary(
+  group: CatalogSnapshotGroupSummary,
+): DuplicateGroupSummary {
+  return {
+    groupId: group.groupId,
+    matchKind: isMatchKind(group.matchKind) ? group.matchKind : 'EXACT_BYTES',
+    memberCount: group.memberCount,
+    reclaimableBytesEst: group.reclaimableBytesEst,
+    thumbnails: group.thumbnails.map(mapCatalogThumbnail),
+  };
+}
+
+function mapCatalogGroupDetail(
+  detail: CatalogSnapshotGroupDetail,
+): DuplicateGroupDetail {
+  return {
+    groupId: detail.groupId,
+    matchKind: isMatchKind(detail.matchKind) ? detail.matchKind : 'EXACT_BYTES',
+    memberCount: detail.memberCount,
+    reclaimableBytesEst: detail.reclaimableBytesEst,
+    members: detail.members.map(mapCatalogMember),
+  };
+}
+
+/** Maps native `getCatalogSnapshot` payload to [ScanCatalogSnapshot]. */
+export function mapCatalogSnapshot(raw: CatalogSnapshot): ScanCatalogSnapshot {
+  const unscannableCounts: ScanCatalogSnapshot['unscannableCounts'] = {};
+  for (const [reason, count] of Object.entries(raw.unscannableCounts ?? {})) {
+    if (typeof count !== 'number' || !isUnscannableReason(reason)) {
+      continue;
+    }
+    unscannableCounts[reason] = count;
+  }
+
+  const groupDetailsById: Record<number, DuplicateGroupDetail> = {};
+  const rawDetails = raw.groupDetailsById as Record<string, CatalogSnapshotGroupDetail>;
+  for (const [groupIdKey, detail] of Object.entries(rawDetails ?? {})) {
+    if (detail == null) {
+      continue;
+    }
+    groupDetailsById[Number(groupIdKey)] = mapCatalogGroupDetail(detail);
+  }
+
+  return {
+    duplicateGroups: (raw.duplicateGroups ?? []).map(mapCatalogGroupSummary),
+    unscannableCounts,
+    groupDetailsById,
+  };
+}
+
+type NativeScanEngineEventSubscription = {
+  remove?: () => void;
+};
+
+/** Codegen EventEmitter<T> is a callable listener registrar, not `{ addListener }`. */
+type NativeScanEngineEventEmitter<T> = (
+  listener: (event: T) => void,
+) => NativeScanEngineEventSubscription;
+
+const VALID_SCAN_PHASES = new Set<ScanPhase>([
+  'idle',
+  'discovering',
+  'hashing',
+  'grouping',
+  'complete',
+  'paused',
+  'error',
+  'cancelling',
+  'cancelled',
+]);
+
+function coerceBridgeNumber(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
+/** Maps throttled native progress payloads to the JS contract (guards bridge shape drift). */
+export function normalizeScanProgressEvent(raw: unknown): ScanProgressEvent | null {
+  if (raw == null || typeof raw !== 'object') {
+    return null;
+  }
+  const event = raw as Record<string, unknown>;
+  if (typeof event.phase !== 'string' || !VALID_SCAN_PHASES.has(event.phase as ScanPhase)) {
+    return null;
+  }
+
+  const filesTotalKnownRaw = event.filesTotalKnown;
+  const contentKindRaw = event.contentKind;
+  let contentKind: ScanProgressContentKind | undefined;
+  if (contentKindRaw === 'none' || contentKindRaw === 'video_content') {
+    contentKind = contentKindRaw;
+  }
+
+  return {
+    filesProcessed: coerceBridgeNumber(event.filesProcessed, 0),
+    filesTotalKnown:
+      filesTotalKnownRaw == null
+        ? null
+        : coerceBridgeNumber(filesTotalKnownRaw, 0),
+    groupsFound: coerceBridgeNumber(event.groupsFound, 0),
+    reclaimableBytesEst: coerceBridgeNumber(event.reclaimableBytesEst, 0),
+    phase: event.phase as ScanPhase,
+    contentKind,
+  };
+}
+
+/** Maps native error payloads to the JS contract. */
+export function normalizeScanErrorEvent(raw: unknown): ScanErrorEvent | null {
+  if (raw == null || typeof raw !== 'object') {
+    return null;
+  }
+  const event = raw as Record<string, unknown>;
+  if (
+    typeof event.unscannableReason !== 'string' ||
+    !isUnscannableReason(event.unscannableReason)
+  ) {
+    return null;
+  }
+  const fileEntryId = coerceBridgeNumber(event.fileEntryId, NaN);
+  if (!Number.isFinite(fileEntryId)) {
+    return null;
+  }
+
+  const normalized: ScanErrorEvent = {
+    fileEntryId,
+    unscannableReason: event.unscannableReason,
+  };
+  if (event.scanRunId != null) {
+    const scanRunId = coerceBridgeNumber(event.scanRunId, NaN);
+    if (Number.isFinite(scanRunId)) {
+      normalized.scanRunId = scanRunId;
+    }
+  }
+  return normalized;
+}
+
+function subscribeNativeModuleEvent<T>(
+  register: unknown,
+  listener: (event: T) => void,
+  normalize: (raw: unknown) => T | null,
+): () => void {
+  const dispatch = (raw: unknown) => {
+    const event = normalize(raw);
+    if (event != null) {
+      listener(event);
+    }
+  };
+
+  if (typeof register === 'function') {
+    const subscription = (register as NativeScanEngineEventEmitter<T>)(dispatch);
+    return () => subscription?.remove?.();
+  }
+
+  if (
+    register != null &&
+    typeof register === 'object' &&
+    typeof (register as {addListener?: unknown}).addListener === 'function'
+  ) {
+    const subscription = (
+      register as {
+        addListener: (handler: (event: T) => void) => NativeScanEngineEventSubscription;
+      }
+    ).addListener((event: T) => dispatch(event));
+    return () => subscription?.remove?.();
+  }
+
+  throw new Error('NativeScanEngine event emitter is unavailable — rebuild the native app.');
+}
+
 type NativeScanEngineModule = {
-  onScanProgress: {
-    addListener: (listener: (event: ScanProgressEvent) => void) => {
-      remove: () => void;
-    };
-  };
-  onScanError: {
-    addListener: (listener: (event: ScanErrorEvent) => void) => {
-      remove: () => void;
-    };
-  };
+  onScanProgress: NativeScanEngineEventEmitter<ScanProgressEvent>;
+  onScanError: NativeScanEngineEventEmitter<ScanErrorEvent>;
   startScan: ScanEnginePort['startScan'];
   pauseScan: ScanEnginePort['pauseScan'];
   resumeScan: ScanEnginePort['resumeScan'];
   cancelScan: ScanEnginePort['cancelScan'];
   getCatalogMeta: ScanEnginePort['getCatalogMeta'];
+  getCatalogSnapshot: () => Promise<CatalogSnapshot>;
 };
 
-/** Wraps TurboModule; catalog snapshot empty until orchestrator exposes query APIs. */
+/** Wraps TurboModule; catalog snapshot from native CatalogReader (Phase B). */
 export function createNativeScanEnginePort(
   module: NativeScanEngineModule,
 ): ScanEnginePort {
+  const startScan = module.startScan.bind(module);
+  const pauseScan = module.pauseScan.bind(module);
+  const resumeScan = module.resumeScan.bind(module);
+  const cancelScan = module.cancelScan.bind(module);
+  const getCatalogMeta = module.getCatalogMeta.bind(module);
+  const getCatalogSnapshot = module.getCatalogSnapshot.bind(module);
+
   return {
     addProgressListener(listener) {
-      const subscription = module.onScanProgress.addListener(listener);
-      return () => subscription.remove();
+      return subscribeNativeModuleEvent(
+        module.onScanProgress,
+        listener,
+        normalizeScanProgressEvent,
+      );
     },
     addErrorListener(listener) {
-      const subscription = module.onScanError.addListener(listener);
-      return () => subscription.remove();
+      return subscribeNativeModuleEvent(
+        module.onScanError,
+        listener,
+        normalizeScanErrorEvent,
+      );
     },
-    startScan: options => module.startScan(options),
-    pauseScan: scanRunId => module.pauseScan(scanRunId),
-    resumeScan: scanRunId => module.resumeScan(scanRunId),
-    cancelScan: scanRunId => module.cancelScan(scanRunId),
-    getCatalogMeta: () => module.getCatalogMeta(),
-    getCatalogSnapshot: async () => EMPTY_CATALOG_SNAPSHOT,
+    startScan: options => startScan(options),
+    pauseScan: scanRunId => pauseScan(scanRunId),
+    resumeScan: scanRunId => resumeScan(scanRunId),
+    cancelScan: scanRunId => cancelScan(scanRunId),
+    getCatalogMeta: () => getCatalogMeta(),
+    getCatalogSnapshot: async () => {
+      const snapshot = await getCatalogSnapshot();
+      return mapCatalogSnapshot(snapshot);
+    },
   };
 }
