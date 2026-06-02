@@ -13,7 +13,9 @@ import com.dupbuster.scanengine.index.Grouper
 import com.dupbuster.scanengine.index.IndexWriter
 import com.dupbuster.scanengine.index.SqliteDurationBucketIndex
 import com.dupbuster.scanengine.index.SqliteSizeBucketIndex
+import com.dupbuster.scanengine.stat.ContentResolverFileStatReader
 import com.dupbuster.scanengine.stat.StatStage
+import com.dupbuster.scanengine.stat.ToctouStatVerifier
 import com.facebook.react.bridge.ReadableMap
 
 object ScanOrchestratorFactory {
@@ -47,6 +49,7 @@ object ScanOrchestratorFactory {
         },
         progressBridge = progressBridge,
         emitError = emitError,
+        toctouVerifier = ToctouStatVerifier(ContentResolverFileStatReader(appContext)),
     )
   }
 }

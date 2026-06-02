@@ -334,6 +334,16 @@
       "kind": "descriptor"
     },
     {
+      "id": "integrity-toctou-01",
+      "path": "integrity-toctou-01.json",
+      "category": "integrity",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-integrity-toctou-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
       "id": "hash-pipeline-video-01",
       "path": "pipeline/hash-pipeline-video-01.json",
       "category": "pipeline",

@@ -17,6 +17,9 @@ import com.dupbuster.scanengine.index.ScanRunStatus
 import com.dupbuster.scanengine.security.ScanRootGrant
 import com.dupbuster.scanengine.stat.StatResult
 import com.dupbuster.scanengine.stat.StagedFile
+import com.dupbuster.scanengine.stat.ToctouStatVerifier
+import com.dupbuster.scanengine.stat.ToctouVerifyOutcome
+import com.dupbuster.scanengine.security.UnscannableReason
 import com.facebook.react.bridge.ReadableMap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -35,6 +38,7 @@ class ScanOrchestrator(
     private val hashPipelineFactory: (IndexWriter) -> HashPipeline,
     private val progressBridge: ScanProgressBridge,
     private val emitError: (ReadableMap) -> Unit,
+    private val toctouVerifier: ToctouStatVerifier,
     private val executor: Executor = Executors.newSingleThreadExecutor { runnable ->
       Thread(runnable, "dupbuster-scan-orchestrator").apply { isDaemon = true }
     },
@@ -198,7 +202,9 @@ class ScanOrchestrator(
               is StatResult.Success ->
                   processHashResult(
                       hashPipeline = hashPipeline,
-                      staged = statResult.staged,
+                      entry = entry,
+                      grant = grant,
+                      initialStaged = statResult.staged,
                       generation = generation,
                       scanRunId = scanRunId,
                       plan = plan,
@@ -289,12 +295,99 @@ class ScanOrchestrator(
 
   private fun processHashResult(
       hashPipeline: HashPipeline,
+      entry: DiscoveredEntry,
+      grant: ScanRootGrant,
+      initialStaged: StagedFile,
+      generation: Int,
+      scanRunId: Long,
+      plan: ScanRootResolver.ResolvedPlan,
+  ): Long {
+    var staged = initialStaged
+    var mismatchAttempts = 0
+
+    while (true) {
+      when (val preCheck = toctouVerifier.verifyBaseline(staged)) {
+        ToctouVerifyOutcome.Consistent -> Unit
+        is ToctouVerifyOutcome.Changed -> {
+          mismatchAttempts++
+          if (mismatchAttempts > ToctouStatVerifier.MAX_MISMATCH_RETRIES) {
+            return upsertToctouUnscannable(staged, generation, scanRunId)
+          }
+          staged = restatForToctou(entry, grant) ?: return upsertToctouUnscannable(staged, generation, scanRunId)
+          continue
+        }
+        ToctouVerifyOutcome.IoFailure ->
+            return upsertToctouUnscannable(staged, generation, scanRunId)
+      }
+
+      val hashResult = hashPipeline.hash(staged, HashSettings())
+
+      when (val postCheck = toctouVerifier.verifyBaseline(staged)) {
+        ToctouVerifyOutcome.Consistent ->
+            return persistHashOutcome(
+                hashPipeline = hashPipeline,
+                hashResult = hashResult,
+                staged = staged,
+                generation = generation,
+                scanRunId = scanRunId,
+                plan = plan,
+            )
+        is ToctouVerifyOutcome.Changed -> {
+          mismatchAttempts++
+          if (mismatchAttempts > ToctouStatVerifier.MAX_MISMATCH_RETRIES) {
+            return persistHashOutcome(
+                hashPipeline = hashPipeline,
+                hashResult = hashResult,
+                staged = toctouVerifier.applyFreshStat(staged, postCheck.freshStat),
+                generation = generation,
+                scanRunId = scanRunId,
+                plan = plan,
+            )
+          }
+          staged = restatForToctou(entry, grant) ?: return upsertToctouUnscannable(staged, generation, scanRunId)
+          continue
+        }
+        ToctouVerifyOutcome.IoFailure ->
+            return upsertToctouUnscannable(staged, generation, scanRunId)
+      }
+    }
+  }
+
+  private fun restatForToctou(entry: DiscoveredEntry, grant: ScanRootGrant): StagedFile? =
+      when (val statResult = statFile(entry, grant)) {
+        is StatResult.Success -> statResult.staged
+        is StatResult.Unscannable -> null
+      }
+
+  private fun upsertToctouUnscannable(
+      staged: StagedFile,
+      generation: Int,
+      scanRunId: Long,
+  ): Long {
+    val fileEntryId =
+        indexWriter.upsertUnscannable(
+            UnscannableReason.PERMISSION_DENIED,
+            staged,
+            generation,
+        )
+    emitError(
+        ScanErrorBridgeMapper.toReadableMap(
+            fileEntryId = fileEntryId,
+            unscannableReason = UnscannableReason.PERMISSION_DENIED,
+            scanRunId = scanRunId,
+        ),
+    )
+    return fileEntryId
+  }
+
+  private fun persistHashOutcome(
+      hashPipeline: HashPipeline,
+      hashResult: HashResult,
       staged: StagedFile,
       generation: Int,
       scanRunId: Long,
       plan: ScanRootResolver.ResolvedPlan,
   ): Long {
-    val hashResult = hashPipeline.hash(staged, HashSettings())
     val fileEntryId = indexWriter.persistHashResult(hashResult, staged, generation)
     if (hashResult is HashResult.Unscannable) {
       emitError(
@@ -344,7 +437,9 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
-                staged = statResult.staged,
+                entry = entry,
+                grant = grant,
+                initialStaged = statResult.staged,
                 generation = generation,
                 scanRunId = scanRunId,
                 plan = plan,
@@ -377,7 +472,9 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
-                staged = statResult.staged,
+                entry = entry,
+                grant = grant,
+                initialStaged = statResult.staged,
                 generation = generation,
                 scanRunId = scanRunId,
                 plan = plan,
@@ -413,7 +510,9 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
-                staged = statResult.staged,
+                entry = entry,
+                grant = grant,
+                initialStaged = statResult.staged,
                 generation = generation,
                 scanRunId = scanRunId,
                 plan = plan,

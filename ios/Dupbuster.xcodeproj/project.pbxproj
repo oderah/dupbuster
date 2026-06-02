@@ -160,6 +160,9 @@
 		D4M305322B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */; };
 		D4M305142B68230000A75B9A /* DBDeleteCoordinatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */; };
 		D4M305162B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */; };
+		D4M306122B68230000A75B9A /* DBToctouStatVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */; };
+		D4M306322B68230000A75B9A /* DBToctouStatVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */; };
+		D4M306142B68230000A75B9A /* DBToctouStatVerifierTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -327,6 +330,9 @@
 		D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhAssetPlatformFileDeleter.m; path = ScanEngine/Delete/DBPhAssetPlatformFileDeleter.m; sourceTree = "<group>"; };
 		D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinatorTests.m; path = ScanEngineTests/DBDeleteCoordinatorTests.m; sourceTree = "<group>"; };
 		D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhAssetPlatformFileDeleterTests.m; path = ScanEngineTests/DBPhAssetPlatformFileDeleterTests.m; sourceTree = "<group>"; };
+		D4M306012B68230000A75B9A /* DBToctouStatVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBToctouStatVerifier.h; path = ScanEngine/Stat/DBToctouStatVerifier.h; sourceTree = "<group>"; };
+		D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBToctouStatVerifier.m; path = ScanEngine/Stat/DBToctouStatVerifier.m; sourceTree = "<group>"; };
+		D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBToctouStatVerifierTests.m; path = ScanEngineTests/DBToctouStatVerifierTests.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -549,6 +555,8 @@
 				D4F8A2472B68150000A75B9A /* DBFileStatReader.mm */,
 				D4F8A2542B68150000A75B9A /* DBStatStage.h */,
 				D4F8A2492B68150000A75B9A /* DBStatStage.mm */,
+				D4M306012B68230000A75B9A /* DBToctouStatVerifier.h */,
+				D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */,
 			);
 			name = Stat;
 			sourceTree = "<group>";
@@ -578,6 +586,7 @@
 				D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */,
 				D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */,
 				D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */,
+				D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -890,6 +899,8 @@
 				D4M305122B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */,
 				D4M305142B68230000A75B9A /* DBDeleteCoordinatorTests.m in Sources */,
 				D4M305162B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m in Sources */,
+				D4M306122B68230000A75B9A /* DBToctouStatVerifier.m in Sources */,
+				D4M306142B68230000A75B9A /* DBToctouStatVerifierTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -962,6 +973,7 @@
 				D4M303282B68230000A75B9A /* DBDeleteCoordinator.m in Sources */,
 				D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
 				D4M305322B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */,
+				D4M306322B68230000A75B9A /* DBToctouStatVerifier.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

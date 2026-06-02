@@ -13,6 +13,8 @@
 #import "DBScanSessionControl.h"
 #import "DBSizeBucketPendingEntry.h"
 #import "DBStagedFile.h"
+#import "DBToctouStatVerifier.h"
+#import "DBUnscannableReason.h"
 
 NSString *const DBScanOrchestratorErrorDomain = @"com.dupbuster.scanengine.scan.orchestrator";
 
@@ -46,6 +48,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   DBScanHashPipelineFactoryBlock _hashPipelineFactory;
   DBScanProgressBridge *_progressBridge;
   void (^_emitError)(NSDictionary *payload);
+  DBToctouStatVerifier *_toctouVerifier;
   dispatch_queue_t _workQueue;
   DBScanActiveSession *_Nullable _activeSession;
   NSLock *_sessionLock;
@@ -59,6 +62,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                hashPipelineFactory:(DBScanHashPipelineFactoryBlock)hashPipelineFactory
                     progressBridge:(DBScanProgressBridge *)progressBridge
                          emitError:(void (^)(NSDictionary *payload))emitError
+                    toctouVerifier:(DBToctouStatVerifier *)toctouVerifier
                          workQueue:(dispatch_queue_t)workQueue
 {
   self = [super init];
@@ -71,6 +75,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     _hashPipelineFactory = [hashPipelineFactory copy];
     _progressBridge = progressBridge;
     _emitError = [emitError copy];
+    _toctouVerifier = toctouVerifier;
     _workQueue = workQueue ?: dispatch_queue_create("com.dupbuster.scan.orchestrator", DISPATCH_QUEUE_SERIAL);
     _sessionLock = [[NSLock alloc] init];
   }
@@ -250,7 +255,9 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
       NSInteger fileEntryId = 0;
       if (statResult.outcome == DBStatStageOutcomeSuccess) {
         fileEntryId = [self processHashResult:hashPipeline
-                                       staged:statResult.staged
+                                        entry:entry
+                                        grant:grant
+                                initialStaged:statResult.staged
                                    generation:generation
                                     scanRunId:scanRunId
                                          plan:plan];
@@ -315,16 +322,112 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
 }
 
 - (NSInteger)processHashResult:(DBHashPipeline *)hashPipeline
-                        staged:(DBStagedFile *)staged
+                         entry:(DBDiscoveredEntry *)entry
+                         grant:(DBScanRootGrant *)grant
+                 initialStaged:(DBStagedFile *)initialStaged
                     generation:(NSInteger)generation
                      scanRunId:(NSInteger)scanRunId
                           plan:(DBScanRootResolverPlan *)plan
 {
-  DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:[[DBHashSettings alloc] init]];
+  DBStagedFile *staged = initialStaged;
+  NSInteger mismatchAttempts = 0;
+
+  while (YES) {
+    DBFileStat *freshStat = nil;
+    DBToctouVerifyOutcome preCheck = [_toctouVerifier verifyBaselineForStaged:staged freshStat:&freshStat];
+    if (preCheck == DBToctouVerifyOutcomeChanged) {
+      mismatchAttempts += 1;
+      if (mismatchAttempts > [DBToctouStatVerifier maxMismatchRetries]) {
+        return [self upsertToctouUnscannableForStaged:staged
+                                           generation:generation
+                                            scanRunId:scanRunId];
+      }
+      DBStagedFile *restaged = [self restatForToctouWithEntry:entry grant:grant];
+      if (restaged == nil) {
+        return [self upsertToctouUnscannableForStaged:staged
+                                           generation:generation
+                                            scanRunId:scanRunId];
+      }
+      staged = restaged;
+      continue;
+    }
+    if (preCheck == DBToctouVerifyOutcomeIoFailure) {
+      return [self upsertToctouUnscannableForStaged:staged
+                                         generation:generation
+                                          scanRunId:scanRunId];
+    }
+
+    DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:[[DBHashSettings alloc] init]];
+
+    freshStat = nil;
+    DBToctouVerifyOutcome postCheck = [_toctouVerifier verifyBaselineForStaged:staged freshStat:&freshStat];
+    if (postCheck == DBToctouVerifyOutcomeConsistent) {
+      return [self persistHashOutcome:hashPipeline
+                           hashResult:hashResult
+                               staged:staged
+                           generation:generation
+                            scanRunId:scanRunId
+                                 plan:plan];
+    }
+    if (postCheck == DBToctouVerifyOutcomeChanged) {
+      mismatchAttempts += 1;
+      if (mismatchAttempts > [DBToctouStatVerifier maxMismatchRetries]) {
+        DBStagedFile *adjusted = [_toctouVerifier stagedByApplyingFreshStat:freshStat toStaged:staged];
+        return [self persistHashOutcome:hashPipeline
+                             hashResult:hashResult
+                                 staged:adjusted
+                             generation:generation
+                              scanRunId:scanRunId
+                                   plan:plan];
+      }
+      DBStagedFile *restaged = [self restatForToctouWithEntry:entry grant:grant];
+      if (restaged == nil) {
+        return [self upsertToctouUnscannableForStaged:staged
+                                           generation:generation
+                                            scanRunId:scanRunId];
+      }
+      staged = restaged;
+      continue;
+    }
+    return [self upsertToctouUnscannableForStaged:staged
+                                       generation:generation
+                                        scanRunId:scanRunId];
+  }
+}
+
+- (nullable DBStagedFile *)restatForToctouWithEntry:(DBDiscoveredEntry *)entry grant:(DBScanRootGrant *)grant
+{
+  DBStatStageResult *statResult = _statFile(entry, grant);
+  if (statResult.outcome == DBStatStageOutcomeSuccess) {
+    return statResult.staged;
+  }
+  return nil;
+}
+
+- (NSInteger)upsertToctouUnscannableForStaged:(DBStagedFile *)staged
+                                    generation:(NSInteger)generation
+                                     scanRunId:(NSInteger)scanRunId
+{
+  NSInteger fileEntryId = [_indexWriter upsertUnscannableWithReason:DBUnscannableReasonPermissionDenied
+                                                             staged:staged
+                                                         generation:generation];
+  _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
+                                                 unscannableReason:DBUnscannableReasonPermissionDenied
+                                                         scanRunId:@(scanRunId)]);
+  return fileEntryId;
+}
+
+- (NSInteger)persistHashOutcome:(DBHashPipeline *)hashPipeline
+                     hashResult:(DBHashPipelineResult *)hashResult
+                         staged:(DBStagedFile *)staged
+                     generation:(NSInteger)generation
+                      scanRunId:(NSInteger)scanRunId
+                           plan:(DBScanRootResolverPlan *)plan
+{
   NSInteger fileEntryId = [_indexWriter persistHashPipelineResult:hashResult staged:staged generation:generation];
   if (hashResult.outcome == DBHashPipelineOutcomeUnscannable ||
       hashResult.outcome == DBHashPipelineOutcomeVideoPartialSuccess) {
-    NSString *reason = hashResult.unscannableReason ?: @"PERMISSION_DENIED";
+    NSString *reason = hashResult.unscannableReason ?: DBUnscannableReasonPermissionDenied;
     _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
                                                    unscannableReason:reason
                                                            scanRunId:@(scanRunId)]);
@@ -357,10 +460,12 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     DBStatStageResult *statResult = _statFile(entry, grant);
     if (statResult.outcome == DBStatStageOutcomeSuccess) {
       [self processHashResult:hashPipeline
-                       staged:statResult.staged
-                   generation:generation
-                    scanRunId:scanRunId
-                         plan:plan];
+                          entry:entry
+                          grant:grant
+                  initialStaged:statResult.staged
+                     generation:generation
+                      scanRunId:scanRunId
+                           plan:plan];
     } else {
       NSInteger fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
                                                                  staged:DBStagedFromDiscovered(entry)

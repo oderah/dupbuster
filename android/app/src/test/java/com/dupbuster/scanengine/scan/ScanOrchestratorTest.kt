@@ -23,8 +23,12 @@ import com.dupbuster.scanengine.index.ScanRunStatus
 import com.dupbuster.scanengine.index.SqliteSizeBucketIndex
 import com.dupbuster.scanengine.security.ScanRootGrant
 import com.dupbuster.scanengine.security.ScanRootMode
+import com.dupbuster.scanengine.stat.FileStat
+import com.dupbuster.scanengine.stat.FileStatReadOutcome
+import com.dupbuster.scanengine.stat.FileStatReader
 import com.dupbuster.scanengine.stat.StatResult
 import com.dupbuster.scanengine.stat.StagedFile
+import com.dupbuster.scanengine.stat.ToctouStatVerifier
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -48,6 +52,7 @@ class ScanOrchestratorTest {
   private lateinit var checkpointStore: CheckpointStore
   private lateinit var emittedPhases: MutableList<String>
   private lateinit var orchestrator: ScanOrchestrator
+  private var latestStaged: StagedFile? = null
 
   private val contentUri =
       Uri.parse(
@@ -88,8 +93,92 @@ class ScanOrchestratorTest {
             },
             progressBridge = progressBridge,
             emitError = {},
+            toctouVerifier = echoToctouVerifier(),
             executor = syncExecutor,
         )
+  }
+
+  @Test
+  fun startScan_toctouMismatchAfterHash_restatsAndIndexesFreshMetadata() {
+    var statCalls = 0
+    var verifyReads = 0
+    val payload = "stable-payload".toByteArray(Charsets.UTF_8)
+
+    val toctouOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner =
+                ScanDiscoveryRunner { _, _, generation, consumer, _ ->
+                  consumer.onEntry(discoveredEntry(1, generation))
+                  DiscoveryResult(1, 0, 0, cancelled = false)
+                },
+            statFile = { entry, _ ->
+              statCalls++
+              val size = if (statCalls == 1) 4L else payload.size.toLong()
+              val mtime = if (statCalls == 1) 100L else 200L
+              StatResult.Success(staged(entry, size, mtime).also { latestStaged = it })
+            },
+            hashPipelineFactory = { _ ->
+              HashPipeline(
+                  context,
+                  FakeContentReader(payload),
+                  sizeBucketIndex = alwaysNeedsHashIndex(),
+              )
+            },
+            progressBridge =
+                ScanProgressBridge(
+                    emitProgress = { map ->
+                      emittedPhases.add(map.getString("phase")!!)
+                    },
+                ),
+            emitError = {},
+            toctouVerifier =
+                ToctouStatVerifier(
+                    object : FileStatReader {
+                      override fun readStat(uri: Uri): FileStatReadOutcome {
+                        verifyReads++
+                        return when (verifyReads) {
+                          1 ->
+                              FileStatReadOutcome.Ok(
+                                  FileStat(4, 100, null, null, false),
+                              )
+                          2 ->
+                              FileStatReadOutcome.Ok(
+                                  FileStat(payload.size.toLong(), 200, null, null, false),
+                              )
+                          else ->
+                              FileStatReadOutcome.Ok(
+                                  FileStat(
+                                      latestStaged!!.sizeBytes,
+                                      latestStaged!!.mtimeNs,
+                                      null,
+                                      null,
+                                      false,
+                                  ),
+                              )
+                        }
+                      }
+                    },
+                ),
+            executor = java.util.concurrent.Executor { it.run() },
+        )
+
+    toctouOrchestrator.startScan(
+        ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+    )
+
+    assertEquals(2, statCalls)
+    assertTrue(verifyReads >= 3)
+    database.readable().rawQuery(
+        "SELECT size, mtime_ns FROM file_entry ORDER BY id DESC LIMIT 1",
+        null,
+    ).use { cursor ->
+      assertTrue(cursor.moveToFirst())
+      assertEquals(payload.size.toLong(), cursor.getLong(0))
+      assertEquals(200L, cursor.getLong(1))
+    }
   }
 
   @Test
@@ -140,6 +229,7 @@ class ScanOrchestratorTest {
                     },
                 ),
             emitError = {},
+            toctouVerifier = echoToctouVerifier(),
             executor = java.util.concurrent.Executor { it.run() },
         )
 
@@ -181,6 +271,7 @@ class ScanOrchestratorTest {
                     },
                 ),
             emitError = {},
+            toctouVerifier = echoToctouVerifier(),
             executor = Executors.newSingleThreadExecutor(),
         )
 
@@ -217,15 +308,33 @@ class ScanOrchestratorTest {
           mtimeNs = id,
       )
 
-  private fun staged(entry: DiscoveredEntry, sizeBytes: Long): StagedFile =
+  private fun staged(entry: DiscoveredEntry, sizeBytes: Long, mtimeNs: Long = entry.mtimeNs): StagedFile =
       StagedFile(
           discovered = entry,
           sizeBytes = sizeBytes,
-          mtimeNs = entry.mtimeNs,
-          inode = entry.mtimeNs,
+          mtimeNs = mtimeNs,
+          inode = mtimeNs,
           deviceId = 1L,
           isSymlink = false,
           mediaTypeHint = entry.mediaTypeHint,
+      ).also { latestStaged = it }
+
+  private fun echoToctouVerifier(): ToctouStatVerifier =
+      ToctouStatVerifier(
+          object : FileStatReader {
+            override fun readStat(uri: Uri): FileStatReadOutcome {
+              val staged = latestStaged ?: return FileStatReadOutcome.IoFailure
+              return FileStatReadOutcome.Ok(
+                  FileStat(
+                      sizeBytes = staged.sizeBytes,
+                      mtimeNs = staged.mtimeNs,
+                      inode = staged.inode,
+                      deviceId = staged.deviceId,
+                      isSymlink = staged.isSymlink,
+                  ),
+              )
+            }
+          },
       )
 
   private fun alwaysNeedsHashIndex() =

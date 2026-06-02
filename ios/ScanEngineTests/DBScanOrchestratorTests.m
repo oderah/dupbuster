@@ -17,6 +17,8 @@
 #import "DBSizeBucketIndex.h"
 #import "DBStagedFile.h"
 #import "DBProductionScanDiscoveryRunner.h"
+#import "DBToctouStatVerifier.h"
+#import "DBFileStatReading.h"
 
 @interface DBFakeContentReader : NSObject <DBFileContentReading>
 @property (nonatomic, copy) NSData *payload;
@@ -67,12 +69,43 @@
 
 @end
 
+@interface DBEchoFileStatReader : NSObject <DBFileStatReading>
+@property (nonatomic, strong, nullable) DBStagedFile *latestStaged;
+@end
+
+@implementation DBEchoFileStatReader
+
+- (nullable DBFileStat *)statFileURL:(NSURL *)fileURL error:(NSError **)error
+{
+  (void)fileURL;
+  (void)error;
+  if (self.latestStaged == nil) {
+    return nil;
+  }
+  return [[DBFileStat alloc] initWithSizeBytes:self.latestStaged.sizeBytes
+                                       mtimeNs:self.latestStaged.mtimeNs
+                                         inode:self.latestStaged.inode
+                                      deviceId:self.latestStaged.deviceId
+                                     isSymlink:self.latestStaged.isSymlink
+                                    durationMs:self.latestStaged.durationMs
+                                    videoWidth:self.latestStaged.videoWidth
+                                   videoHeight:self.latestStaged.videoHeight];
+}
+
+- (nullable DBFileStat *)statPhAssetLocalIdentifier:(NSString *)localIdentifier error:(NSError **)error
+{
+  return [self statFileURL:nil error:error];
+}
+
+@end
+
 @interface DBScanOrchestratorTests : XCTestCase
 @property (nonatomic, strong) DBCatalogDatabase *database;
 @property (nonatomic, strong) DBIndexWriter *writer;
 @property (nonatomic, strong) DBCheckpointStore *checkpoints;
 @property (nonatomic, strong) NSMutableArray<NSString *> *emittedPhases;
 @property (nonatomic, strong) DBScanOrchestrator *orchestrator;
+@property (nonatomic, strong) DBEchoFileStatReader *echoStatReader;
 @end
 
 @interface DBScanOrchestratorTests ()
@@ -108,6 +141,10 @@
     [self discoveredEntryWithId:2 generation:1],
   ];
 
+  self.echoStatReader = [[DBEchoFileStatReader alloc] init];
+  DBToctouStatVerifier *toctouVerifier =
+      [[DBToctouStatVerifier alloc] initWithFileStatReader:self.echoStatReader];
+
   self.orchestrator =
       [[DBScanOrchestrator alloc] initWithIndexWriter:self.writer
                                       checkpointStore:self.checkpoints
@@ -123,6 +160,7 @@
                                                stat.inode = @(entry.mtimeNs);
                                                stat.deviceId = @1;
                                                result.staged = [[DBStagedFile alloc] initWithDiscovered:entry fileStat:stat];
+                                               weakSelf.echoStatReader.latestStaged = result.staged;
                                                return result;
                                              }
                                   hashPipelineFactory:^DBHashPipeline *(DBIndexWriter *writer) {
@@ -133,6 +171,7 @@
                                                 emitError:^(NSDictionary *payloadMap) {
                                                   (void)payloadMap;
                                                 }
+                                           toctouVerifier:toctouVerifier
                                                 workQueue:self.syncWorkQueue];
 }
 

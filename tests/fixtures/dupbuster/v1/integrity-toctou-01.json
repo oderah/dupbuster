@@ -1,0 +1,19 @@
+{
+  "id": "integrity-toctou-01",
+  "description": "Size or mtime change between StatStage baseline and post-hash verify discards hash and re-queues with fresh stat (AC-integrity-toctou-01)",
+  "platform": "both",
+  "input": {
+    "baselineSizeBytes": 100,
+    "baselineMtimeNs": 1000,
+    "changedSizeBytes": 200,
+    "changedMtimeNs": 2000
+  },
+  "expect": {
+    "preVerifyConsistent": true,
+    "postVerifyChanged": true,
+    "afterRestatConsistent": true,
+    "hashDiscardedOnMismatch": true,
+    "indexedSizeBytes": 200,
+    "indexedMtimeNs": 2000
+  }
+}

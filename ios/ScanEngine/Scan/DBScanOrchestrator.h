@@ -9,6 +9,7 @@
 @class DBIndexWriter;
 @class DBGrouper;
 @class DBScanProgressBridge;
+@class DBToctouStatVerifier;
 @protocol DBScanDiscoveryRunning;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,7 +38,8 @@ typedef NS_ERROR_ENUM(DBScanOrchestratorErrorDomain, DBScanOrchestratorError) {
                hashPipelineFactory:(DBScanHashPipelineFactoryBlock)hashPipelineFactory
                     progressBridge:(DBScanProgressBridge *)progressBridge
                          emitError:(void (^)(NSDictionary *payload))emitError
-                     workQueue:(nullable dispatch_queue_t)workQueue NS_DESIGNATED_INITIALIZER;
+                    toctouVerifier:(DBToctouStatVerifier *)toctouVerifier
+                         workQueue:(nullable dispatch_queue_t)workQueue NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
 

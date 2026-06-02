@@ -508,6 +508,13 @@ New code must land in these areas unless architecture is amended first.
 - **Factory:** `DeleteCoordinatorFactory.create(ReactApplicationContext)` wires production deleter; non-RN `Context` keeps `PendingPlatformFileDeleter` for headless tests.
 - **Tests:** `AndroidPlatformFileDeleterTest`, `DefaultContentDeleteGatewayTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.delete.*'`.
 
+### TOCTOU stat→hash (M3-06)
+
+- **Android:** `com.dupbuster.scanengine.stat.ToctouStatVerifier` — re-reads size/mtime via `FileStatReader` before and after `HashPipeline.hash`; `ScanOrchestrator.processHashResult` discards hash on mismatch, re-stats via `statFile`, retries up to `MAX_MISMATCH_RETRIES` (3).
+- **iOS:** `DBToctouStatVerifier` — same compare via `DBFileStatReading`; `DBScanOrchestrator` parity loop.
+- **Scope:** AC-integrity-toctou-01 only; delete mid-hash tombstone is M3-07 (`AC-integrity-toctou-02`).
+- **Tests:** `ToctouStatVerifierTest`, `ScanOrchestratorTest` (mismatch re-queue); `DBToctouStatVerifierTests`; fixture `integrity-toctou-01.json`.
+
 ### iOS platform delete (M3-05)
 
 - **`DBPhAssetPlatformFileDeleter`:** Mode B PHAsset rows → `PHAssetChangeRequest deleteAssets` via `performChangesAndWait` (requires `PHAccessLevelReadWrite` authorized or limited). Mode A `file://` → `NSFileCoordinator` delete + security-scoped grant URL access.

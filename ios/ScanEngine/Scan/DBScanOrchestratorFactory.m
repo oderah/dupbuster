@@ -10,6 +10,7 @@
 #import "DBSqliteDurationBucketIndex.h"
 #import "DBSqliteSizeBucketIndex.h"
 #import "DBStatStage.h"
+#import "DBToctouStatVerifier.h"
 #import "DBUriValidator.h"
 
 @implementation DBScanOrchestratorFactory
@@ -46,6 +47,7 @@
                                      }
                                               progressBridge:progressBridge
                                                    emitError:emitError
+                                              toctouVerifier:[[DBToctouStatVerifier alloc] init]
                                                    workQueue:nil];
 }
 
