@@ -6,7 +6,6 @@ import type {DuplicateGroupDetailScreenProps} from '../types/duplicateGroup';
 import {
   buildDetailThumbnailSlots,
   formatGroupAccessibilityLabel,
-  formatGroupReclaimableLine,
   summarizeGroupMediaTypes,
 } from '../components/duplicateGroupDisplay';
 import {ContentMatchNotice} from '../components/ContentMatchNotice';
@@ -14,8 +13,7 @@ import {KeeperSelector} from '../components/KeeperSelector';
 import {MatchKindBadge} from '../components/MatchKindBadge';
 import {toKeeperMembers} from '../components/keeperMembers';
 import {ThumbnailGrid} from '../components/ThumbnailGrid';
-import {computeReclaimableBytesForKeeper} from '../controllers/keeperSelection';
-import {formatKeeperReclaimableLine} from '../components/keeperDisplay';
+import {resolveGroupDetailReclaimable} from '../controllers/groupDetailReclaimable';
 
 const DETAIL_THUMB_CELL_SIZE = 96;
 
@@ -37,15 +35,10 @@ export function DuplicateGroupDetailScreen({
     group.memberCount,
   );
   const keeperMembers = toKeeperMembers(group.members);
-  const reclaimableBytes = keeperSelection.explicitlyActivated
-    ? computeReclaimableBytesForKeeper(
-        keeperMembers,
-        keeperSelection.selectedFileEntryId,
-      )
-    : group.reclaimableBytesEst;
-  const reclaimableLine = keeperSelection.explicitlyActivated
-    ? formatKeeperReclaimableLine(reclaimableBytes)
-    : formatGroupReclaimableLine(group.reclaimableBytesEst);
+  const {reclaimableLine} = resolveGroupDetailReclaimable(
+    group,
+    keeperSelection,
+  );
   const mediaTypeSummary = summarizeGroupMediaTypes(
     group.members.map(member => member.mediaTypeHint),
   );
@@ -64,9 +57,6 @@ export function DuplicateGroupDetailScreen({
         />
         <Text style={styles.mediaType} maxFontSizeMultiplier={1.3}>
           {mediaTypeSummary}
-        </Text>
-        <Text style={styles.reclaimable} maxFontSizeMultiplier={1.3}>
-          {reclaimableLine}
         </Text>
       </View>
 
@@ -92,6 +82,14 @@ export function DuplicateGroupDetailScreen({
         showRememberSession={showRememberSession}
         testID={`${testID}-keeper`}
       />
+
+      <Text
+        testID={`${testID}-reclaimable`}
+        style={styles.reclaimable}
+        accessibilityLiveRegion="polite"
+        maxFontSizeMultiplier={1.3}>
+        {reclaimableLine}
+      </Text>
 
       <Pressable
         ref={deleteTriggerRef}

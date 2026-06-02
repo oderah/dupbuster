@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
 import {
+  applyKeeperPreset,
   createKeeperSelectionState,
   selectKeeperMember,
 } from '../src/controllers/keeperSelection';
@@ -210,6 +211,70 @@ describe('DuplicateGroupDetailScreen', () => {
     );
     expect(deleteTrigger?.props.accessibilityState?.disabled).toBe(true);
     expect(deleteTrigger?.props.disabled).toBe(true);
+  });
+
+  it('shows scan-time reclaimable preview before keeper activation', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen group={group} {...keeperProps} />,
+      );
+    });
+
+    const reclaimable = findByTestId(tree!.root, 'duplicate-group-detail-reclaimable');
+    expect(reclaimable).not.toBeNull();
+    expect(JSON.stringify(tree!.toJSON())).toContain('You can free up');
+  });
+
+  it('updates reclaimable to non-keeper sum after keeper pick (AC-action-reclaim-01)', () => {
+    const keepSmallest = applyKeeperPreset(
+      createKeeperSelectionState(group.members),
+      'smallest_file',
+      group.members,
+    );
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen
+          group={group}
+          {...keeperProps}
+          keeperSelection={keepSmallest}
+        />,
+      );
+    });
+
+    const reclaimable = findByTestId(tree!.root, 'duplicate-group-detail-reclaimable');
+    expect(reclaimable).not.toBeNull();
+    expect(JSON.stringify(tree!.toJSON())).toContain('3.8 MB');
+  });
+
+  it('places reclaimable line after KeeperSelector and before delete trigger', () => {
+    const activated = selectKeeperMember(keeperSelection, 101);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen
+          group={group}
+          {...keeperProps}
+          keeperSelection={activated}
+          deleteEnabled
+          onDeletePress={jest.fn()}
+        />,
+      );
+    });
+
+    const keeper = findByTestId(tree!.root, 'duplicate-group-detail-keeper');
+    const reclaimable = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-reclaimable',
+    );
+    const deleteTrigger = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-delete-trigger',
+    );
+    const flat = tree!.root.findAll(() => true);
+    expect(flat.indexOf(keeper!)).toBeLessThan(flat.indexOf(reclaimable!));
+    expect(flat.indexOf(reclaimable!)).toBeLessThan(flat.indexOf(deleteTrigger!));
   });
 
   it('uses group a11y label on scroll container (AC-a11y-match-01)', () => {

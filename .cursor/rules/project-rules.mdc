@@ -406,7 +406,7 @@ New code must land in these areas unless architecture is amended first.
 - **`src/controllers/keeperSelection.ts`:** Preset resolution, selection state, `isKeeperSelectionComplete`, `computeReclaimableBytesForKeeper` (FR-AC-06).
 - **`src/controllers/keeperEducationSession.ts`:** Once-per-session gate for AC-action-keeper-02 (not persisted across cold start).
 - **`src/components/keeperDisplay.ts`**, **`keeperMembers.ts`**, **`src/types/keeper.ts`:** Labels, member mapping, closed preset set.
-- **`DuplicateGroupDetailScreen`:** Composes `KeeperSelector`; reclaimable line switches to non-keeper sum after explicit keeper pick.
+- **`DuplicateGroupDetailScreen`:** Composes `KeeperSelector`; reclaimable line below selector via `resolveGroupDetailReclaimable` — switches to non-keeper sum after explicit keeper pick (M3-10).
 - **Tokens:** `keeper.preset.*`, `keeper.education.title` / `general` / `dismiss` (catalog copy); `keeper.education.videoContent` unchanged.
 - **`DuplicateGroupMember`:** Requires `mtimeMs` + `pathLength` for preset resolution.
 - **Delete:** `DeleteConfirmModal` + detail delete trigger (M3-01); native delete coordinator (M3-03+).
@@ -530,6 +530,14 @@ New code must land in these areas unless architecture is amended first.
 - **Tokens:** `resume.interrupted`, `resume.cta.resume`, `resume.cta.restart` (requirements §9); hidden when `fullRescanRequired`.
 - **Scope:** AC-integrity-resume-01 / FR-SI-03; native `CheckpointStore` (M1-12) unchanged.
 - **Tests:** `resumePromptSessionState.test.ts`, `ResumePromptBanner.test.tsx`, `ScanOrchestratorTest` (resume skip), `scanPermissionFlow.test.tsx`; fixture `integrity-resume-01.json`.
+
+### Reclaimable on group detail (M3-10)
+
+- **`src/controllers/groupDetailReclaimable.ts`:** `resolveGroupDetailReclaimable` — scan-time `reclaimableBytesEst` (sum−max preview) until explicit keeper activation; then `computeReclaimableBytesForKeeper` (FR-AC-06 / AC-action-reclaim-01).
+- **`DuplicateGroupDetailScreen`:** Reclaimable line below `KeeperSelector`, above delete trigger; `accessibilityLiveRegion="polite"` on keeper change.
+- **List row:** `DuplicateGroupListItem` keeps catalog `reclaimableBytesEst` (no keeper context).
+- **Delete modal:** `resolveDeleteConfirmCounts` unchanged — non-keeper sum when confirm opens.
+- **Tests:** `groupDetailReclaimable.test.ts`, `DuplicateGroupDetailScreen.test.tsx` (AC-action-reclaim-01 layout + update).
 
 ### Permission revoke mid-scan pause (M3-08)
 
