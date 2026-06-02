@@ -354,6 +354,16 @@
       "kind": "descriptor"
     },
     {
+      "id": "integrity-perm-01",
+      "path": "integrity-perm-01.json",
+      "category": "integrity",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-integrity-perm-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
       "id": "hash-pipeline-video-01",
       "path": "pipeline/hash-pipeline-video-01.json",
       "category": "pipeline",

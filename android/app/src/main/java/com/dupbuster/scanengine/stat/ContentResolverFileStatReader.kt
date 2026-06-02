@@ -3,9 +3,11 @@ package com.dupbuster.scanengine.stat
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.system.ErrnoException
 import android.system.Os
 import android.system.OsConstants
+import com.dupbuster.scanengine.scan.ScanOpenFileRegistry
 import java.io.IOException
 
 /**
@@ -14,6 +16,7 @@ import java.io.IOException
  */
 class ContentResolverFileStatReader(
     context: Context,
+    private val openFileRegistry: ScanOpenFileRegistry? = null,
 ) : FileStatReader {
 
   private val contentResolver = context.contentResolver
@@ -24,29 +27,38 @@ class ContentResolverFileStatReader(
           contentResolver.openFileDescriptor(uri, "r")
         } catch (_: IOException) {
           return FileStatReadOutcome.IoFailure
+        } catch (_: SecurityException) {
+          return FileStatReadOutcome.IoFailure
         } ?: return FileStatReadOutcome.IoFailure
 
-    pfd.use { parcel ->
-      val structStat =
-          try {
-            Os.fstat(parcel.fileDescriptor)
-          } catch (_: ErrnoException) {
-            return FileStatReadOutcome.IoFailure
-          }
-
-      val mtimeNs = mtimeNsFromStructStat(structStat)
-      val isSymlink = isSymlinkAtOpenFd(parcel.fd)
-
-      return FileStatReadOutcome.Ok(
-          FileStat(
-              sizeBytes = structStat.st_size.coerceAtLeast(0L),
-              mtimeNs = mtimeNs,
-              inode = structStat.st_ino,
-              deviceId = structStat.st_dev,
-              isSymlink = isSymlink,
-          ),
-      )
+    val release = openFileRegistry?.register(pfd)
+    try {
+      return readStatFromPfd(pfd)
+    } finally {
+      release?.close()
     }
+  }
+
+  private fun readStatFromPfd(parcel: ParcelFileDescriptor): FileStatReadOutcome {
+    val structStat =
+        try {
+          Os.fstat(parcel.fileDescriptor)
+        } catch (_: ErrnoException) {
+          return FileStatReadOutcome.IoFailure
+        }
+
+    val mtimeNs = mtimeNsFromStructStat(structStat)
+    val isSymlink = isSymlinkAtOpenFd(parcel.fd)
+
+    return FileStatReadOutcome.Ok(
+        FileStat(
+            sizeBytes = structStat.st_size.coerceAtLeast(0L),
+            mtimeNs = mtimeNs,
+            inode = structStat.st_ino,
+            deviceId = structStat.st_dev,
+            isSymlink = isSymlink,
+        ),
+    )
   }
 
   private fun mtimeNsFromStructStat(structStat: android.system.StructStat): Long {

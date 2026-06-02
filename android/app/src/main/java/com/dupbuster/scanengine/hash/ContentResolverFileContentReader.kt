@@ -3,12 +3,16 @@ package com.dupbuster.scanengine.hash
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import com.dupbuster.scanengine.scan.ScanOpenFileRegistry
 import java.io.FileInputStream
+import java.io.FilterInputStream
 import java.io.IOException
+import java.io.InputStream
 
 /** Read-only content access via `ContentResolver.openFileDescriptor` (architecture §6). */
 class ContentResolverFileContentReader(
     context: Context,
+    private val openFileRegistry: ScanOpenFileRegistry? = null,
 ) : FileContentReader {
 
   private val contentResolver = context.contentResolver
@@ -19,12 +23,20 @@ class ContentResolverFileContentReader(
           contentResolver.openFileDescriptor(uri, "r")
         } catch (_: IOException) {
           return ContentOpenOutcome.IoFailure
+        } catch (_: SecurityException) {
+          return ContentOpenOutcome.IoFailure
         } ?: return ContentOpenOutcome.IoFailure
 
+    val release = openFileRegistry?.register(pfd)
     return try {
-      ContentOpenOutcome.Ok(FileInputStream(pfd.fileDescriptor))
+      ContentOpenOutcome.Ok(
+          RegistryTrackingInputStream(
+              input = FileInputStream(pfd.fileDescriptor),
+              onClose = { release?.close() ?: pfd.close() },
+          ),
+      )
     } catch (_: IOException) {
-      pfd.close()
+      release?.close() ?: pfd.close()
       ContentOpenOutcome.IoFailure
     }
   }
@@ -38,10 +50,25 @@ class ContentResolverFileContentReader(
           contentResolver.openFileDescriptor(uri, "r")
         } catch (_: IOException) {
           return null
+        } catch (_: SecurityException) {
+          return null
         } ?: return null
 
-  return pfd.use { parcel ->
-      readRangeFromPfd(parcel, offset, length)
+    val release = openFileRegistry?.register(pfd)
+    return try {
+      readRangeFromPfd(pfd, offset, length)
+    } finally {
+      release?.close() ?: pfd.close()
+    }
+  }
+
+  private class RegistryTrackingInputStream(
+      input: InputStream,
+      private val onClose: () -> Unit,
+  ) : FilterInputStream(input) {
+    override fun close() {
+      super.close()
+      onClose()
     }
   }
 

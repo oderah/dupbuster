@@ -2,9 +2,11 @@
 
 #import "DBCheckpointStore.h"
 #import "DBDiscoveredEntry.h"
+#import "DBGrantRevocationTracker.h"
 #import "DBGrouper.h"
 #import "DBHashSettings.h"
 #import "DBScanErrorBridgeMapper.h"
+#import "DBScanOpenFileRegistry.h"
 #import "DBScanPhase.h"
 #import "DBScanProgressBridge.h"
 #import "DBScanProgressSnapshot.h"
@@ -17,6 +19,7 @@
 #import "DBUnscannableReason.h"
 
 NSString *const DBScanOrchestratorErrorDomain = @"com.dupbuster.scanengine.scan.orchestrator";
+NSInteger const DBScanOrchestratorGrantRevokedSignal = -2;
 
 @interface DBScanActiveSession : NSObject
 @property (nonatomic, assign) NSInteger scanRunId;
@@ -49,6 +52,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   DBScanProgressBridge *_progressBridge;
   void (^_emitError)(NSDictionary *payload);
   DBToctouStatVerifier *_toctouVerifier;
+  DBGrantRevocationTracker *_grantRevocationTracker;
+  DBScanOpenFileRegistry *_openFileRegistry;
   dispatch_queue_t _workQueue;
   DBScanActiveSession *_Nullable _activeSession;
   NSLock *_sessionLock;
@@ -76,6 +81,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     _progressBridge = progressBridge;
     _emitError = [emitError copy];
     _toctouVerifier = toctouVerifier;
+    _grantRevocationTracker = [[DBGrantRevocationTracker alloc] init];
+    _openFileRegistry = [[DBScanOpenFileRegistry alloc] init];
     _workQueue = workQueue ?: dispatch_queue_create("com.dupbuster.scan.orchestrator", DISPATCH_QUEUE_SERIAL);
     _sessionLock = [[NSLock alloc] init];
   }
@@ -205,6 +212,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                    control:(DBScanSessionControl *)control
 {
   [_progressBridge reset];
+  [_grantRevocationTracker reset];
   @try {
     [self emitPhaseWithSnapshot:[[DBScanProgressSnapshot alloc] initWithFilesProcessed:0
                                                                          filesTotalKnown:nil
@@ -244,35 +252,63 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                                                              contentKind:nil]];
 
     for (DBDiscoveredEntry *entry in entries) {
-      [control awaitIfPaused];
-      if (control.isCancelled) {
-        [self finishCancelledWithScanRunId:scanRunId filesProcessed:filesProcessed filesTotalKnown:totalFiles];
-        return;
-      }
+      BOOL entryComplete = NO;
+      while (!entryComplete) {
+        [control awaitIfPaused];
+        if (control.isCancelled) {
+          [self finishCancelledWithScanRunId:scanRunId filesProcessed:filesProcessed filesTotalKnown:totalFiles];
+          return;
+        }
 
-      DBScanRootGrant *grant = [self grantForEntry:entry plan:plan];
-      DBStatStageResult *statResult = _statFile(entry, grant);
-      NSInteger fileEntryId = 0;
-      if (statResult.outcome == DBStatStageOutcomeSuccess) {
-        fileEntryId = [self processHashResult:hashPipeline
-                                        entry:entry
-                                        grant:grant
-                                initialStaged:statResult.staged
-                                   generation:generation
-                                    scanRunId:scanRunId
-                                         plan:plan];
-      } else {
-        fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
-                                                         staged:DBStagedFromDiscovered(entry)
-                                                     generation:generation];
-        _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
-                                                       unscannableReason:statResult.unscannableReason
-                                                               scanRunId:@(scanRunId)]);
+        DBScanRootGrant *grant = [self grantForEntry:entry plan:plan];
+        DBStatStageResult *statResult = _statFile(entry, grant);
+        if (statResult.outcome == DBStatStageOutcomeSuccess) {
+          [_grantRevocationTracker markSuccessfulAccessForScanRootId:entry.scanRootId];
+          NSInteger fileEntryId = [self processHashResult:hashPipeline
+                                                    entry:entry
+                                                    grant:grant
+                                            initialStaged:statResult.staged
+                                               generation:generation
+                                                scanRunId:scanRunId
+                                                     plan:plan];
+          if (fileEntryId == DBScanOrchestratorGrantRevokedSignal) {
+            DBPartialScanProgress partial =
+                [self pauseForPermissionRevokeWithScanRunId:scanRunId
+                                                    control:control
+                                             filesProcessed:filesProcessed
+                                            filesTotalKnown:totalFiles];
+            groupsFound = partial.groupsFound;
+            reclaimableBytesEst = partial.reclaimableBytesEst;
+            continue;
+          }
+          NSError *checkpointError = nil;
+          [_indexWriter updateScanRunCheckpoint:scanRunId lastProcessedId:fileEntryId error:&checkpointError];
+          entryComplete = YES;
+        } else {
+          if ([_grantRevocationTracker isGrantRevocationForScanRootId:entry.scanRootId
+                                                    unscannableReason:statResult.unscannableReason]) {
+            DBPartialScanProgress partial =
+                [self pauseForPermissionRevokeWithScanRunId:scanRunId
+                                                    control:control
+                                             filesProcessed:filesProcessed
+                                            filesTotalKnown:totalFiles];
+            groupsFound = partial.groupsFound;
+            reclaimableBytesEst = partial.reclaimableBytesEst;
+            continue;
+          }
+          NSInteger fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
+                                                                     staged:DBStagedFromDiscovered(entry)
+                                                                 generation:generation];
+          _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
+                                                         unscannableReason:statResult.unscannableReason
+                                                                 scanRunId:@(scanRunId)]);
+          NSError *checkpointError = nil;
+          [_indexWriter updateScanRunCheckpoint:scanRunId lastProcessedId:fileEntryId error:&checkpointError];
+          entryComplete = YES;
+        }
       }
 
       filesProcessed += 1;
-      NSError *checkpointError = nil;
-      [_indexWriter updateScanRunCheckpoint:scanRunId lastProcessedId:fileEntryId error:&checkpointError];
       [_progressBridge reportHashingProgressWithFilesProcessed:filesProcessed
                                                filesTotalKnown:@(totalFiles)
                                                    groupsFound:groupsFound
@@ -421,6 +457,14 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                       scanRunId:(NSInteger)scanRunId
                            plan:(DBScanRootResolverPlan *)plan
 {
+  if (hashResult.outcome == DBHashPipelineOutcomeUnscannable) {
+    NSString *reason = hashResult.unscannableReason ?: DBUnscannableReasonPermissionDenied;
+    if ([_grantRevocationTracker isGrantRevocationForScanRootId:staged.discovered.scanRootId
+                                              unscannableReason:reason]) {
+      return DBScanOrchestratorGrantRevokedSignal;
+    }
+  }
+
   NSInteger fileEntryId = [_indexWriter persistHashPipelineResult:hashResult staged:staged generation:generation];
   if (hashResult.outcome == DBHashPipelineOutcomeUnscannable ||
       hashResult.outcome == DBHashPipelineOutcomeVideoPartialSuccess) {
@@ -507,6 +551,39 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   int64_t nowMs = [self nowMs];
   [_progressBridge reportSnapshot:snapshot atMs:nowMs];
   [_progressBridge flushAtMs:nowMs];
+}
+
+typedef struct {
+  NSInteger groupsFound;
+  int64_t reclaimableBytesEst;
+} DBPartialScanProgress;
+
+- (DBPartialScanProgress)pauseForPermissionRevokeWithScanRunId:(NSInteger)scanRunId
+                                                     control:(DBScanSessionControl *)control
+                                              filesProcessed:(NSInteger)filesProcessed
+                                             filesTotalKnown:(NSInteger)filesTotalKnown
+{
+  [_openFileRegistry closeAll];
+  DBGrouperRebuildResult *groupResult = [_grouper rebuildDuplicateGroups];
+  control.paused = YES;
+  NSError *pauseError = nil;
+  [_checkpointStore pauseRunWithId:scanRunId error:&pauseError];
+  DBScanRunSnapshot *run = [_checkpointStore runWithId:scanRunId];
+  NSInteger lastProcessedId = run != nil ? run.lastProcessedId : 0;
+  _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:lastProcessedId
+                                                 unscannableReason:DBUnscannableReasonPermissionDenied
+                                                         scanRunId:@(scanRunId)]);
+  [self emitPhaseWithSnapshot:[[DBScanProgressSnapshot alloc] initWithFilesProcessed:filesProcessed
+                                                                       filesTotalKnown:@(filesTotalKnown)
+                                                                           groupsFound:groupResult.groupsCreated
+                                                                   reclaimableBytesEst:groupResult.totalReclaimableBytesEst
+                                                                                 phase:DBScanPhasePaused
+                                                                           contentKind:nil]];
+  DBPartialScanProgress partial = {
+    .groupsFound = groupResult.groupsCreated,
+    .reclaimableBytesEst = groupResult.totalReclaimableBytesEst,
+  };
+  return partial;
 }
 
 - (int64_t)nowMs

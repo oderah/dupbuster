@@ -518,6 +518,6 @@ export function reduceScanSessionConfirmDelete(
 export function shouldRefreshCatalogAfterProgress(
   progress: ScanProgressEvent,
 ): boolean {
-  return isTerminalPhase(progress.phase);
+  return isTerminalPhase(progress.phase) || progress.phase === 'paused';
 }
 

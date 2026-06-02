@@ -163,6 +163,10 @@
 		D4M306122B68230000A75B9A /* DBToctouStatVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */; };
 		D4M306322B68230000A75B9A /* DBToctouStatVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */; };
 		D4M306142B68230000A75B9A /* DBToctouStatVerifierTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */; };
+		D4M308122B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308022B68230000A75B9A /* DBGrantRevocationTracker.m */; };
+		D4M308222B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308022B68230000A75B9A /* DBGrantRevocationTracker.m */; };
+		D4M308142B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */; };
+		D4M308242B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -333,6 +337,10 @@
 		D4M306012B68230000A75B9A /* DBToctouStatVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBToctouStatVerifier.h; path = ScanEngine/Stat/DBToctouStatVerifier.h; sourceTree = "<group>"; };
 		D4M306022B68230000A75B9A /* DBToctouStatVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBToctouStatVerifier.m; path = ScanEngine/Stat/DBToctouStatVerifier.m; sourceTree = "<group>"; };
 		D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBToctouStatVerifierTests.m; path = ScanEngineTests/DBToctouStatVerifierTests.m; sourceTree = "<group>"; };
+		D4M308012B68230000A75B9A /* DBGrantRevocationTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBGrantRevocationTracker.h; path = ScanEngine/Scan/DBGrantRevocationTracker.h; sourceTree = "<group>"; };
+		D4M308022B68230000A75B9A /* DBGrantRevocationTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBGrantRevocationTracker.m; path = ScanEngine/Scan/DBGrantRevocationTracker.m; sourceTree = "<group>"; };
+		D4M308042B68230000A75B9A /* DBScanOpenFileRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanOpenFileRegistry.h; path = ScanEngine/Scan/DBScanOpenFileRegistry.h; sourceTree = "<group>"; };
+		D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanOpenFileRegistry.m; path = ScanEngine/Scan/DBScanOpenFileRegistry.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -411,6 +419,10 @@
 				D4F8A34B2B68210000A75B9A /* DBScanOrchestrator.m */,
 				D4F8A34C2B68210000A75B9A /* DBScanOrchestratorFactory.h */,
 				D4F8A34D2B68210000A75B9A /* DBScanOrchestratorFactory.m */,
+				D4M308012B68230000A75B9A /* DBGrantRevocationTracker.h */,
+				D4M308022B68230000A75B9A /* DBGrantRevocationTracker.m */,
+				D4M308042B68230000A75B9A /* DBScanOpenFileRegistry.h */,
+				D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */,
 			);
 			name = Scan;
 			sourceTree = "<group>";
@@ -901,6 +913,8 @@
 				D4M305162B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m in Sources */,
 				D4M306122B68230000A75B9A /* DBToctouStatVerifier.m in Sources */,
 				D4M306142B68230000A75B9A /* DBToctouStatVerifierTests.m in Sources */,
+				D4M308122B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */,
+				D4M308142B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -974,6 +988,8 @@
 				D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
 				D4M305322B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */,
 				D4M306322B68230000A75B9A /* DBToctouStatVerifier.m in Sources */,
+				D4M308222B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */,
+				D4M308242B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

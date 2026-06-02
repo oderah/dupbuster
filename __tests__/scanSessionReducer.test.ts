@@ -154,5 +154,8 @@ describe('scanSessionReducer', () => {
     expect(
       shouldRefreshCatalogAfterProgress({...complete, phase: 'hashing'}),
     ).toBe(false);
+    expect(
+      shouldRefreshCatalogAfterProgress({...complete, phase: 'paused'}),
+    ).toBe(true);
   });
 });

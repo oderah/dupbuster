@@ -4,6 +4,7 @@ import android.content.Context
 import com.dupbuster.scanengine.bridge.ScanProgressBridge
 import com.dupbuster.scanengine.hash.ContentResolverImageBitmapExtractor
 import com.dupbuster.scanengine.hash.ContentResolverVideoFrameExtractor
+import com.dupbuster.scanengine.hash.ContentResolverFileContentReader
 import com.dupbuster.scanengine.hash.HashPipeline
 import com.dupbuster.scanengine.hash.ImageFingerprinter
 import com.dupbuster.scanengine.hash.VideoFingerprinter
@@ -30,15 +31,21 @@ object ScanOrchestratorFactory {
     val indexWriter = IndexWriter(database)
     val checkpointStore = CheckpointStore(database)
     val progressBridge = ScanProgressBridge(emitProgress = emitProgress)
+    val openFileRegistry = ScanOpenFileRegistry()
+    val fileStatReader = ContentResolverFileStatReader(appContext, openFileRegistry)
+    val contentReader = ContentResolverFileContentReader(appContext, openFileRegistry)
     return ScanOrchestrator(
         indexWriter = indexWriter,
         checkpointStore = checkpointStore,
         grouper = Grouper(database),
         discoveryRunner = ProductionScanDiscoveryRunner(appContext),
-        statFile = { entry, grant -> StatStage(appContext).stat(entry, grant) },
+        statFile = { entry, grant ->
+          StatStage(appContext, fileStatReader = fileStatReader).stat(entry, grant)
+        },
         hashPipelineFactory = { writer ->
           HashPipeline(
               appContext,
+              contentReader = contentReader,
               sizeBucketIndex = SqliteSizeBucketIndex(writer),
               durationBucketIndex = SqliteDurationBucketIndex(writer),
               imageFingerprinter =
@@ -49,7 +56,8 @@ object ScanOrchestratorFactory {
         },
         progressBridge = progressBridge,
         emitError = emitError,
-        toctouVerifier = ToctouStatVerifier(ContentResolverFileStatReader(appContext)),
+        toctouVerifier = ToctouStatVerifier(fileStatReader),
+        openFileRegistry = openFileRegistry,
     )
   }
 }

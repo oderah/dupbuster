@@ -1,0 +1,15 @@
+{
+  "id": "integrity-perm-01",
+  "description": "Permission revoked mid-scan pauses run and retains partial indexed results (AC-integrity-perm-01)",
+  "platform": "both",
+  "input": {
+    "filesProcessedBeforeRevoke": 1,
+    "revokeAtStat": true
+  },
+  "expect": {
+    "scanPaused": true,
+    "partialResultsRetained": true,
+    "openFdsClosed": true,
+    "coverageBannerDenied": true
+  }
+}

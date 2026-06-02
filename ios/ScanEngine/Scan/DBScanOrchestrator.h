@@ -18,6 +18,7 @@ typedef DBStatStageResult *_Nonnull (^DBScanStatFileBlock)(DBDiscoveredEntry *en
 typedef DBHashPipeline *_Nonnull (^DBScanHashPipelineFactoryBlock)(DBIndexWriter *indexWriter);
 
 extern NSString *const DBScanOrchestratorErrorDomain;
+extern NSInteger const DBScanOrchestratorGrantRevokedSignal;
 
 typedef NS_ERROR_ENUM(DBScanOrchestratorErrorDomain, DBScanOrchestratorError) {
   DBScanOrchestratorErrorActiveScan = 1,

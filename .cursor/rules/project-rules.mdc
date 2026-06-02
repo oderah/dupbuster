@@ -522,6 +522,14 @@ New code must land in these areas unless architecture is amended first.
 - **Scope:** AC-integrity-toctou-02; stale rows purged by existing `purgeEntriesNotSeenInGeneration` after successful run (FR-IX-03).
 - **Tests:** `IndexWriterTest`, `ScanOrchestratorTest` (deleted mid-hash completes); `DBIndexWriterTests`; fixture `integrity-toctou-02.json`.
 
+### Permission revoke mid-scan pause (M3-08)
+
+- **Android:** `GrantRevocationTracker` — root with prior successful stat/hash that later returns `PERMISSION_DENIED` → grant revocation (not single-file deny). `ScanOpenFileRegistry` tracks read FDs; `ScanOrchestrator.pauseForPermissionRevoke` closes FDs, rebuilds partial duplicate groups, `checkpointStore.pauseRun`, emits `PAUSED` + bridge `PERMISSION_DENIED` for coverage banner.
+- **iOS:** `DBGrantRevocationTracker`, `DBScanOpenFileRegistry`, `DBScanOrchestrator pauseForPermissionRevokeWithScanRunId:` parity.
+- **JS:** `shouldRefreshCatalogAfterProgress` includes `paused` so partial duplicate groups appear after permission-revoke pause (FR-SI-02).
+- **Scope:** AC-integrity-perm-01; run stays resumable via existing `pauseScan`/`resumeScan` checkpoint row.
+- **Tests:** `GrantRevocationTrackerTest`, `ScanOpenFileRegistryTest`, `ScanOrchestratorTest` (grant revoked mid-scan); fixture `integrity-perm-01.json`.
+
 ### iOS platform delete (M3-05)
 
 - **`DBPhAssetPlatformFileDeleter`:** Mode B PHAsset rows → `PHAssetChangeRequest deleteAssets` via `performChangesAndWait` (requires `PHAccessLevelReadWrite` authorized or limited). Mode A `file://` → `NSFileCoordinator` delete + security-scoped grant URL access.

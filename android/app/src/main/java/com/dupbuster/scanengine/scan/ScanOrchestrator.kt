@@ -39,6 +39,8 @@ class ScanOrchestrator(
     private val progressBridge: ScanProgressBridge,
     private val emitError: (ReadableMap) -> Unit,
     private val toctouVerifier: ToctouStatVerifier,
+    private val grantRevocationTracker: GrantRevocationTracker = GrantRevocationTracker(),
+    private val openFileRegistry: ScanOpenFileRegistry = ScanOpenFileRegistry(),
     private val executor: Executor = Executors.newSingleThreadExecutor { runnable ->
       Thread(runnable, "dupbuster-scan-orchestrator").apply { isDaemon = true }
     },
@@ -147,6 +149,7 @@ class ScanOrchestrator(
       control: ScanSessionControl,
   ) {
     progressBridge.reset()
+    grantRevocationTracker.reset()
     try {
       emitPhase(
           ScanProgressSnapshot(
@@ -190,16 +193,19 @@ class ScanOrchestrator(
       )
 
       for (entry in entries) {
-        control.awaitIfPaused()
-        if (control.isCancelled()) {
-          finishCancelled(scanRunId, filesProcessed, totalFiles)
-          return
-        }
+        var entryComplete = false
+        while (!entryComplete) {
+          control.awaitIfPaused()
+          if (control.isCancelled()) {
+            finishCancelled(scanRunId, filesProcessed, totalFiles)
+            return
+          }
 
-        val grant = grantForEntry(entry, plan)
-        val fileEntryId =
-            when (val statResult = statFile(entry, grant)) {
-              is StatResult.Success ->
+          val grant = grantForEntry(entry, plan)
+          when (val statResult = statFile(entry, grant)) {
+            is StatResult.Success -> {
+              grantRevocationTracker.markSuccessfulAccess(entry.scanRootId)
+              val processedId =
                   processHashResult(
                       hashPipeline = hashPipeline,
                       entry = entry,
@@ -209,7 +215,35 @@ class ScanOrchestrator(
                       scanRunId = scanRunId,
                       plan = plan,
                   )
-              is StatResult.Unscannable ->
+              if (processedId == GRANT_REVOKED_SIGNAL) {
+                val partial =
+                    pauseForPermissionRevoke(
+                        scanRunId = scanRunId,
+                        control = control,
+                        filesProcessed = filesProcessed,
+                        filesTotalKnown = totalFiles,
+                    )
+                groupsFound = partial.groupsFound
+                reclaimableBytesEst = partial.reclaimableBytesEst
+                continue
+              }
+              indexWriter.updateScanRunCheckpoint(scanRunId, processedId)
+              entryComplete = true
+            }
+            is StatResult.Unscannable -> {
+              if (grantRevocationTracker.isGrantRevocation(entry.scanRootId, statResult.reason)) {
+                val partial =
+                    pauseForPermissionRevoke(
+                        scanRunId = scanRunId,
+                        control = control,
+                        filesProcessed = filesProcessed,
+                        filesTotalKnown = totalFiles,
+                    )
+                groupsFound = partial.groupsFound
+                reclaimableBytesEst = partial.reclaimableBytesEst
+                continue
+              }
+              val fileEntryId =
                   indexWriter.upsertUnscannable(
                       statResult.reason,
                       stagedFromDiscovered(entry),
@@ -223,10 +257,13 @@ class ScanOrchestrator(
                         ),
                     )
                   }
+              indexWriter.updateScanRunCheckpoint(scanRunId, fileEntryId)
+              entryComplete = true
             }
+          }
+        }
 
         filesProcessed++
-        indexWriter.updateScanRunCheckpoint(scanRunId, fileEntryId)
         reportHashingProgress(
             mediaTypeHint = entry.mediaTypeHint,
             filesProcessed = filesProcessed,
@@ -392,6 +429,15 @@ class ScanOrchestrator(
       scanRunId: Long,
       plan: ScanRootResolver.ResolvedPlan,
   ): Long {
+    if (hashResult is HashResult.Unscannable &&
+        grantRevocationTracker.isGrantRevocation(
+            staged.discovered.scanRootId,
+            hashResult.reason,
+        )
+    ) {
+      return GRANT_REVOKED_SIGNAL
+    }
+
     val fileEntryId = indexWriter.persistHashResult(hashResult, staged, generation)
     if (hashResult is HashResult.Unscannable) {
       emitError(
@@ -587,5 +633,49 @@ class ScanOrchestrator(
   private fun emitPhase(snapshot: ScanProgressSnapshot) {
     progressBridge.report(snapshot, clock())
     progressBridge.flush(clock())
+  }
+
+  /** AC-integrity-perm-01: pause run, close FDs, rebuild partial duplicate groups. */
+  private fun pauseForPermissionRevoke(
+      scanRunId: Long,
+      control: ScanSessionControl,
+      filesProcessed: Int,
+      filesTotalKnown: Int,
+  ): PartialScanProgress {
+    openFileRegistry.closeAll()
+    val groupResult = grouper.rebuildDuplicateGroups()
+    control.paused = true
+    checkpointStore.pauseRun(scanRunId)
+    val lastProcessedId = checkpointStore.getRun(scanRunId)?.lastProcessedId ?: 0L
+    emitError(
+        ScanErrorBridgeMapper.toReadableMap(
+            fileEntryId = lastProcessedId,
+            unscannableReason = UnscannableReason.PERMISSION_DENIED,
+            scanRunId = scanRunId,
+        ),
+    )
+    emitPhase(
+        ScanProgressSnapshot(
+            filesProcessed = filesProcessed,
+            filesTotalKnown = filesTotalKnown,
+            groupsFound = groupResult.groupsCreated,
+            reclaimableBytesEst = groupResult.totalReclaimableBytesEst,
+            phase = ScanPhase.PAUSED,
+        ),
+    )
+    return PartialScanProgress(
+        groupsFound = groupResult.groupsCreated,
+        reclaimableBytesEst = groupResult.totalReclaimableBytesEst,
+    )
+  }
+
+  private data class PartialScanProgress(
+      val groupsFound: Int,
+      val reclaimableBytesEst: Long,
+  )
+
+  companion object {
+    /** Returned from [processHashResult] / [persistHashOutcome] when grant access is lost mid-run. */
+    const val GRANT_REVOKED_SIGNAL: Long = -2L
   }
 }

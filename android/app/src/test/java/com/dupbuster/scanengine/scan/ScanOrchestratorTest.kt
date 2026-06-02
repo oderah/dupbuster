@@ -289,6 +289,92 @@ class ScanOrchestratorTest {
   }
 
   @Test
+  fun startScan_grantRevokedMidScan_pausesAndRetainsPartialResults() {
+    val payload = "keep-me".toByteArray(Charsets.UTF_8)
+    val platformRootId =
+        indexWriter.findOrInsertScanRoot(
+            PlatformDiscoveryGrant.MARKER_URI.toString(),
+            ScanRootMode.PLATFORM_DISCOVERY,
+        )
+    val uriOk = Uri.parse("$contentUri/ok")
+    val uriRevoked = Uri.parse("$contentUri/revoked")
+    val emittedErrors = mutableListOf<String>()
+    val pausedLatch = CountDownLatch(1)
+
+    val revokeOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner =
+                ScanDiscoveryRunner { _, _, generation, consumer, _ ->
+                  consumer.onEntry(
+                      DiscoveredEntry(
+                          contentUri = uriOk,
+                          scanRootId = platformRootId,
+                          generation = generation,
+                          displayName = "ok.bin",
+                          mediaTypeHint = MediaTypeHint.OTHER,
+                          sizeBytes = payload.size.toLong(),
+                          mtimeNs = 1L,
+                      ),
+                  )
+                  consumer.onEntry(
+                      DiscoveredEntry(
+                          contentUri = uriRevoked,
+                          scanRootId = platformRootId,
+                          generation = generation,
+                          displayName = "revoked.bin",
+                          mediaTypeHint = MediaTypeHint.OTHER,
+                          sizeBytes = payload.size.toLong(),
+                          mtimeNs = 2L,
+                      ),
+                  )
+                  DiscoveryResult(2, 0, 0, cancelled = false)
+                },
+            statFile = { entry, _ ->
+              if (entry.contentUri == uriOk) {
+                StatResult.Success(staged(entry, payload.size.toLong(), 1L))
+              } else {
+                StatResult.Unscannable.permissionDenied()
+              }
+            },
+            hashPipelineFactory = { _ ->
+              HashPipeline(
+                  context,
+                  FakeContentReader(payload),
+                  sizeBucketIndex = alwaysNeedsHashIndex(),
+              )
+            },
+            progressBridge =
+                ScanProgressBridge(
+                    emitProgress = { map ->
+                      emittedPhases.add(map.getString("phase")!!)
+                      if (map.getString("phase") == ScanPhase.PAUSED) {
+                        pausedLatch.countDown()
+                      }
+                    },
+                ),
+            emitError = { map -> emittedErrors.add(map.getString("unscannableReason")!!) },
+            toctouVerifier = echoToctouVerifier(),
+            executor = Executors.newSingleThreadExecutor(),
+        )
+
+    val scanRunId =
+        revokeOrchestrator.startScan(
+            ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+        )
+    assertTrue(pausedLatch.await(2, TimeUnit.SECONDS))
+    assertTrue(emittedPhases.contains(ScanPhase.PAUSED))
+    assertTrue(emittedErrors.contains("PERMISSION_DENIED"))
+    assertEquals(ScanRunStatus.PAUSED, checkpointStore.getRun(scanRunId)!!.status)
+    assertEquals(1, indexWriter.fileEntryCount())
+
+    revokeOrchestrator.cancelScan(scanRunId)
+    Thread.sleep(200)
+  }
+
+  @Test
   fun startScan_runsPipeline_andEmitsTerminalComplete() {
     val scanRunId =
         orchestrator.startScan(
