@@ -493,7 +493,7 @@ New code must land in these areas unless architecture is amended first.
 ### DeleteCoordinator (M3-03)
 
 - **Android:** `com.dupbuster.scanengine.delete.DeleteCoordinator` — dedicated `dupbuster-delete` executor (not `ScanOrchestrator` hash pool); `UriValidator` + `DISCOVERY` provenance before delete; platform delete via `AndroidPlatformFileDeleter` (M3-04).
-- **iOS:** `ScanEngine/Delete/DBDeleteCoordinator` — serial `com.dupbuster.delete` queue; `DBPendingPlatformFileDeleter` until M3-05 PHAsset delete.
+- **iOS:** `ScanEngine/Delete/DBDeleteCoordinator` — serial `com.dupbuster.delete` queue; `DBPhAssetPlatformFileDeleter` (`PHAssetChangeRequest` + scoped `file://` via `NSFileCoordinator`).
 - **Catalog:** `IndexWriter.applyDuplicateDelete` / `DBIndexWriter applyDuplicateDeleteForGroupId:` — mark `is_keeper`, remove deleted `file_entry` / `duplicate_member`, drop group when &lt;2 members remain.
 - **Bridge:** `deleteDuplicates({ groupId, keeperFileEntryId, deleteFileEntryIds })` → `{ deletedCount, failedCount }`; invalid payload → `DELETE_INVALID_COMMAND`.
 - **JS:** `ScanEnginePort.deleteDuplicates`; `buildDeleteDuplicatesCommand`; `ScanSessionController.confirmDelete` refreshes catalog and closes detail when group removed.
@@ -507,6 +507,13 @@ New code must land in these areas unless architecture is amended first.
 - **Legacy API 26–29:** `ContentResolver.delete`; `RecoverableSecurityException` uses same confirmation launcher (API 29+).
 - **Factory:** `DeleteCoordinatorFactory.create(ReactApplicationContext)` wires production deleter; non-RN `Context` keeps `PendingPlatformFileDeleter` for headless tests.
 - **Tests:** `AndroidPlatformFileDeleterTest`, `DefaultContentDeleteGatewayTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.delete.*'`.
+
+### iOS platform delete (M3-05)
+
+- **`DBPhAssetPlatformFileDeleter`:** Mode B PHAsset rows → `PHAssetChangeRequest deleteAssets` via `performChangesAndWait` (requires `PHAccessLevelReadWrite` authorized or limited). Mode A `file://` → `NSFileCoordinator` delete + security-scoped grant URL access.
+- **Factory:** `DBDeleteCoordinatorFactory` wires `DBPhAssetPlatformFileDeleter`; `DBPendingPlatformFileDeleter` remains for headless / failure-path tests.
+- **Fail-closed:** No Photos authorization, missing asset, or coordinator error → `NO` without catalog mutation (M3-03 applies deletes only after platform success).
+- **Tests:** `DBDeleteCoordinatorTests`, `DBPhAssetPlatformFileDeleterTests` in `DupbusterScanEngineTests` target.
 
 ### DeleteConfirmModal (M3-01)
 

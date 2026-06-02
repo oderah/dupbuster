@@ -138,7 +138,7 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 | M3-02 | Implement `PathChipList` + hard-link alias display | |
 | M3-03 | Implement `DeleteCoordinator` (native, isolated from hash) | |
 | M3-04 | Android MediaStore deleteRequest integration | API 11+ |
-| M3-05 | iOS PHAssetChangeRequest integration | |
+| M3-05 | iOS PHAssetChangeRequest integration | `DBPhAssetPlatformFileDeleter` |
 | M3-12 | `IMAGE_CONTENT_V1`: ImageFingerprinter + fuzzy Grouper + UI (`SAME_CONTENT_IMAGE`) | FR-FP-09/10; AC-equiv-image-content-* |
 | M3-06 | TOCTOU: stat→hash size/mtime change discard + re-queue | AC-integrity-toctou-* |
 | M3-07 | TOCTOU: delete mid-hash tombstone | |

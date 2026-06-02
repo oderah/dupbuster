@@ -4,7 +4,7 @@ import com.dupbuster.scanengine.index.FileEntryDeleteTarget
 
 /**
  * Platform delete API surface (FR-AC-07). Production wiring: [AndroidPlatformFileDeleter] (M3-04)
- * / iOS PHAsset (M3-05).
+ * / iOS PHAssetChangeRequest (M3-05).
  */
 fun interface PlatformFileDeleter {
   /** @return [file_entry_id] values removed on disk. */

@@ -156,6 +156,10 @@
 		D4M303282B68230000A75B9A /* DBDeleteCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */; };
 		D4M303202B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */; };
 		D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */; };
+		D4M305122B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */; };
+		D4M305322B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */; };
+		D4M305142B68230000A75B9A /* DBDeleteCoordinatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */; };
+		D4M305162B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -319,6 +323,10 @@
 		D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinator.m; path = ScanEngine/Delete/DBDeleteCoordinator.m; sourceTree = "<group>"; };
 		D4M303092B68230000A75B9A /* DBDeleteCoordinatorFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDeleteCoordinatorFactory.h; path = ScanEngine/Delete/DBDeleteCoordinatorFactory.h; sourceTree = "<group>"; };
 		D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinatorFactory.m; path = ScanEngine/Delete/DBDeleteCoordinatorFactory.m; sourceTree = "<group>"; };
+		D4M305012B68230000A75B9A /* DBPhAssetPlatformFileDeleter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBPhAssetPlatformFileDeleter.h; path = ScanEngine/Delete/DBPhAssetPlatformFileDeleter.h; sourceTree = "<group>"; };
+		D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhAssetPlatformFileDeleter.m; path = ScanEngine/Delete/DBPhAssetPlatformFileDeleter.m; sourceTree = "<group>"; };
+		D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinatorTests.m; path = ScanEngineTests/DBDeleteCoordinatorTests.m; sourceTree = "<group>"; };
+		D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPhAssetPlatformFileDeleterTests.m; path = ScanEngineTests/DBPhAssetPlatformFileDeleterTests.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -568,6 +576,8 @@
 				D4F8A3522B68210000A75B9A /* DBScanStartRequestParserTests.m */,
 				D4F8A3532B68210000A75B9A /* DBScanOrchestratorTests.m */,
 				D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */,
+				D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */,
+				D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -626,6 +636,8 @@
 				D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */,
 				D4M303092B68230000A75B9A /* DBDeleteCoordinatorFactory.h */,
 				D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */,
+				D4M305012B68230000A75B9A /* DBPhAssetPlatformFileDeleter.h */,
+				D4M305022B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m */,
 			);
 			name = Delete;
 			sourceTree = "<group>";
@@ -875,6 +887,9 @@
 				D4M303162B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */,
 				D4M303182B68230000A75B9A /* DBDeleteCoordinator.m in Sources */,
 				D4M303202B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
+				D4M305122B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */,
+				D4M305142B68230000A75B9A /* DBDeleteCoordinatorTests.m in Sources */,
+				D4M305162B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -946,6 +961,7 @@
 				D4M303262B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */,
 				D4M303282B68230000A75B9A /* DBDeleteCoordinator.m in Sources */,
 				D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
+				D4M305322B68230000A75B9A /* DBPhAssetPlatformFileDeleter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

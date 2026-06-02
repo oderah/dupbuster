@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** Until M3-05 PHAsset delete — reports failure without mutating device storage. */
+/** Test / headless stub — reports failure without mutating device storage. */
 @interface DBPendingPlatformFileDeleter : NSObject <DBPlatformFileDeleter>
 @end
 
