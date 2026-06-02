@@ -12,6 +12,12 @@ import {
   resolveRescanPromptPresentation,
 } from './rescanPromptSessionState';
 import {
+  createResumePromptSessionState,
+  dismissResumePromptForSession,
+  markResumePromptDisplayed,
+  resolveResumePromptPresentation,
+} from './resumePromptSessionState';
+import {
   applyKeeperPreset,
   createKeeperSelectionState,
   selectKeeperMember,
@@ -27,7 +33,7 @@ import {
 import type {CoverageBannerVariant} from '../types/coverageBanner';
 import type {KeeperPreset} from '../types/keeper';
 import type {ScanCatalogSnapshot} from '../types/scanCatalog';
-import type {CatalogMeta} from '../types/scanEngine';
+import type {CatalogMeta, ResumableScanRun} from '../types/scanEngine';
 import {TERMINAL_SCAN_PHASES} from '../types/scanEngine';
 import type {ScanErrorEvent, ScanProgressEvent} from '../types/scanEngine';
 import type {
@@ -55,7 +61,7 @@ function applyProgressEvent(
   progress: ScanProgressEvent,
 ): ScanSessionState {
   const a11y = advanceScanProgressA11y(state.scanProgressA11y, progress);
-  return {
+  const next = {
     ...state,
     phase: progress.phase,
     progress,
@@ -63,6 +69,13 @@ function applyProgressEvent(
     progressAccessibilityLabel: a11y.accessibilityLabel,
     progressAnnouncement: a11y.announcement,
   };
+  if (progress.phase !== 'idle') {
+    return {
+      ...next,
+      resumePresentation: null,
+    };
+  }
+  return next;
 }
 
 function applyCatalogMeta(
@@ -75,6 +88,28 @@ function applyCatalogMeta(
     rescanPresentation: resolveRescanPromptPresentation(
       catalogMeta,
       state.rescanPromptSession,
+    ),
+    resumePresentation: resolveResumePromptPresentation(
+      state.resumableScanRun,
+      catalogMeta,
+      state.phase,
+      state.resumePromptSession,
+    ),
+  };
+}
+
+function applyResumableScanRun(
+  state: ScanSessionState,
+  resumable: ResumableScanRun | null,
+): ScanSessionState {
+  return {
+    ...state,
+    resumableScanRun: resumable,
+    resumePresentation: resolveResumePromptPresentation(
+      resumable,
+      state.catalogMeta,
+      state.phase,
+      state.resumePromptSession,
     ),
   };
 }
@@ -108,6 +143,7 @@ export function createInitialScanSessionState(
 ): ScanSessionState {
   const coverageBannerSession = createCoverageBannerSessionState();
   const rescanPromptSession = createRescanPromptSessionState();
+  const resumePromptSession = createResumePromptSessionState();
   const coverageVariant = options.coverageVariant ?? null;
   const a11y = createScanProgressA11yState();
   const progress = {
@@ -136,6 +172,9 @@ export function createInitialScanSessionState(
     ),
     rescanPromptSession,
     rescanPresentation: null,
+    resumePromptSession,
+    resumePresentation: null,
+    resumableScanRun: null,
     catalogMeta: null,
     duplicateGroups: [],
     unscannableCounts: {},
@@ -155,15 +194,30 @@ export function reduceScanSessionOnScanStarted(
   state: ScanSessionState,
   scanRunId: number,
 ): ScanSessionState {
-  return {
-    ...state,
-    scanRunId,
-    selectedGroupId: null,
+  return applyResumableScanRun(
+    {
+      ...state,
+      scanRunId,
+      resumePresentation: null,
+      selectedGroupId: null,
     keeperEducationVisible: false,
     pendingDeleteGroupId: null,
-    deleteConfirmVisible: false,
-    deleteConfirmStep: 'review',
-  };
+      deleteConfirmVisible: false,
+      deleteConfirmStep: 'review',
+    },
+    null,
+  );
+}
+
+export function reduceScanSessionOnResumableScanLoaded(
+  state: ScanSessionState,
+  resumable: ResumableScanRun | null,
+): ScanSessionState {
+  const next = applyResumableScanRun(state, resumable);
+  if (resumable != null && next.phase === 'idle') {
+    return next;
+  }
+  return next;
 }
 
 export function reduceScanSessionOnProgress(
@@ -296,6 +350,51 @@ export function reduceScanSessionMarkRescanPromptDisplayed(
     rescanPromptSession,
     rescanPresentation,
   };
+}
+
+export function reduceScanSessionDismissResumePrompt(
+  state: ScanSessionState,
+): ScanSessionState {
+  const resumePromptSession = dismissResumePromptForSession(
+    state.resumePromptSession,
+  );
+  return {
+    ...state,
+    resumePromptSession,
+    resumePresentation: state.resumePresentation
+      ? {
+          ...state.resumePresentation,
+          dismissedForSession: true,
+          firstDisplayAlertEligible: false,
+        }
+      : null,
+  };
+}
+
+export function reduceScanSessionMarkResumePromptDisplayed(
+  state: ScanSessionState,
+): ScanSessionState {
+  const resumePromptSession = markResumePromptDisplayed(
+    state.resumePresentation?.resumeSessionKey ?? '',
+    state.resumePromptSession,
+  );
+  const resumePresentation = state.resumePresentation
+    ? {
+        ...state.resumePresentation,
+        firstDisplayAlertEligible: false,
+      }
+    : null;
+  return {
+    ...state,
+    resumePromptSession,
+    resumePresentation,
+  };
+}
+
+export function reduceScanSessionClearResumableScan(
+  state: ScanSessionState,
+): ScanSessionState {
+  return applyResumableScanRun(state, null);
 }
 
 export function reduceScanSessionMarkCoverageDisplayed(

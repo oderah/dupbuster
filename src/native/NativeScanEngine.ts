@@ -82,6 +82,13 @@ export type CatalogMeta = {
   fullRescanRequired: boolean;
 };
 
+/** Interrupted scan metadata (`getResumableScanRun`) — no paths/hashes. */
+export type ResumableScanRun = {
+  scanRunId: Double;
+  lastProcessedId: Double;
+  status: string;
+};
+
 /** Catalog read bridge (Phase B) — separate from progress/error events. */
 export type CatalogSnapshotThumbnail = {
   fileEntryId: Double;
@@ -133,6 +140,8 @@ export interface Spec extends TurboModule {
   deleteDuplicates(command: DeleteDuplicatesCommand): Promise<DeleteDuplicatesResult>;
   getCatalogMeta(): Promise<CatalogMeta>;
   getCatalogSnapshot(): Promise<CatalogSnapshot>;
+  getResumableScanRun(): Promise<ResumableScanRun | null>;
+  abandonScanForRestart(scanRunId: Double): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('NativeScanEngine');

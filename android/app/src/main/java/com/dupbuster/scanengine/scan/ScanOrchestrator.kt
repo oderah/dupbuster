@@ -13,6 +13,7 @@ import com.dupbuster.scanengine.index.CheckpointConflictException
 import com.dupbuster.scanengine.index.CheckpointStore
 import com.dupbuster.scanengine.index.Grouper
 import com.dupbuster.scanengine.index.IndexWriter
+import com.dupbuster.scanengine.index.ResumableScanRun
 import com.dupbuster.scanengine.index.ScanRunStatus
 import com.dupbuster.scanengine.security.ScanRootGrant
 import com.dupbuster.scanengine.stat.StatResult
@@ -55,8 +56,9 @@ class ScanOrchestrator(
 
   @Throws(IllegalStateException::class, CheckpointConflictException::class, IllegalArgumentException::class)
   fun startScan(request: ScanStartRequest): Long {
-    if (request.resumeScanRunId != null) {
-      throw UnsupportedOperationException("resumeScanRunId is not supported until resume wiring lands")
+    val resumeScanRunId = request.resumeScanRunId
+    if (resumeScanRunId != null) {
+      return startResumedScan(request, resumeScanRunId)
     }
     assertNoConflictingActiveScan()
 
@@ -71,10 +73,61 @@ class ScanOrchestrator(
     activeSession.set(ActiveSession(scanRunId = scanRunId, control = control))
 
     executor.execute {
-      runScan(request, plan, generation, scanRunId, control)
+      runScan(request, plan, generation, scanRunId, control, resumeFromCheckpoint = false)
     }
 
     return scanRunId
+  }
+
+  fun getResumableScanRun(): ResumableScanRun? {
+    val snapshot = checkpointStore.findResumableRun() ?: return null
+    return ResumableScanRun(
+        scanRunId = snapshot.id,
+        lastProcessedId = snapshot.lastProcessedId,
+        status = snapshot.status,
+    )
+  }
+
+  fun abandonScanForRestart(scanRunId: Long) {
+    checkpointStore.abandonForRestart(scanRunId)
+    val session = activeSession.get()
+    if (session?.scanRunId == scanRunId) {
+      activeSession.set(null)
+    }
+  }
+
+  private fun startResumedScan(request: ScanStartRequest, resumeScanRunId: Long): Long {
+    val run =
+        checkpointStore.getRun(resumeScanRunId)
+            ?: throw IllegalArgumentException("scan_run $resumeScanRunId not found")
+    require(run.status in ScanRunStatus.RESUMABLE) {
+      "scan_run $resumeScanRunId is not resumable (status=${run.status})"
+    }
+
+    val plan = ScanRootResolver.resolve(request, indexWriter)
+    if (run.rootId != null && run.rootId != plan.primaryRootId) {
+      throw IllegalArgumentException("scan root mismatch for resume")
+    }
+    if (checkpointStore.hasConflictingActiveRun(run.rootId, run.generation, excludeRunId = resumeScanRunId)) {
+      throw CheckpointConflictException(run.rootId, run.generation)
+    }
+
+    checkpointStore.resumeRun(resumeScanRunId)
+    val control = ScanSessionControl()
+    activeSession.set(ActiveSession(scanRunId = resumeScanRunId, control = control))
+
+    executor.execute {
+      runScan(
+          request = request,
+          plan = plan,
+          generation = run.generation,
+          scanRunId = resumeScanRunId,
+          control = control,
+          resumeFromCheckpoint = true,
+      )
+    }
+
+    return resumeScanRunId
   }
 
   fun pauseScan(scanRunId: Long) {
@@ -147,9 +200,12 @@ class ScanOrchestrator(
       generation: Int,
       scanRunId: Long,
       control: ScanSessionControl,
+      resumeFromCheckpoint: Boolean,
   ) {
     progressBridge.reset()
     grantRevocationTracker.reset()
+    val checkpointId = checkpointStore.getRun(scanRunId)?.lastProcessedId ?: 0L
+    var resumeSkipActive = resumeFromCheckpoint && checkpointId > 0L
     try {
       emitPhase(
           ScanProgressSnapshot(
@@ -193,6 +249,24 @@ class ScanOrchestrator(
       )
 
       for (entry in entries) {
+        if (resumeSkipActive) {
+          when (val existingId = indexWriter.findFileEntryIdForDiscovered(entry)) {
+            null -> resumeSkipActive = false
+            in 1..checkpointId -> {
+              filesProcessed++
+              reportHashingProgress(
+                  mediaTypeHint = entry.mediaTypeHint,
+                  filesProcessed = filesProcessed,
+                  filesTotalKnown = totalFiles,
+                  groupsFound = groupsFound,
+                  reclaimableBytesEst = reclaimableBytesEst,
+              )
+              continue
+            }
+            else -> resumeSkipActive = false
+          }
+        }
+
         var entryComplete = false
         while (!entryComplete) {
           control.awaitIfPaused()

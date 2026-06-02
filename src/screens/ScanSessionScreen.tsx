@@ -12,6 +12,7 @@ import {CoverageBanner} from '../components/CoverageBanner';
 import {DeleteConfirmModal} from '../components/DeleteConfirmModal';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
+import {ResumePromptBanner} from '../components/ResumePromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
 import {ScanStatusChip} from '../components/ScanStatusChip';
 import {UnscannableSummaryCard} from '../components/UnscannableSummaryCard';
@@ -32,6 +33,8 @@ export type ScanSessionScreenProps = {
   controller: ScanSessionController;
   reducedMotion?: boolean;
   onStartScan: () => void;
+  onResumeInterruptedScan: (scanRunId: number) => void;
+  onRestartInterruptedScan: (scanRunId: number) => void;
   onExpandCoverage: () => void;
   onOpenSettings: () => void;
   testID?: string;
@@ -42,6 +45,8 @@ export function ScanSessionScreen({
   controller,
   reducedMotion = false,
   onStartScan,
+  onResumeInterruptedScan,
+  onRestartInterruptedScan,
   onExpandCoverage,
   onOpenSettings,
   testID = 'scan-session',
@@ -64,6 +69,10 @@ export function ScanSessionScreen({
   const showRescanPrompt =
     state.rescanPresentation != null &&
     !state.rescanPresentation.dismissedForSession;
+
+  const showResumePrompt =
+    state.resumePresentation != null &&
+    !state.resumePresentation.dismissedForSession;
 
   const showUnscannableSummary =
     state.phase === 'complete' ||
@@ -110,6 +119,26 @@ export function ScanSessionScreen({
             onStartScan();
           }}
           testID={`${testID}-rescan-prompt-banner`}
+        />
+      ) : null}
+
+      {showResumePrompt && state.resumePresentation ? (
+        <ResumePromptBanner
+          resumeSessionKey={state.resumePresentation.resumeSessionKey}
+          firstDisplayAlertEligible={
+            state.resumePresentation.firstDisplayAlertEligible
+          }
+          dismissedForSession={state.resumePresentation.dismissedForSession}
+          onDismiss={() => controller.dismissResumePrompt()}
+          onResume={() => {
+            controller.markResumePromptDisplayed();
+            onResumeInterruptedScan(state.resumePresentation!.scanRunId);
+          }}
+          onRestart={() => {
+            controller.markResumePromptDisplayed();
+            onRestartInterruptedScan(state.resumePresentation!.scanRunId);
+          }}
+          testID={`${testID}-resume-prompt-banner`}
         />
       ) : null}
 

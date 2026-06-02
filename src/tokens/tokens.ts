@@ -79,6 +79,9 @@ export const tokens = {
     rescanPromptBanner: {
       minHeight: 56,
     },
+    resumePromptBanner: {
+      minHeight: 56,
+    },
     scanProgress: {
       height: 64,
     },
@@ -170,6 +173,16 @@ export const tokens = {
   rescan: {
     required:
       'This update changed how files are compared. Rescan to refresh results.',
+  },
+
+  /** FR-SI-03 / AC-integrity-resume-01 — interrupted scan relaunch prompt */
+  resume: {
+    interrupted:
+      'A scan was interrupted. Continue from where it stopped or start over.',
+    cta: {
+      resume: 'Resume scan',
+      restart: 'Start over',
+    },
   },
 
   unscan: {

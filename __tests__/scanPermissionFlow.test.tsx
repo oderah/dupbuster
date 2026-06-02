@@ -133,6 +133,39 @@ describe('useScanPermissionFlow', () => {
     expect(controller.getState().scanRunId).not.toBeNull();
     controller.dispose();
   });
+
+  it('resumes interrupted scan with resumeScanRunId', async () => {
+    const port = createMockScanPermissionPort();
+    const engine = createMockScanEnginePort({simulateScan: false});
+    const startScan = jest.spyOn(engine, 'startScan');
+    const controller = createScanSessionController(engine);
+    const handlers = mountPermissionFlow(controller, port);
+
+    await handlers.handleResumeInterruptedScan(9);
+    expect(startScan).toHaveBeenCalledWith(
+      expect.objectContaining({resumeScanRunId: 9}),
+    );
+    controller.dispose();
+  });
+
+  it('restart abandons resumable run then starts fresh scan', async () => {
+    const port = createMockScanPermissionPort();
+    const engine = createMockScanEnginePort({
+      simulateScan: false,
+      resumableScanRun: {scanRunId: 4, lastProcessedId: 100, status: 'running'},
+    });
+    const abandon = jest.spyOn(engine, 'abandonScanForRestart');
+    const startScan = jest.spyOn(engine, 'startScan');
+    const controller = createScanSessionController(engine);
+    const handlers = mountPermissionFlow(controller, port);
+
+    await handlers.handleRestartInterruptedScan(4);
+    expect(abandon).toHaveBeenCalledWith(4);
+    expect(startScan).toHaveBeenCalledWith(
+      expect.not.objectContaining({resumeScanRunId: expect.anything()}),
+    );
+    controller.dispose();
+  });
 });
 
 function mountPermissionFlow(

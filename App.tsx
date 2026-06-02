@@ -17,8 +17,13 @@ function AppContent(): React.JSX.Element {
   const engine = useMemo(() => createNativeScanEnginePort(NativeScanEngine), []);
   const permissionPort = useMemo(() => createNativeScanPermissionPort(), []);
   const {state, controller} = useScanSessionController(engine);
-  const {handleStartScan, handleExpandCoverage, handleOpenSettings} =
-    useScanPermissionFlow(controller, permissionPort);
+  const {
+    handleStartScan,
+    handleResumeInterruptedScan,
+    handleRestartInterruptedScan,
+    handleExpandCoverage,
+    handleOpenSettings,
+  } = useScanPermissionFlow(controller, permissionPort);
   const reducedMotion = useReducedMotion();
 
   return (
@@ -28,6 +33,12 @@ function AppContent(): React.JSX.Element {
       reducedMotion={reducedMotion}
       onStartScan={() => {
         handleStartScan().catch(() => {});
+      }}
+      onResumeInterruptedScan={scanRunId => {
+        handleResumeInterruptedScan(scanRunId).catch(() => {});
+      }}
+      onRestartInterruptedScan={scanRunId => {
+        handleRestartInterruptedScan(scanRunId).catch(() => {});
       }}
       onExpandCoverage={() => {
         handleExpandCoverage().catch(() => {});

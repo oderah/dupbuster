@@ -375,6 +375,135 @@ class ScanOrchestratorTest {
   }
 
   @Test
+  fun getResumableScanRun_returnsLatestInterruptedRun() {
+    val runId = checkpointStore.beginRun(rootId = null, generation = 1)
+    checkpointStore.saveCheckpoint(runId, 100L)
+
+    val resumable = orchestrator.getResumableScanRun()
+
+    assertNotNull(resumable)
+    assertEquals(runId, resumable!!.scanRunId)
+    assertEquals(100L, resumable.lastProcessedId)
+    assertEquals(ScanRunStatus.RUNNING, resumable.status)
+  }
+
+  @Test
+  fun startScan_resumeFromCheckpoint_skipsAlreadyIndexedEntries() {
+    val payload = "resume-payload".toByteArray(Charsets.UTF_8)
+    val platformRootId =
+        indexWriter.findOrInsertScanRoot(
+            PlatformDiscoveryGrant.MARKER_URI.toString(),
+            ScanRootMode.PLATFORM_DISCOVERY,
+        )
+    val uriFirst = Uri.parse("$contentUri/first-resume")
+    val uriSecond = Uri.parse("$contentUri/second-resume")
+    var statInvocations = 0
+
+    var discoveryPass = 0
+    val discoveryRunner =
+        ScanDiscoveryRunner { _, _, generation, consumer, _ ->
+          discoveryPass++
+          consumer.onEntry(
+              DiscoveredEntry(
+                  contentUri = uriFirst,
+                  scanRootId = platformRootId,
+                  generation = generation,
+                  displayName = "first.bin",
+                  mediaTypeHint = MediaTypeHint.OTHER,
+                  sizeBytes = payload.size.toLong(),
+                  mtimeNs = 1L,
+              ),
+          )
+          if (discoveryPass > 1) {
+            consumer.onEntry(
+                DiscoveredEntry(
+                    contentUri = uriSecond,
+                    scanRootId = platformRootId,
+                    generation = generation,
+                    displayName = "second.bin",
+                    mediaTypeHint = MediaTypeHint.OTHER,
+                    sizeBytes = payload.size.toLong(),
+                    mtimeNs = 2L,
+                ),
+            )
+          }
+          DiscoveryResult(if (discoveryPass > 1) 2 else 1, 0, 0, cancelled = false)
+        }
+
+    val statFile: (DiscoveredEntry, ScanRootGrant) -> StatResult = { entry, _ ->
+      statInvocations++
+      StatResult.Success(staged(entry, payload.size.toLong(), entry.mtimeNs))
+    }
+
+    val hashFactory = { writer: IndexWriter ->
+      HashPipeline(
+          context,
+          FakeContentReader(payload),
+          sizeBucketIndex = alwaysNeedsHashIndex(),
+      )
+    }
+
+    val firstOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner = discoveryRunner,
+            statFile = statFile,
+            hashPipelineFactory = hashFactory,
+            progressBridge = ScanProgressBridge(emitProgress = {}),
+            emitError = {},
+            toctouVerifier = echoToctouVerifier(),
+            executor = java.util.concurrent.Executor { it.run() },
+        )
+
+    val runId =
+        firstOrchestrator.startScan(
+            ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+        )
+    val interrupted = checkpointStore.getRun(runId)!!
+    assertEquals(ScanRunStatus.COMPLETE, interrupted.status)
+    assertEquals(1, statInvocations)
+
+    statInvocations = 0
+    val resumeOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner = discoveryRunner,
+            statFile = statFile,
+            hashPipelineFactory = hashFactory,
+            progressBridge =
+                ScanProgressBridge(
+                    emitProgress = { map ->
+                      emittedPhases.add(map.getString("phase")!!)
+                    },
+                ),
+            emitError = {},
+            toctouVerifier = echoToctouVerifier(),
+            executor = java.util.concurrent.Executor { it.run() },
+        )
+
+    checkpointStore.getRun(runId)!!.let { run ->
+      database.writable().execSQL(
+          "UPDATE scan_run SET status = '${ScanRunStatus.RUNNING}', ended_at = NULL WHERE id = ${run.id}",
+      )
+    }
+
+    resumeOrchestrator.startScan(
+        ScanStartRequest(
+            mode = ScanRootMode.PLATFORM_DISCOVERY,
+            roots = emptyList(),
+            resumeScanRunId = runId,
+        ),
+    )
+
+    assertEquals(1, statInvocations)
+    assertTrue(emittedPhases.contains(ScanPhase.COMPLETE))
+  }
+
+  @Test
   fun startScan_runsPipeline_andEmitsTerminalComplete() {
     val scanRunId =
         orchestrator.startScan(

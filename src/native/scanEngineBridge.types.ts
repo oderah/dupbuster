@@ -88,6 +88,12 @@ export type CatalogMeta = {
   fullRescanRequired: boolean;
 };
 
+export type ResumableScanRun = {
+  scanRunId: number;
+  lastProcessedId: number;
+  status: string;
+};
+
 /** Catalog read bridge (Phase B) — aligned with [NativeScanEngine.ts]. */
 export type CatalogSnapshotThumbnail = {
   fileEntryId: number;

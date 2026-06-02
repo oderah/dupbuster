@@ -2,6 +2,7 @@ package com.dupbuster.scanengine.index
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
+import com.dupbuster.scanengine.discovery.DiscoveredEntry
 import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashResult
 import com.dupbuster.scanengine.hash.HashedFile
@@ -68,6 +69,10 @@ class IndexWriter(private val database: CatalogDatabase) {
       mode: ScanRootMode,
       platformReason: String? = null,
   ): Long = findScanRootId(uriOrGrant) ?: insertScanRoot(uriOrGrant, mode, platformReason)
+
+  /** Lookup indexed row for resume skip (architecture §6.3). */
+  fun findFileEntryIdForDiscovered(entry: DiscoveredEntry): Long? =
+      findFileEntryIdByUri(entry.scanRootId, entry.contentUri.toString())
 
   /** Next scan generation for [rootId] (architecture §6.2 incremental scan). */
   fun nextGenerationForRoot(rootId: Long): Int {

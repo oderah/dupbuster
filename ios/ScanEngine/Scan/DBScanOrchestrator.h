@@ -6,6 +6,7 @@
 #import "DBStatStage.h"
 
 @class DBCheckpointStore;
+@class DBScanRunSnapshot;
 @class DBIndexWriter;
 @class DBGrouper;
 @class DBScanProgressBridge;
@@ -49,6 +50,10 @@ typedef NS_ERROR_ENUM(DBScanOrchestratorErrorDomain, DBScanOrchestratorError) {
 - (BOOL)pauseScanWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
 - (BOOL)resumeScanWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
 - (BOOL)cancelScanWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
+
+- (nullable DBScanRunSnapshot *)resumableScanRun;
+
+- (BOOL)abandonScanForRestartWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
 
 @end
 

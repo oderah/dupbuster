@@ -10,9 +10,13 @@ import {
   reduceScanSessionCloseGroup,
   reduceScanSessionDismissCoverage,
   reduceScanSessionDismissKeeperEducation,
+  reduceScanSessionClearResumableScan,
   reduceScanSessionDismissRescanPrompt,
+  reduceScanSessionDismissResumePrompt,
   reduceScanSessionMarkCoverageDisplayed,
   reduceScanSessionMarkRescanPromptDisplayed,
+  reduceScanSessionMarkResumePromptDisplayed,
+  reduceScanSessionOnResumableScanLoaded,
   reduceScanSessionOnCatalogLoaded,
   reduceScanSessionOnCatalogMetaLoaded,
   reduceScanSessionOnProgress,
@@ -55,6 +59,7 @@ export class ScanSessionController {
       this.handleError(event);
     });
     this.refreshCatalogMeta().catch(() => {});
+    this.refreshResumableScan().catch(() => {});
   }
 
   getState(): ScanSessionState {
@@ -124,12 +129,25 @@ export class ScanSessionController {
     this.dispatch(reduceScanSessionDismissRescanPrompt(this.state));
   }
 
+  dismissResumePrompt(): void {
+    this.dispatch(reduceScanSessionDismissResumePrompt(this.state));
+  }
+
   markCoverageBannerDisplayed(): void {
     this.dispatch(reduceScanSessionMarkCoverageDisplayed(this.state));
   }
 
   markRescanPromptDisplayed(): void {
     this.dispatch(reduceScanSessionMarkRescanPromptDisplayed(this.state));
+  }
+
+  markResumePromptDisplayed(): void {
+    this.dispatch(reduceScanSessionMarkResumePromptDisplayed(this.state));
+  }
+
+  async abandonResumableScan(scanRunId: number): Promise<void> {
+    await this.engine.abandonScanForRestart(scanRunId);
+    this.dispatch(reduceScanSessionClearResumableScan(this.state));
   }
 
   openGroupDetail(groupId: number): void {
@@ -217,6 +235,18 @@ export class ScanSessionController {
       this.dispatch(reduceScanSessionOnCatalogMetaLoaded(this.state, catalogMeta));
     } catch {
       // Native stub may reject until DB is ready; shell stays usable.
+    }
+  }
+
+  private async refreshResumableScan(): Promise<void> {
+    try {
+      const resumable = await this.engine.getResumableScanRun();
+      this.dispatch(reduceScanSessionOnResumableScanLoaded(this.state, resumable));
+      if (resumable != null && this.state.phase === 'idle') {
+        this.refreshCatalog().catch(() => {});
+      }
+    } catch {
+      // Shell stays usable when native DB is unavailable.
     }
   }
 

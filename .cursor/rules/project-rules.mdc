@@ -522,6 +522,15 @@ New code must land in these areas unless architecture is amended first.
 - **Scope:** AC-integrity-toctou-02; stale rows purged by existing `purgeEntriesNotSeenInGeneration` after successful run (FR-IX-03).
 - **Tests:** `IndexWriterTest`, `ScanOrchestratorTest` (deleted mid-hash completes); `DBIndexWriterTests`; fixture `integrity-toctou-02.json`.
 
+### Process kill resume/restart prompt (M3-09)
+
+- **Android:** `ScanOrchestrator.startResumedScan` + checkpoint skip via `IndexWriter.findFileEntryIdForDiscovered`; `getResumableScanRun` / `abandonScanForRestart` on `ScanEngineModule`; `ResumableScanRunBridgeMapper`.
+- **iOS:** `startResumedScanWithRequest:` + `fileEntryIdForDiscoveredEntry:` parity; `RCTNativeScanEngine` `getResumableScanRun` / `abandonScanForRestart`; `DBResumableScanRunBridgeMapper`.
+- **JS:** `ResumePromptBanner`, `resumePromptSessionState`, `ScanSessionController.refreshResumableScan`; resume CTA → `startScan({ resumeScanRunId })`; restart → `abandonScanForRestart` then fresh `startScan` (`useScanPermissionFlow`).
+- **Tokens:** `resume.interrupted`, `resume.cta.resume`, `resume.cta.restart` (requirements §9); hidden when `fullRescanRequired`.
+- **Scope:** AC-integrity-resume-01 / FR-SI-03; native `CheckpointStore` (M1-12) unchanged.
+- **Tests:** `resumePromptSessionState.test.ts`, `ResumePromptBanner.test.tsx`, `ScanOrchestratorTest` (resume skip), `scanPermissionFlow.test.tsx`; fixture `integrity-resume-01.json`.
+
 ### Permission revoke mid-scan pause (M3-08)
 
 - **Android:** `GrantRevocationTracker` — root with prior successful stat/hash that later returns `PERMISSION_DENIED` → grant revocation (not single-file deny). `ScanOpenFileRegistry` tracks read FDs; `ScanOrchestrator.pauseForPermissionRevoke` closes FDs, rebuilds partial duplicate groups, `checkpointStore.pauseRun`, emits `PAUSED` + bridge `PERMISSION_DENIED` for coverage banner.

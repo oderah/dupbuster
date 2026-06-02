@@ -145,6 +145,8 @@
 		D4F8A3752B68220000A75B9A /* DBCatalogReader.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3552B68220000A75B9A /* DBCatalogReader.m */; };
 		D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
 		D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
+		D4M309122B68230000A75B9A /* DBResumableScanRunBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M309022B68230000A75B9A /* DBResumableScanRunBridgeMapper.m */; };
+		D4M309222B68230000A75B9A /* DBResumableScanRunBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M309022B68230000A75B9A /* DBResumableScanRunBridgeMapper.m */; };
 		D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */; };
 		D4M303122B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */; };
 		D4M303222B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */; };
@@ -316,6 +318,8 @@
 		D4F8A3552B68220000A75B9A /* DBCatalogReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogReader.m; path = ScanEngine/Index/DBCatalogReader.m; sourceTree = "<group>"; };
 		D4F8A3562B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBCatalogSnapshotBridgeMapper.h; path = ScanEngine/Bridge/DBCatalogSnapshotBridgeMapper.h; sourceTree = "<group>"; };
 		D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogSnapshotBridgeMapper.m; path = ScanEngine/Bridge/DBCatalogSnapshotBridgeMapper.m; sourceTree = "<group>"; };
+		D4M309012B68230000A75B9A /* DBResumableScanRunBridgeMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBResumableScanRunBridgeMapper.h; path = ScanEngine/Bridge/DBResumableScanRunBridgeMapper.h; sourceTree = "<group>"; };
+		D4M309022B68230000A75B9A /* DBResumableScanRunBridgeMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBResumableScanRunBridgeMapper.m; path = ScanEngine/Bridge/DBResumableScanRunBridgeMapper.m; sourceTree = "<group>"; };
 		D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBCatalogReaderTests.m; path = ScanEngineTests/DBCatalogReaderTests.m; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -516,6 +520,8 @@
 				D4F8A3512B68210000A75B9A /* DBScanProgressBridge.m */,
 				D4F8A3562B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.h */,
 				D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */,
+				D4M309012B68230000A75B9A /* DBResumableScanRunBridgeMapper.h */,
+				D4M309022B68230000A75B9A /* DBResumableScanRunBridgeMapper.m */,
 			);
 			name = Bridge;
 			sourceTree = "<group>";
@@ -902,6 +908,7 @@
 				D4F8A3732B68210000A75B9A /* DBScanOrchestratorTests.m in Sources */,
 				D4F8A3752B68220000A75B9A /* DBCatalogReader.m in Sources */,
 				D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
+				D4M309122B68230000A75B9A /* DBResumableScanRunBridgeMapper.m in Sources */,
 				D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */,
 				D4M303122B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */,
 				D4M303142B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */,
@@ -981,6 +988,7 @@
 				D4F8A3712B68210000A75B9A /* DBScanProgressBridge.m in Sources */,
 				D4F8A3742B68220000A75B9A /* DBCatalogReader.m in Sources */,
 				D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
+				D4M309222B68230000A75B9A /* DBResumableScanRunBridgeMapper.m in Sources */,
 				D4M303222B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */,
 				D4M303242B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */,
 				D4M303262B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */,

@@ -4,6 +4,7 @@ import {
   reduceScanSessionDismissRescanPrompt,
   reduceScanSessionOnCatalogLoaded,
   reduceScanSessionOnCatalogMetaLoaded,
+  reduceScanSessionOnResumableScanLoaded,
   reduceScanSessionOnProgress,
   reduceScanSessionOnScanError,
   reduceScanSessionAdvanceDeleteConfirm,
@@ -140,6 +141,21 @@ describe('scanSessionReducer', () => {
     expect(state.deleteConfirmStep).toBe('review');
     state = reduceScanSessionCancelDeleteConfirm(state);
     expect(state.deleteConfirmVisible).toBe(false);
+  });
+
+  it('shows resume prompt when resumable run exists and phase is idle', () => {
+    let state = createInitialScanSessionState();
+    state = reduceScanSessionOnResumableScanLoaded(state, {
+      scanRunId: 3,
+      lastProcessedId: 50,
+      status: 'running',
+    });
+    expect(state.resumePresentation).toEqual(
+      expect.objectContaining({
+        scanRunId: 3,
+        resumeSessionKey: 'run:3',
+      }),
+    );
   });
 
   it('identifies terminal phases for catalog refresh', () => {

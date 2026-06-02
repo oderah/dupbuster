@@ -1,5 +1,7 @@
 #import "DBIndexWriter.h"
 
+#import "DBDiscoveredEntry.h"
+
 #import "DBSizeBucketPendingEntry.h"
 
 #import <sqlite3.h>
@@ -139,6 +141,15 @@
   }
   NSInteger rootId = staged.discovered.scanRootId;
   return [self fileEntryIdForRootId:rootId uriOrPath:[self uriOrPathForStaged:staged]];
+}
+
+- (NSInteger)fileEntryIdForDiscoveredEntry:(DBDiscoveredEntry *)entry
+{
+  NSString *uri =
+      entry.phAssetLocalIdentifier.length > 0
+          ? entry.phAssetLocalIdentifier
+          : entry.contentURL.absoluteString;
+  return [self fileEntryIdForRootId:entry.scanRootId uriOrPath:uri];
 }
 
 - (NSInteger)beginScanRunWithGeneration:(NSInteger)generation rootId:(NSInteger)rootId

@@ -2,6 +2,7 @@ package com.dupbuster.scanengine
 
 import com.facebook.proguard.annotations.DoNotStrip
 import com.dupbuster.scanengine.bridge.CatalogSnapshotBridgeMapper
+import com.dupbuster.scanengine.bridge.ResumableScanRunBridgeMapper
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.CatalogReader
 import com.dupbuster.scanengine.index.IndexWriter
@@ -227,6 +228,32 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
   }
 
   @DoNotStrip
+  override fun getResumableScanRun(promise: Promise) {
+    try {
+      val resumable = orchestrator.getResumableScanRun()
+      if (resumable == null) {
+        promise.resolve(null)
+        return
+      }
+      val payload = ResumableScanRunBridgeMapper.toReadableMap(resumable)
+      ResumableScanRunBridgeMapper.assertBridgeSafePayload(payload)
+      promise.resolve(payload)
+    } catch (error: Exception) {
+      promise.reject(CODE_RESUMABLE_SCAN_FAILED, error.message, error)
+    }
+  }
+
+  @DoNotStrip
+  override fun abandonScanForRestart(scanRunId: Double, promise: Promise) {
+    try {
+      orchestrator.abandonScanForRestart(scanRunId.toLong())
+      promise.resolve(null)
+    } catch (error: Exception) {
+      promise.reject(CODE_SCAN_CONTROL_FAILED, error.message, error)
+    }
+  }
+
+  @DoNotStrip
   override fun getCatalogMeta(promise: Promise) {
     val catalogMeta = IndexWriter(CatalogDatabase.getInstance(reactApplicationContext)).readCatalogMeta()
     val meta =
@@ -262,6 +289,7 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
     private const val CODE_SCAN_START_FAILED = "SCAN_START_FAILED"
     private const val CODE_SCAN_CONTROL_FAILED = "SCAN_CONTROL_FAILED"
     private const val CODE_CATALOG_READ_FAILED = "CATALOG_READ_FAILED"
+    private const val CODE_RESUMABLE_SCAN_FAILED = "RESUMABLE_SCAN_FAILED"
     private const val CODE_DELETE_INVALID = "DELETE_INVALID_COMMAND"
   }
 }

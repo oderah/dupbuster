@@ -231,6 +231,9 @@ Implement these strings verbatim from `tokens.ts`:
 | `settings.largeFiles` | "Hash files larger than 2 GB (uses more battery)" |
 | `reclaimable.label` | "You can free up {size}" |
 | `rescan.required` | "This update changed how files are compared. Rescan to refresh results." |
+| `resume.interrupted` | "A scan was interrupted. Continue from where it stopped or start over." |
+| `resume.cta.resume` | "Resume scan" |
+| `resume.cta.restart` | "Start over" |
 | `unscan.retry` | "Retry" |
 
 **Android notification channel ID:** `com.dupbuster.scan.foreground.v1` (stable across upgrades)

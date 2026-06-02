@@ -8,6 +8,8 @@ import {buildScanStartRequest} from '../permissions/buildScanStartRequest';
 export type ScanPermissionFlowHandlers = {
   refreshCoverage: () => Promise<void>;
   handleStartScan: () => Promise<void>;
+  handleResumeInterruptedScan: (resumeScanRunId: number) => Promise<void>;
+  handleRestartInterruptedScan: (scanRunId: number) => Promise<void>;
   handleExpandCoverage: () => Promise<void>;
   handleOpenSettings: () => Promise<void>;
 };
@@ -39,25 +41,50 @@ export function useScanPermissionFlow(
     });
   }, [port, refreshCoverage]);
 
+  const startScanFromSnapshot = useCallback(
+    async (resumeScanRunId?: number) => {
+      let snapshot = await portRef.current.getSnapshot();
+
+      if (
+        snapshot.platformDiscovery === 'denied' ||
+        snapshot.platformDiscovery === 'blocked'
+      ) {
+        snapshot = await portRef.current.requestPlatformDiscoveryAccess();
+        applyCoverageFromSnapshot(controller, snapshot);
+      }
+
+      const request = buildScanStartRequest(snapshot);
+      if (request == null) {
+        applyCoverageFromSnapshot(controller, snapshot);
+        return;
+      }
+
+      await controller.startScan({
+        ...request,
+        resumeScanRunId,
+      });
+    },
+    [controller],
+  );
+
   const handleStartScan = useCallback(async () => {
-    let snapshot = await portRef.current.getSnapshot();
+    await startScanFromSnapshot();
+  }, [startScanFromSnapshot]);
 
-    if (
-      snapshot.platformDiscovery === 'denied' ||
-      snapshot.platformDiscovery === 'blocked'
-    ) {
-      snapshot = await portRef.current.requestPlatformDiscoveryAccess();
-      applyCoverageFromSnapshot(controller, snapshot);
-    }
+  const handleResumeInterruptedScan = useCallback(
+    async (resumeScanRunId: number) => {
+      await startScanFromSnapshot(resumeScanRunId);
+    },
+    [startScanFromSnapshot],
+  );
 
-    const request = buildScanStartRequest(snapshot);
-    if (request == null) {
-      applyCoverageFromSnapshot(controller, snapshot);
-      return;
-    }
-
-    await controller.startScan(request);
-  }, [controller]);
+  const handleRestartInterruptedScan = useCallback(
+    async (scanRunId: number) => {
+      await controller.abandonResumableScan(scanRunId);
+      await startScanFromSnapshot();
+    },
+    [controller, startScanFromSnapshot],
+  );
 
   const handleExpandCoverage = useCallback(async () => {
     const current = await portRef.current.getSnapshot();
@@ -77,6 +104,8 @@ export function useScanPermissionFlow(
   return {
     refreshCoverage,
     handleStartScan,
+    handleResumeInterruptedScan,
+    handleRestartInterruptedScan,
     handleExpandCoverage,
     handleOpenSettings,
   };

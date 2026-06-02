@@ -1,6 +1,6 @@
 {
   "id": "integrity-resume-01",
-  "description": "CheckpointStore persists last_processed_id and exposes resumable scan_run after process kill (AC-integrity-resume-01 native layer)",
+  "description": "CheckpointStore + relaunch ResumePromptBanner: resume from last_processed_id or start over (AC-integrity-resume-01)",
   "platform": "both",
   "input": {
     "scanRunStatus": "running",
@@ -9,6 +9,7 @@
   "expect": {
     "findResumableRun": true,
     "lastProcessedId": 500,
-    "abandonClearsResumable": true
+    "abandonClearsResumable": true,
+    "resumePromptOffered": true
   }
 }

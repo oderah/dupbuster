@@ -6,6 +6,8 @@
 #import "DBCatalogMeta.h"
 #import "DBCatalogReader.h"
 #import "DBCatalogSnapshotBridgeMapper.h"
+#import "DBResumableScanRunBridgeMapper.h"
+#import "DBScanRunSnapshot.h"
 #import "DBIndexWriter.h"
 #import "DBScanOrchestrator.h"
 #import "DBScanOrchestratorFactory.h"
@@ -75,11 +77,7 @@ static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
     NSError *error = nil;
     NSInteger scanRunId = [self.orchestrator startScanWithRequest:request error:&error];
     if (error != nil) {
-      if (error.code == DBScanOrchestratorErrorResumeUnsupported) {
-        reject(kScanEngineNotImplemented, error.localizedDescription, error);
-        return;
-      }
-      reject(kScanStartFailed, error.localizedDescription, error);
+        reject(kScanStartFailed, error.localizedDescription, error);
       return;
     }
     resolve(@{@"scanRunId" : @(scanRunId)});
@@ -155,6 +153,28 @@ static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
       @"failedCount" : @(result.failedCount),
     });
   }];
+}
+
+- (void)getResumableScanRun:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  DBScanRunSnapshot *snapshot = [self.orchestrator resumableScanRun];
+  if (snapshot == nil) {
+    resolve(nil);
+    return;
+  }
+  resolve([DBResumableScanRunBridgeMapper bridgePayloadForSnapshot:snapshot]);
+}
+
+- (void)abandonScanForRestart:(double)scanRunId
+                      resolve:(RCTPromiseResolveBlock)resolve
+                       reject:(RCTPromiseRejectBlock)reject
+{
+  NSError *error = nil;
+  if (![self.orchestrator abandonScanForRestartWithId:(NSInteger)scanRunId error:&error]) {
+    reject(kScanControlFailed, error.localizedDescription ?: @"abandonScanForRestart failed", error);
+    return;
+  }
+  resolve(nil);
 }
 
 - (void)getCatalogMeta:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject

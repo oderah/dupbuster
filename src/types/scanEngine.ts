@@ -16,6 +16,7 @@ export type {
   ScanPhase,
   ScanProgressContentKind,
   ScanProgressEvent,
+  ResumableScanRun,
   ScanRootInput,
   ScanRootMode,
   ScanStartOptions,

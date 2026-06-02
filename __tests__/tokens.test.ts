@@ -55,6 +55,11 @@ describe('tokens EN freeze (requirements §9)', () => {
     expect(tokens.rescan.required).toBe(
       'This update changed how files are compared. Rescan to refresh results.',
     );
+    expect(tokens.resume.interrupted).toBe(
+      'A scan was interrupted. Continue from where it stopped or start over.',
+    );
+    expect(tokens.resume.cta.resume).toBe('Resume scan');
+    expect(tokens.resume.cta.restart).toBe('Start over');
     expect(tokens.unscan.title).toBe("Some files couldn't be scanned");
     expect(tokens.unscan.row).toBe('{count} {reason}');
     expect(tokens.unscan.retry).toBe('Retry');

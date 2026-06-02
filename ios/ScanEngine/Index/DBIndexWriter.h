@@ -8,6 +8,7 @@
 #import "DBUriValidator.h"
 @class DBHashedFile;
 @class DBSizeBucketPendingEntry;
+@class DBDiscoveredEntry;
 @class DBStagedFile;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -25,6 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSNumber *)findScanRootIdForUriOrGrant:(NSString *)uriOrGrant;
 
 - (NSInteger)findOrInsertScanRootWithUriOrGrant:(NSString *)uriOrGrant mode:(NSString *)mode;
+
+/** Lookup indexed row for resume skip (architecture §6.3). */
+- (NSInteger)fileEntryIdForDiscoveredEntry:(DBDiscoveredEntry *)entry;
 
 - (NSInteger)nextGenerationForRootId:(NSInteger)rootId;
 

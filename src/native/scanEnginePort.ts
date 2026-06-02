@@ -15,6 +15,7 @@ import type {
   ScanPhase,
   ScanProgressContentKind,
   ScanProgressEvent,
+  ResumableScanRun,
   ScanStartOptions,
   ScanStartResult,
   UnscannableReason,
@@ -36,6 +37,8 @@ export type ScanEnginePort = {
   cancelScan: (scanRunId: number) => Promise<void>;
   getCatalogMeta: () => Promise<CatalogMeta>;
   getCatalogSnapshot: () => Promise<ScanCatalogSnapshot>;
+  getResumableScanRun: () => Promise<ResumableScanRun | null>;
+  abandonScanForRestart: (scanRunId: number) => Promise<void>;
   deleteDuplicates: (
     command: DeleteDuplicatesCommand,
   ) => Promise<DeleteDuplicatesResult>;
@@ -44,6 +47,7 @@ export type ScanEnginePort = {
 export type MockScanEngineOptions = {
   catalogSnapshot?: ScanCatalogSnapshot;
   catalogMeta?: CatalogMeta;
+  resumableScanRun?: ResumableScanRun | null;
   /** When true, simulates a short scan on startScan (default true). */
   simulateScan?: boolean;
 };
@@ -213,6 +217,7 @@ export function createMockScanEnginePort(
 ): ScanEnginePort {
   let catalogSnapshot = options.catalogSnapshot ?? createMockCatalogSnapshot();
   const catalogMeta = options.catalogMeta ?? DEFAULT_MOCK_CATALOG_META;
+  let resumableScanRun = options.resumableScanRun ?? null;
   const simulateScan = options.simulateScan ?? true;
 
   let scanRunSeq = 1;
@@ -359,6 +364,14 @@ export function createMockScanEnginePort(
     },
     async getCatalogMeta() {
       return catalogMeta;
+    },
+    async getResumableScanRun() {
+      return resumableScanRun;
+    },
+    async abandonScanForRestart(scanRunId) {
+      if (resumableScanRun?.scanRunId === scanRunId) {
+        resumableScanRun = null;
+      }
     },
     async getCatalogSnapshot() {
       return catalogSnapshot;
@@ -603,6 +616,25 @@ function subscribeNativeModuleEvent<T>(
   throw new Error('NativeScanEngine event emitter is unavailable — rebuild the native app.');
 }
 
+type NativeResumableScanRunPayload = {
+  scanRunId: number;
+  lastProcessedId: number;
+  status: string;
+};
+
+function mapResumableScanRun(
+  payload: NativeResumableScanRunPayload | null,
+): ResumableScanRun | null {
+  if (payload == null) {
+    return null;
+  }
+  return {
+    scanRunId: payload.scanRunId,
+    lastProcessedId: payload.lastProcessedId,
+    status: payload.status,
+  };
+}
+
 type NativeScanEngineModule = {
   onScanProgress: NativeScanEngineEventEmitter<ScanProgressEvent>;
   onScanError: NativeScanEngineEventEmitter<ScanErrorEvent>;
@@ -613,6 +645,8 @@ type NativeScanEngineModule = {
   deleteDuplicates: ScanEnginePort['deleteDuplicates'];
   getCatalogMeta: ScanEnginePort['getCatalogMeta'];
   getCatalogSnapshot: () => Promise<CatalogSnapshot>;
+  getResumableScanRun: () => Promise<NativeResumableScanRunPayload | null>;
+  abandonScanForRestart: ScanEnginePort['abandonScanForRestart'];
 };
 
 /** Wraps TurboModule; catalog snapshot from native CatalogReader (Phase B). */
@@ -626,6 +660,8 @@ export function createNativeScanEnginePort(
   const deleteDuplicates = module.deleteDuplicates.bind(module);
   const getCatalogMeta = module.getCatalogMeta.bind(module);
   const getCatalogSnapshot = module.getCatalogSnapshot.bind(module);
+  const getResumableScanRun = module.getResumableScanRun.bind(module);
+  const abandonScanForRestart = module.abandonScanForRestart.bind(module);
 
   return {
     addProgressListener(listener) {
@@ -648,6 +684,9 @@ export function createNativeScanEnginePort(
     cancelScan: scanRunId => cancelScan(scanRunId),
     deleteDuplicates: command => deleteDuplicates(command),
     getCatalogMeta: () => getCatalogMeta(),
+    getResumableScanRun: async () =>
+      mapResumableScanRun(await getResumableScanRun()),
+    abandonScanForRestart: scanRunId => abandonScanForRestart(scanRunId),
     getCatalogSnapshot: async () => {
       const snapshot = await getCatalogSnapshot();
       return mapCatalogSnapshot(snapshot);

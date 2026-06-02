@@ -92,15 +92,9 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
 - (NSInteger)startScanWithRequest:(DBScanStartRequest *)request error:(NSError **)error
 {
   if (request.resumeScanRunId != nil) {
-    if (error != nil) {
-      *error = [NSError errorWithDomain:DBScanOrchestratorErrorDomain
-                                   code:DBScanOrchestratorErrorResumeUnsupported
-                               userInfo:@{
-                                 NSLocalizedDescriptionKey :
-                                     @"resumeScanRunId is not supported until resume wiring lands",
-                               }];
-    }
-    return 0;
+    return [self startResumedScanWithRequest:request
+                               resumeScanRunId:request.resumeScanRunId.integerValue
+                                       error:error];
   }
 
   if (![self assertNoConflictingActiveScanWithError:error]) {
@@ -127,10 +121,93 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   [_sessionLock unlock];
 
   dispatch_async(_workQueue, ^{
-    [self runScanWithRequest:request plan:plan generation:generation scanRunId:scanRunId control:session.control];
+    [self runScanWithRequest:request
+                        plan:plan
+                  generation:generation
+                   scanRunId:scanRunId
+                     control:session.control
+         resumeFromCheckpoint:NO];
   });
 
   return scanRunId;
+}
+
+- (nullable DBScanRunSnapshot *)resumableScanRun
+{
+  return [_checkpointStore findResumableRun];
+}
+
+- (BOOL)abandonScanForRestartWithId:(NSInteger)scanRunId error:(NSError **)error
+{
+  if (![_checkpointStore abandonForRestartRunWithId:scanRunId error:error]) {
+    return NO;
+  }
+  [_sessionLock lock];
+  if (_activeSession.scanRunId == scanRunId) {
+    _activeSession = nil;
+  }
+  [_sessionLock unlock];
+  return YES;
+}
+
+- (NSInteger)startResumedScanWithRequest:(DBScanStartRequest *)request
+                          resumeScanRunId:(NSInteger)resumeScanRunId
+                                  error:(NSError **)error
+{
+  DBScanRunSnapshot *run = [_checkpointStore runWithId:resumeScanRunId];
+  if (run == nil) {
+    if (error != nil) {
+      *error = [NSError errorWithDomain:DBScanOrchestratorErrorDomain
+                                   code:DBScanOrchestratorErrorBeginRunFailed
+                               userInfo:@{NSLocalizedDescriptionKey : @"scan_run not found"}];
+    }
+    return 0;
+  }
+  if (![run.status isEqualToString:DBScanRunStatusRunning] &&
+      ![run.status isEqualToString:DBScanRunStatusPaused]) {
+    if (error != nil) {
+      *error = [NSError errorWithDomain:DBScanOrchestratorErrorDomain
+                                   code:DBScanOrchestratorErrorBeginRunFailed
+                               userInfo:@{NSLocalizedDescriptionKey : @"scan_run is not resumable"}];
+    }
+    return 0;
+  }
+
+  DBScanRootResolverPlan *plan = [DBScanRootResolver resolveRequest:request indexWriter:_indexWriter];
+  if (run.rootId != nil && run.rootId.integerValue != plan.primaryRootId) {
+    if (error != nil) {
+      *error = [NSError errorWithDomain:DBScanOrchestratorErrorDomain
+                                   code:DBScanOrchestratorErrorBeginRunFailed
+                               userInfo:@{NSLocalizedDescriptionKey : @"scan root mismatch for resume"}];
+    }
+    return 0;
+  }
+
+  NSError *resumeError = nil;
+  if (![_checkpointStore resumeRunWithId:resumeScanRunId error:&resumeError]) {
+    if (error != nil) {
+      *error = resumeError;
+    }
+    return 0;
+  }
+
+  DBScanActiveSession *session = [[DBScanActiveSession alloc] init];
+  session.scanRunId = resumeScanRunId;
+  session.control = [[DBScanSessionControl alloc] init];
+  [_sessionLock lock];
+  _activeSession = session;
+  [_sessionLock unlock];
+
+  dispatch_async(_workQueue, ^{
+    [self runScanWithRequest:request
+                        plan:plan
+                  generation:run.generation
+                   scanRunId:resumeScanRunId
+                     control:session.control
+         resumeFromCheckpoint:YES];
+  });
+
+  return resumeScanRunId;
 }
 
 - (BOOL)pauseScanWithId:(NSInteger)scanRunId error:(NSError **)error
@@ -210,9 +287,13 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                 generation:(NSInteger)generation
                  scanRunId:(NSInteger)scanRunId
                    control:(DBScanSessionControl *)control
+       resumeFromCheckpoint:(BOOL)resumeFromCheckpoint
 {
   [_progressBridge reset];
   [_grantRevocationTracker reset];
+  DBScanRunSnapshot *runSnapshot = [_checkpointStore runWithId:scanRunId];
+  int64_t checkpointId = runSnapshot != nil ? runSnapshot.lastProcessedId : 0;
+  BOOL resumeSkipActive = resumeFromCheckpoint && checkpointId > 0;
   @try {
     [self emitPhaseWithSnapshot:[[DBScanProgressSnapshot alloc] initWithFilesProcessed:0
                                                                          filesTotalKnown:nil
@@ -252,6 +333,24 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                                                              contentKind:nil]];
 
     for (DBDiscoveredEntry *entry in entries) {
+      if (resumeSkipActive) {
+        NSInteger existingId = [_indexWriter fileEntryIdForDiscoveredEntry:entry];
+        if (existingId <= 0) {
+          resumeSkipActive = NO;
+        } else if (existingId <= checkpointId) {
+          filesProcessed += 1;
+          [_progressBridge reportHashingProgressWithFilesProcessed:filesProcessed
+                                                   filesTotalKnown:@(totalFiles)
+                                                       groupsFound:groupsFound
+                                               reclaimableBytesEst:reclaimableBytesEst
+                                            isVideoFingerprintPass:NO
+                                                              atMs:[self nowMs]];
+          continue;
+        } else {
+          resumeSkipActive = NO;
+        }
+      }
+
       BOOL entryComplete = NO;
       while (!entryComplete) {
         [control awaitIfPaused];
