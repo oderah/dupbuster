@@ -14,7 +14,7 @@ class SqliteSizeBucketIndex(private val indexWriter: IndexWriter) : SizeBucketIn
       mediaTypeHint: MediaTypeHint,
       isEmpty: Boolean,
   ): SizeBucketDisposition {
-    if (isEmpty || mediaTypeHint == MediaTypeHint.VIDEO) {
+    if (isEmpty || mediaTypeHint == MediaTypeHint.VIDEO || mediaTypeHint == MediaTypeHint.IMAGE) {
       return SizeBucketDisposition.NEEDS_HASH
     }
     val existing = indexWriter.countIndexedFilesWithSize(sizeBytes)

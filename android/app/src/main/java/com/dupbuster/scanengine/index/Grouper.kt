@@ -2,7 +2,11 @@ package com.dupbuster.scanengine.index
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
+import com.dupbuster.scanengine.hash.ImageContentMatcher
 import com.dupbuster.scanengine.hash.NormalizationProfile
+import com.dupbuster.scanengine.hash.VideoContentMatcher
+import com.dupbuster.scanengine.hash.VideoFingerprint
+import com.dupbuster.scanengine.hash.VideoFingerprintCodec
 
 /**
  * Builds `duplicate_group` / `duplicate_member` rows from hashed catalog entries (M1-10).
@@ -37,22 +41,33 @@ class Grouper(private val database: CatalogDatabase) {
         }
       }
 
-      val videoCandidates = loadVideoContentCandidates(db)
-      for (candidate in videoCandidates) {
-        val filteredIds = candidate.fileEntryIds.filter { it !in exactBytesMemberIds }
-        if (filteredIds.size < 2) {
+      val videoClusters = clusterVideoContentEntries(loadVideoContentEntries(db))
+      for (cluster in videoClusters) {
+        if (cluster.candidate.fileEntryIds.size < 2) {
           continue
         }
-        val filtered =
-            candidate.copy(
-                fileEntryIds = filteredIds,
-                memberCount = filteredIds.size,
-                reclaimableBytesEst = estimateReclaimableBytes(filteredIds, db),
-            )
-        val groupId = insertGroup(db, filtered, MatchKind.SAME_CONTENT_VIDEO)
+        val groupId = insertGroup(db, cluster.candidate, cluster.matchKind)
         if (groupId != null) {
           groupsCreated++
-          totalReclaimable += filtered.reclaimableBytesEst
+          totalReclaimable += cluster.candidate.reclaimableBytesEst
+          if (cluster.matchKind == MatchKind.EXACT_BYTES) {
+            exactBytesMemberIds.addAll(cluster.candidate.fileEntryIds)
+          }
+        }
+      }
+
+      val imageClusters = clusterImageContentEntries(loadImageContentEntries(db))
+      for (cluster in imageClusters) {
+        if (cluster.candidate.fileEntryIds.size < 2) {
+          continue
+        }
+        val groupId = insertGroup(db, cluster.candidate, cluster.matchKind)
+        if (groupId != null) {
+          groupsCreated++
+          totalReclaimable += cluster.candidate.reclaimableBytesEst
+          if (cluster.matchKind == MatchKind.EXACT_BYTES) {
+            exactBytesMemberIds.addAll(cluster.candidate.fileEntryIds)
+          }
         }
       }
 
@@ -135,6 +150,7 @@ class Grouper(private val database: CatalogDatabase) {
     fun matchKindForProfile(normalizationProfile: String): String =
         when (normalizationProfile) {
           NormalizationProfile.VIDEO_CONTENT_V1 -> MatchKind.SAME_CONTENT_VIDEO
+          NormalizationProfile.IMAGE_CONTENT_V1 -> MatchKind.SAME_CONTENT_IMAGE
           else -> MatchKind.EXACT_BYTES
         }
 
@@ -165,27 +181,285 @@ class Grouper(private val database: CatalogDatabase) {
         WHERE fe.fingerprint_id IS NOT NULL
           AND fe.is_symlink = 0
           AND fe.unscannable_reason IS NULL
-          AND f.normalization_profile != '${NormalizationProfile.VIDEO_CONTENT_V1}'
+          AND fe.raw_content_fingerprint_id IS NULL
+          AND f.normalization_profile NOT IN (
+            '${NormalizationProfile.VIDEO_CONTENT_V1}',
+            '${NormalizationProfile.IMAGE_CONTENT_V1}'
+          )
         ORDER BY group_fp_id ASC, fe.id ASC
         """
             .trimIndent()
     return aggregateCandidates(db, sql)
   }
 
-  private fun loadVideoContentCandidates(db: SQLiteDatabase): List<FingerprintGroupCandidate> {
+  private data class VideoContentEntry(
+      val fileEntryId: Long,
+      val fingerprintId: Long,
+      val frameHashes: LongArray,
+      val durationMs: Long,
+      val videoWidth: Int,
+      val videoHeight: Int,
+      val sizeBytes: Long,
+      val rawContentFingerprintId: Long?,
+  ) {
+    fun toVideoFingerprint(): VideoFingerprint =
+        VideoFingerprint(
+            frameHashes = frameHashes,
+            durationMs = durationMs,
+            videoWidth = videoWidth,
+            videoHeight = videoHeight,
+        )
+  }
+
+  private data class VideoContentCluster(
+      val candidate: FingerprintGroupCandidate,
+      val matchKind: String,
+  )
+
+  private fun loadVideoContentEntries(db: SQLiteDatabase): List<VideoContentEntry> {
     val sql =
         """
-        SELECT fe.fingerprint_id, f.normalization_profile, fe.id, fe.size
+        SELECT fe.id, fe.fingerprint_id, f.frame_hashes_blob, fe.size, fe.raw_content_fingerprint_id,
+               fe.duration_ms, fe.video_width, fe.video_height
         FROM file_entry fe
         INNER JOIN fingerprint f ON fe.fingerprint_id = f.id
         WHERE fe.fingerprint_id IS NOT NULL
           AND fe.is_symlink = 0
           AND fe.unscannable_reason IS NULL
           AND f.normalization_profile = '${NormalizationProfile.VIDEO_CONTENT_V1}'
-        ORDER BY fe.fingerprint_id ASC, fe.id ASC
+          AND f.frame_hashes_blob IS NOT NULL
+        ORDER BY fe.id ASC
         """
             .trimIndent()
-    return aggregateCandidates(db, sql)
+    val entries = mutableListOf<VideoContentEntry>()
+    db.rawQuery(sql, null).use { cursor ->
+      while (cursor.moveToNext()) {
+        val blob = cursor.getBlob(2) ?: continue
+        val hashes = VideoFingerprintCodec.decodeFrameHashesBlob(blob)
+        if (hashes.isEmpty()) {
+          continue
+        }
+        val durationMs = if (cursor.isNull(5)) 0L else cursor.getLong(5)
+        entries.add(
+            VideoContentEntry(
+                fileEntryId = cursor.getLong(0),
+                fingerprintId = cursor.getLong(1),
+                frameHashes = hashes,
+                durationMs = durationMs,
+                videoWidth = if (cursor.isNull(6)) 0 else cursor.getInt(6),
+                videoHeight = if (cursor.isNull(7)) 0 else cursor.getInt(7),
+                sizeBytes = cursor.getLong(3),
+                rawContentFingerprintId =
+                    if (cursor.isNull(4)) {
+                      null
+                    } else {
+                      cursor.getLong(4)
+                    },
+            ),
+        )
+      }
+    }
+    return entries
+  }
+
+  private fun clusterVideoContentEntries(entries: List<VideoContentEntry>): List<VideoContentCluster> {
+    if (entries.size < 2) {
+      return emptyList()
+    }
+
+    val parent = IntArray(entries.size) { it }
+    fun find(index: Int): Int {
+      var root = index
+      while (parent[root] != root) {
+        root = parent[root]
+      }
+      var node = index
+      while (parent[node] != node) {
+        val next = parent[node]
+        parent[node] = root
+        node = next
+      }
+      return root
+    }
+    fun union(left: Int, right: Int) {
+      val rootLeft = find(left)
+      val rootRight = find(right)
+      if (rootLeft != rootRight) {
+        parent[rootRight] = rootLeft
+      }
+    }
+
+    for (i in entries.indices) {
+      for (j in i + 1 until entries.size) {
+        if (
+            VideoContentMatcher.contentMatches(
+                entries[i].toVideoFingerprint(),
+                entries[j].toVideoFingerprint(),
+            )
+        ) {
+          union(i, j)
+        }
+      }
+    }
+
+    val clusters = linkedMapOf<Int, MutableList<VideoContentEntry>>()
+    for (index in entries.indices) {
+      val root = find(index)
+      clusters.getOrPut(root) { mutableListOf() }.add(entries[index])
+    }
+
+    return clusters.values
+        .filter { it.size >= 2 }
+        .map { cluster ->
+          val fileEntryIds = cluster.map { it.fileEntryId }
+          val sizes = cluster.map { it.sizeBytes }
+          VideoContentCluster(
+              candidate =
+                  FingerprintGroupCandidate(
+                      fingerprintId = cluster.first().fingerprintId,
+                      normalizationProfile = NormalizationProfile.VIDEO_CONTENT_V1,
+                      fileEntryIds = fileEntryIds,
+                      memberCount = fileEntryIds.size,
+                      reclaimableBytesEst = estimateReclaimableBytes(sizes),
+                  ),
+              matchKind = matchKindForVideoCluster(cluster),
+          )
+        }
+  }
+
+  /** AC-equiv-video-xres-04: byte-identical only → `EXACT_BYTES`; cross-resolution → `SAME_CONTENT_VIDEO`. */
+  private fun matchKindForVideoCluster(cluster: List<VideoContentEntry>): String {
+    val rawIds = cluster.map { it.rawContentFingerprintId }
+    return if (rawIds.all { it != null } && rawIds.toSet().size == 1) {
+      MatchKind.EXACT_BYTES
+    } else {
+      MatchKind.SAME_CONTENT_VIDEO
+    }
+  }
+
+  private data class ImageContentEntry(
+      val fileEntryId: Long,
+      val fingerprintId: Long,
+      val dHash: Long,
+      val sizeBytes: Long,
+      val rawContentFingerprintId: Long?,
+  )
+
+  private data class ImageContentCluster(
+      val candidate: FingerprintGroupCandidate,
+      val matchKind: String,
+  )
+
+  private fun loadImageContentEntries(db: SQLiteDatabase): List<ImageContentEntry> {
+    val sql =
+        """
+        SELECT fe.id, fe.fingerprint_id, f.frame_hashes_blob, fe.size, fe.raw_content_fingerprint_id
+        FROM file_entry fe
+        INNER JOIN fingerprint f ON fe.fingerprint_id = f.id
+        WHERE fe.fingerprint_id IS NOT NULL
+          AND fe.is_symlink = 0
+          AND fe.unscannable_reason IS NULL
+          AND f.normalization_profile = '${NormalizationProfile.IMAGE_CONTENT_V1}'
+          AND f.frame_hashes_blob IS NOT NULL
+        ORDER BY fe.id ASC
+        """
+            .trimIndent()
+    val entries = mutableListOf<ImageContentEntry>()
+    db.rawQuery(sql, null).use { cursor ->
+      while (cursor.moveToNext()) {
+        val blob = cursor.getBlob(2) ?: continue
+        val hashes = VideoFingerprintCodec.decodeFrameHashesBlob(blob)
+        if (hashes.isEmpty()) {
+          continue
+        }
+        entries.add(
+            ImageContentEntry(
+                fileEntryId = cursor.getLong(0),
+                fingerprintId = cursor.getLong(1),
+                dHash = hashes[0],
+                sizeBytes = cursor.getLong(3),
+                rawContentFingerprintId =
+                    if (cursor.isNull(4)) {
+                      null
+                    } else {
+                      cursor.getLong(4)
+                    },
+            ),
+        )
+      }
+    }
+    return entries
+  }
+
+  private fun clusterImageContentEntries(entries: List<ImageContentEntry>): List<ImageContentCluster> {
+    if (entries.size < 2) {
+      return emptyList()
+    }
+
+    val parent = IntArray(entries.size) { it }
+    fun find(index: Int): Int {
+      var root = index
+      while (parent[root] != root) {
+        root = parent[root]
+      }
+      var node = index
+      while (parent[node] != node) {
+        val next = parent[node]
+        parent[node] = root
+        node = next
+      }
+      return root
+    }
+    fun union(left: Int, right: Int) {
+      val rootLeft = find(left)
+      val rootRight = find(right)
+      if (rootLeft != rootRight) {
+        parent[rootRight] = rootLeft
+      }
+    }
+
+    for (i in entries.indices) {
+      for (j in i + 1 until entries.size) {
+        if (ImageContentMatcher.matches(entries[i].dHash, entries[j].dHash)) {
+          union(i, j)
+        }
+      }
+    }
+
+    val clusters = linkedMapOf<Int, MutableList<ImageContentEntry>>()
+    for (index in entries.indices) {
+      val root = find(index)
+      clusters.getOrPut(root) { mutableListOf() }.add(entries[index])
+    }
+
+    return clusters.values
+        .filter { it.size >= 2 }
+        .map { cluster ->
+          val fileEntryIds = cluster.map { it.fileEntryId }
+          val sizes = cluster.map { it.sizeBytes }
+          val matchKind = matchKindForImageCluster(cluster)
+          ImageContentCluster(
+              candidate =
+                  FingerprintGroupCandidate(
+                      fingerprintId = cluster.first().fingerprintId,
+                      normalizationProfile = NormalizationProfile.IMAGE_CONTENT_V1,
+                      fileEntryIds = fileEntryIds,
+                      memberCount = fileEntryIds.size,
+                      reclaimableBytesEst = estimateReclaimableBytes(sizes),
+                  ),
+              matchKind = matchKind,
+          )
+        }
+  }
+
+  /** AC-equiv-image-content-04: byte-identical only → `EXACT_BYTES`; mixed encodings → `SAME_CONTENT_IMAGE`. */
+  private fun matchKindForImageCluster(cluster: List<ImageContentEntry>): String {
+    val rawIds = cluster.map { it.rawContentFingerprintId }
+    return if (rawIds.all { it != null } && rawIds.toSet().size == 1) {
+      MatchKind.EXACT_BYTES
+    } else {
+      MatchKind.SAME_CONTENT_IMAGE
+    }
   }
 
   private fun aggregateCandidates(db: SQLiteDatabase, sql: String): List<FingerprintGroupCandidate> {
@@ -243,6 +517,7 @@ class Grouper(private val database: CatalogDatabase) {
     val confidence =
         when (matchKind) {
           MatchKind.SAME_CONTENT_VIDEO -> MatchKind.CONFIDENCE_VIDEO_CONTENT
+          MatchKind.SAME_CONTENT_IMAGE -> MatchKind.CONFIDENCE_IMAGE_CONTENT
           else -> MatchKind.CONFIDENCE_EXACT
         }
     val groupValues =

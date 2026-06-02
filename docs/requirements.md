@@ -9,7 +9,7 @@
 
 ## 1. Product overview
 
-DupBuster scans user-selected storage or, when no directory is chosen, all directories the app can legally access on the device. It surfaces groups of files that contain **identical content** and lets users review duplicate groups before deleting or moving files to reclaim space.
+DupBuster scans user-selected storage or, when no directory is chosen, all directories the app can legally access on the device. It surfaces groups of files with **the same content** — byte-identical files and, for photos, visually matching images across re-encode, resize, and compression — and lets users review duplicate groups before deleting or moving files to reclaim space.
 
 All duplicate detection runs **on-device**. No account login, backend sync, or cloud upload of user files is required for v1.
 
@@ -17,15 +17,19 @@ All duplicate detection runs **on-device**. No account login, backend sync, or c
 
 ## 2. Duplicate definition (non-negotiable)
 
-Two or more files are **duplicates** if and only if they contain the **same content**, regardless of:
+Two or more files are **duplicates** when they match under the v1 equivalence rules in §4, regardless of:
 
 - File path or folder location
 - Filename
+- On-disk byte layout (for images matched via `IMAGE_CONTENT_V1`)
 - Resolution (images/video)
 - Thumbnail or poster frame (videos)
 - Metadata (EXIF, ID3, container tags, etc.) unless metadata *is* the content for text-like files
 
-**Near-duplicates** are **out of scope for v1** **except** for **video** cross-resolution / cross-encode variants, which are included via `VIDEO_CONTENT_V1` (see §4, §7, §11).
+**Near-duplicates** are **out of scope for v1** **except**:
+
+- **Images:** re-encoded, recompressed, or resized variants of the same picture via `IMAGE_CONTENT_V1` (see §4, §7, §11).
+- **Video:** cross-resolution / cross-encode variants via `VIDEO_CONTENT_V1` (see §4, §7, §11).
 
 ---
 
@@ -43,7 +47,7 @@ Per-type rules for determining content sameness:
 |----------|---------|----------------------|
 | Plain text | UTF-8 NFC, strip UTF-8 BOM, CRLF→LF; SHA-256 of normalized bytes. **Trailing whitespace significant** (no trim). | `TEXT_NFC_LF` |
 | Documents (docx, pdf, etc.) | Byte-identical file hash (SHA-256 streaming). Cross-format logical equivalence **deferred**. | `RAW_BYTES` |
-| Images | Raw on-disk bytes as-is. EXIF/orientation differences = not duplicate if bytes differ. RAW+JPEG pairs not duplicates unless byte-identical. | `RAW_BYTES` |
+| Images | Two-path rule: (A) byte-identical on-disk hash (`RAW_BYTES`), OR (B) same picture content via `IMAGE_CONTENT_V1` (single-frame dHash on decoded bitmap, downscale ≤320×180, Hamming ≤ 8). EXIF/orientation/metadata differences alone do not block (B) when visuals match. | `RAW_BYTES`, `IMAGE_CONTENT_V1` |
 | Audio | Full container file hash (bytes on disk). No atom/tag stripping in v1. | `RAW_BYTES` |
 | Video | Two-path rule: (A) byte-identical container hash (`RAW_BYTES`), OR (B) same substantive content across resolution/encode/container via `VIDEO_CONTENT_V1` under duration gate + Hamming threshold (see §7.1). | `RAW_BYTES`, `VIDEO_CONTENT_V1` |
 | Other binary | Opaque byte stream SHA-256. | `RAW_BYTES` |
@@ -108,7 +112,7 @@ When coverage is less than 100% of user expectation:
 |----|-------|----------|
 | US-09 | As a user, I can browse duplicate groups and see thumbnails, file types, and reclaimable space. | Must |
 | US-10 | As a user, I must explicitly choose which file to keep before deleting duplicates. | Must |
-| US-11 | As a user, I can use preset keeper rules (largest, newest, shortest path) but must confirm my choice. | Must |
+| US-11 | As a user, I can use preset keeper rules (largest, newest, smallest file) but must confirm my choice. | Must |
 | US-12 | As a user, I receive a two-step confirmation before any destructive delete. | Must |
 | US-13 | As a user, I see how much space I can free by deleting non-keeper members. | Must |
 | US-14 | As a user, I see when the same file appears at multiple paths (hard links / aliases). | Must |
@@ -130,13 +134,15 @@ When coverage is less than 100% of user expectation:
 | ID | Requirement |
 |----|-------------|
 | FR-FP-01 | Multi-stage pipeline: discovery → size bucket → quick sample (files > 50 MB: first + last 64 KiB SHA-256) → full content SHA-256 (1 MiB read buffer). |
-| FR-FP-02 | Files with unique size skip further read except zero-byte `EMPTY:0` class **and except video** (video must still run `VIDEO_CONTENT_V1`; see FR-FP-07). |
+| FR-FP-02 | Files with unique size skip further read except zero-byte `EMPTY:0`, **images** (must run `IMAGE_CONTENT_V1`), and **video** (must run `VIDEO_CONTENT_V1`; see FR-FP-07 / FR-FP-09). |
 | FR-FP-03 | Files over 2 GB default cap marked `LARGE_SKIPPED` unless user opts in via settings. |
 | FR-FP-04 | Per-file hash timeout 120 s → `HASH_TIMEOUT`. |
 | FR-FP-05 | Group by `full_hash` (and normalized text hash where applicable). |
 | FR-FP-06 | SHA-256 collision risk documented as negligible; no special mitigation beyond schema version reporting. |
 | FR-FP-07 | **Video cross-resolution duplicates (v1):** For `media_type=video`, compute `VIDEO_CONTENT_V1` via native `VideoFingerprinter` (5 sampled frames, downscale ≤320×180, 64-bit dHash) in parallel with `RAW_BYTES`. Group as `SAME_CONTENT_VIDEO` when duration gate passes and ≥ 3 of 5 frame pairs match within Hamming threshold (ship default ≤ 8; QA tuning gate may raise to ≤ 10 under false-positive budget). |
 | FR-FP-08 | `VIDEO_CONTENT_V1` resource caps: platform decoders only (MediaCodec/AVAssetReader), max 1 active decode session per process, 90 s wall-clock per file, 500 MB default fingerprint budget (2 GB when `settings.largeFiles` opt-in), and 32 MB header/index parse cap before decode. |
+| FR-FP-09 | **Image re-encode / resize duplicates (v1):** For `media_type=image`, compute `IMAGE_CONTENT_V1` via native `ImageFingerprinter` (decode one representative frame, downscale ≤320×180, 64-bit dHash) in parallel with `RAW_BYTES`. Group as `SAME_CONTENT_IMAGE` when Hamming distance ≤ 8 (ship default; QA may tune ≤ 10 under false-positive budget). `EXACT_BYTES` groups take precedence (AC-equiv-image-content-04). |
+| FR-FP-10 | `IMAGE_CONTENT_V1` resource caps: platform decoders only (`BitmapFactory` / `UIImage`), 30 s wall-clock per file, 50 MB default fingerprint budget (2 GB when `settings.largeFiles` opt-in). Failure maps to `IMAGE_DECODE_FAILED`. |
 
 ### 7.2 Index and catalog
 
@@ -163,7 +169,7 @@ When coverage is less than 100% of user expectation:
 | ID | Requirement |
 |----|-------------|
 | FR-UN-01 | Never skip silently. Persist reason code on `file_entry`. |
-| FR-UN-02 | Supported reason codes: `CLOUD_PLACEHOLDER`, `ENCRYPTED`, `PERMISSION_DENIED`, `OFFLINE_ONLY`, `LOCKED`, `LARGE_SKIPPED`, `HASH_TIMEOUT`, `VIDEO_DECODE_FAILED`. |
+| FR-UN-02 | Supported reason codes: `CLOUD_PLACEHOLDER`, `ENCRYPTED`, `PERMISSION_DENIED`, `OFFLINE_ONLY`, `LOCKED`, `LARGE_SKIPPED`, `HASH_TIMEOUT`, `VIDEO_DECODE_FAILED`, `IMAGE_DECODE_FAILED`. |
 | FR-UN-03 | Invalid SAF/content URI → `PERMISSION_DENIED` (no separate enum in v1). |
 | FR-UN-04 | Aggregate unscannable counts in `UnscannableSummaryCard` at scan end. |
 | FR-UN-05 | Cloud/offline placeholders never hashed. |
@@ -173,7 +179,7 @@ When coverage is less than 100% of user expectation:
 | ID | Requirement |
 |----|-------------|
 | FR-AC-01 | Review-before-delete mandatory for all destructive actions. |
-| FR-AC-02 | KeeperSelector presets: **largest** (defaultHighlighted), newest mtime, shortest path. |
+| FR-AC-02 | KeeperSelector presets: **largest** (defaultHighlighted), newest mtime, smallest file size. |
 | FR-AC-03 | Delete button disabled until user explicitly selects a member or preset. |
 | FR-AC-04 | `KeeperEducationSheet` shown once per session on first destructive action. |
 | FR-AC-05 | Optional session toggle: "Use largest for the rest of this session" — not persisted across cold start. |
@@ -335,18 +341,22 @@ See architecture doc for full `a11y.*` token list.
 | AC-a11y-keeper-01 | Radiogroup; no `selected=true` until explicit activation |
 | AC-a11y-delete-01 | Modal focus trap and focus return |
 | AC-a11y-path-01 | PathChipList single "Same file, {n} locations" label |
-| AC-a11y-match-01 | Duplicate group list item announces match kind before count (`EXACT_BYTES` vs `SAME_CONTENT_VIDEO`) |
-| AC-a11y-match-02 | `SAME_CONTENT_VIDEO` group detail announces ContentMatchNotice once (polite); absent for `EXACT_BYTES` |
-| AC-a11y-match-03 | MatchKindBadge includes readable text (not color-only) for both variants |
+| AC-a11y-match-01 | Duplicate group list item announces match kind before count (`EXACT_BYTES`, `SAME_CONTENT_IMAGE`, `SAME_CONTENT_VIDEO`) |
+| AC-a11y-match-02 | `SAME_CONTENT_IMAGE` / `SAME_CONTENT_VIDEO` group detail announces ContentMatchNotice once (polite); absent for `EXACT_BYTES` |
+| AC-a11y-match-03 | MatchKindBadge includes readable text (not color-only) for all variants |
 | AC-a11y-match-04 | ContentMatchNotice appears before delete button in accessibility traversal order |
 | AC-a11y-match-05 | Hashing phase with video content work announces `a11y.scan.videoContent` once per phase entry |
+| AC-equiv-image-content-01 | Three JPEGs of the same picture at different compression/sizes → one `SAME_CONTENT_IMAGE` group (≥3 members) |
+| AC-equiv-image-content-02 | Hamming distance > threshold → not grouped |
+| AC-equiv-image-content-03 | Different pictures → not grouped |
+| AC-equiv-image-content-04 | Byte-identical image copies → `EXACT_BYTES` only; no competing `SAME_CONTENT_IMAGE` group |
 
 ---
 
 ## 12. Out of scope (v1 defer list)
 
-- Near-duplicate images (resized/recompressed/cropped) / perceptual image hashing
 - Audio re-encode near-duplicate matching
+- Cropped images where less than ~50% of the frame overlaps (heavy crop / different aspect) — may not match `IMAGE_CONTENT_V1`
 - Cross-format document deduplication (e.g. docx vs exported pdf)
 - Cloud upload hashing
 - `MANAGE_EXTERNAL_STORAGE` broad crawl
@@ -368,14 +378,14 @@ See architecture doc for full `a11y.*` token list.
 | `ScanProgress` + `ScanStatusChip` | Scan progress and phase display |
 | `UnscannableSummaryCard` | Aggregate unscannable counts by reason |
 | `DuplicateGroupListItem` | Group summary in list view |
-| `MatchKindBadge` | Shows `EXACT_BYTES` vs `SAME_CONTENT_VIDEO` match kind |
+| `MatchKindBadge` | Shows `EXACT_BYTES`, `SAME_CONTENT_IMAGE`, `SAME_CONTENT_VIDEO` match kind |
 | `KeeperSelector` | Keeper preset and member selection |
 | `KeeperEducationSheet` | One-time delete safety education |
 | `DeleteConfirmModal` | Two-step destructive confirm |
 | `PathChipList` | Multi-path / hard-link display |
 | `TextFileBadge` | Text duplicate indicator (no diff view) |
 | `RescanPromptBanner` | Shown when `full_rescan_required` |
-| `ContentMatchNotice` | Trust copy shown on `SAME_CONTENT_VIDEO` group detail |
+| `ContentMatchNotice` | Trust copy on `SAME_CONTENT_IMAGE` / `SAME_CONTENT_VIDEO` group detail |
 
 ---
 

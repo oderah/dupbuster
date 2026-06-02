@@ -14,7 +14,7 @@ alwaysApply: true
 ## 1. Product invariants (non-negotiable)
 
 - **On-device only:** No account login, backend sync, or cloud upload of user files in v1.
-- **Duplicate definition:** Same **content** only — not path, filename, resolution, thumbnails, or metadata (except text normalization per `TEXT_NFC_LF`). Near-duplicates are **out of scope** except video cross-resolution via `VIDEO_CONTENT_V1`.
+- **Duplicate definition:** Same **content** — byte-identical (`RAW_BYTES` / `TEXT_NFC_LF` / `EMPTY:0`) plus **image** re-encode/resize (`IMAGE_CONTENT_V1`) and **video** cross-resolution (`VIDEO_CONTENT_V1`). Not path/filename/metadata alone.
 - **Review-before-delete:** Every destructive delete requires explicit keeper choice + two-step confirm. No auto-delete.
 - **Partial coverage honesty:** Never claim full-device scan without grants. Use `CoverageBanner` and footer copy from frozen tokens.
 - **EN string freeze:** User-facing copy comes from `src/tokens/tokens.ts` verbatim per `docs/requirements.md` §9 and architecture §9.3. Do not paraphrase frozen strings in UI.
@@ -293,7 +293,7 @@ New code must land in these areas unless architecture is amended first.
 - **Pipeline:** discovery → stat → hash (`SqliteSizeBucketIndex` / `SqliteDurationBucketIndex`) → `IndexWriter` → `Grouper`; background executor/queue; phase progress via progress bridge (flush on phase transitions).
 - **Size-bucket backfill:** When hashing collides on size, orchestrator re-hashes prior `fingerprint_id IS NULL` rows at that size via `IndexWriter.listSizeBucketPendingEntries` / `DBIndexWriter` parity — required so duplicate groups are not missed (first unique-size file was skip-only).
 - **Errors:** bridge-safe `onScanError` (`fileEntryId`, `unscannableReason`, optional `scanRunId` only).
-- **Not in M1-19:** `resumeScanRunId`, production `VideoFrameExtractor` (video hashes `RAW_BYTES` only until decode wired).
+- **Not in M1-19:** `resumeScanRunId`. **Video decode wired:** `ContentResolverVideoFrameExtractor` + `VideoFingerprinter` in `ScanOrchestratorFactory` (was `null` — videos were RAW_BYTES-only and cross-res grouping could not run).
 - **Tests:** Android `ScanOrchestratorTest`, `ScanStartRequestParserTest` — `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.scan.*'`; iOS `DBScanOrchestratorTests`, `DBScanStartRequestParserTests` — Xcode `DupbusterScanEngineTests` target.
 
 ### CatalogReader + `getCatalogSnapshot` bridge (Phase B)
@@ -304,7 +304,7 @@ New code must land in these areas unless architecture is amended first.
 - **Android bridge maps:** `JavaOnlyMap` is **not** sufficient for nested `getCatalogSnapshot` payloads over Turbo Module (JS receives empty `duplicateGroups`). `ScanEngineModule.toWritableMap` deep-copies to `Arguments.createMap()` before `promise.resolve`. `JavaOnlyMap` is also **not** for codegen `emitOnScanProgress` / `emitOnScanError` — use flat `toEventEmitterMap` before emit; otherwise RN crashes with `Cannot convert argument of type class JavaOnlyMap`.
 - **Turbo Module:** `getCatalogSnapshot()` added to `NativeScanEngine.ts` codegen spec; maps to `ScanCatalogSnapshot` via `mapCatalogSnapshot` in `scanEnginePort.ts`.
 - **Media hint:** Derived from `display_name` + `duration_ms > 0` → video; not stored in SQLite.
-- **`pathLength`:** `uri_or_path.length` for shortest-path keeper preset (FR-AC-02).
+- **`pathLength`:** shortest alias path length on catalog members (display/metadata); keeper smallest preset uses `sizeBytes` in JS (`keeperSelection`).
 - **Bridge law:** Separate read API from progress/error events; allowed fields only per mapper allowlists.
 - **`App.tsx`:** Uses `createNativeScanEnginePort(NativeScanEngine)`; Jest keeps `createMockScanEnginePort`.
 - **Tests:** `CatalogReaderTest`, `CatalogSnapshotBridgeMapperTest` / `DBCatalogReaderTests`; `__tests__/scanEnginePort.test.ts` for JS mapper.
@@ -318,7 +318,21 @@ New code must land in these areas unless architecture is amended first.
 - **Index:** `fingerprint_id` = VIDEO_CONTENT_V1, `raw_content_fingerprint_id` = RAW_BYTES on `file_entry`; `frame_hashes_blob` on fingerprint row (debug-only egress).
 - **Grouper:** EXACT_BYTES via `raw_content_fingerprint_id`; SAME_CONTENT_VIDEO via `fingerprint_id` profile; fuzzy Hamming clustering for M1-18 fixture suite uses `VideoContentMatcher`.
 - **Tests:** `DHashTest`, `VideoFingerprinterTest`, `VideoContentMatcherTest`, `VideoFingerprintCodecTest` / iOS `DBVideoFingerprinterTests`, `DBVideoContentMatcherTests`; fixture `hash-video-content-01.json`.
-- **Platform decoders:** Production `MediaCodec` / `AVAssetReader` frame extractors are wired when scan orchestrator lands; M1-13 ships algorithm + injectable extractor + unit tests.
+- **Platform decode (Android):** `ContentResolverVideoFrameExtractor` via `MediaMetadataRetriever` frame sampling (same stack as `AndroidVideoMetadataReader`); `VideoFingerprinter` wired in `ScanOrchestratorFactory`.
+- **Backfill:** `IndexWriter.listVideoContentBackfillEntries` + `ScanOrchestrator.backfillVideoContentFingerprints` before grouping (RAW-only video rows from pre-wiring scans).
+
+### ImageFingerprinter (M3-12)
+
+- **Android:** `ImageFingerprinter`, `ImageContentMatcher`, `ContentResolverImageBitmapExtractor` — single-frame dHash (≤320×180) parallel with `RAW_BYTES`; `IMAGE_CONTENT_V1` on `fingerprint_id`.
+- **Decode:** Rewind FD before second `BitmapFactory` pass; apply EXIF orientation; scale to ≤320×180 before dHash (recompressed Downloads exports).
+- **Hamming:** Image ship threshold **10** (FR-FP-09 QA budget) — not video’s 8 — for heavy recompression false-negatives (e.g. `download.jpeg` vs `images.jpeg`).
+- **Size-bucket:** Images always `NEEDS_HASH` (like video) so unique-size re-encodes still get perceptual fingerprint (fixes missed recompressed dupes).
+- **Backfill:** `IndexWriter.listImageContentBackfillEntries` + `ScanOrchestrator.backfillImageContentFingerprints` before grouping — re-hash legacy size-bucket skips and RAW_BYTES-only image rows missing `IMAGE_CONTENT_V1`.
+- **Grouper:** Fuzzy union-find on dHash Hamming ≤10 → `SAME_CONTENT_IMAGE`; mixed raw → `SAME_CONTENT_IMAGE`, all same raw → `EXACT_BYTES` (AC-equiv-image-content-04).
+- **Grouper (video):** Fuzzy union-find via `VideoContentMatcher.contentMatches` (duration gate + ≥3/5 frames Hamming ≤8) → `SAME_CONTENT_VIDEO`; all same `raw_content_fingerprint_id` → `EXACT_BYTES` (AC-equiv-video-xres-04). Replaces exact-`fingerprint_id`-only video grouping.
+- **UI:** `SAME_CONTENT_IMAGE` uses `match.imageContent.*`, `ContentMatchNotice`, `MatchKindBadge` caution surface; `IMAGE_DECODE_FAILED` in unscan tokens.
+- **iOS:** Parity pending — wire `DBImageFingerprinter` + `DBGrouper` image cluster before iOS ship.
+- **Tests:** `ImageContentMatcherTest`, `GrouperImageContentTest`; rescan required after upgrade.
 
 ### Video pipeline exception (M1-14)
 
@@ -387,7 +401,7 @@ New code must land in these areas unless architecture is amended first.
 
 ### KeeperSelector + KeeperEducationSheet (M2-06)
 
-- **`src/components/KeeperSelector.tsx`:** Presets largest/newest/shortest path (FR-AC-02); member `radiogroup` with `a11y.keeper.group`; largest `defaultHighlighted` without `accessibilityState.selected` until explicit tap (AC-action-keeper-01, AC-a11y-keeper-01); optional `rememberSession` checkbox (FR-AC-05).
+- **`src/components/KeeperSelector.tsx`:** Presets largest/newest/smallest file (FR-AC-02); member `radiogroup` with `a11y.keeper.group`; largest `defaultHighlighted` without `accessibilityState.selected` until explicit tap (AC-action-keeper-01, AC-a11y-keeper-01); optional `rememberSession` checkbox (FR-AC-05).
 - **`src/components/KeeperEducationSheet.tsx`:** Modal sheet with `keeper.education.*` copy; appends `keeper.education.videoContent` for `SAME_CONTENT_VIDEO` groups.
 - **`src/controllers/keeperSelection.ts`:** Preset resolution, selection state, `isKeeperSelectionComplete`, `computeReclaimableBytesForKeeper` (FR-AC-06).
 - **`src/controllers/keeperEducationSession.ts`:** Once-per-session gate for AC-action-keeper-02 (not persisted across cold start).
@@ -478,12 +492,21 @@ New code must land in these areas unless architecture is amended first.
 
 ### DeleteCoordinator (M3-03)
 
-- **Android:** `com.dupbuster.scanengine.delete.DeleteCoordinator` — dedicated `dupbuster-delete` executor (not `ScanOrchestrator` hash pool); `UriValidator` + `DISCOVERY` provenance before delete; `PendingPlatformFileDeleter` until M3-04 MediaStore wiring.
+- **Android:** `com.dupbuster.scanengine.delete.DeleteCoordinator` — dedicated `dupbuster-delete` executor (not `ScanOrchestrator` hash pool); `UriValidator` + `DISCOVERY` provenance before delete; platform delete via `AndroidPlatformFileDeleter` (M3-04).
 - **iOS:** `ScanEngine/Delete/DBDeleteCoordinator` — serial `com.dupbuster.delete` queue; `DBPendingPlatformFileDeleter` until M3-05 PHAsset delete.
 - **Catalog:** `IndexWriter.applyDuplicateDelete` / `DBIndexWriter applyDuplicateDeleteForGroupId:` — mark `is_keeper`, remove deleted `file_entry` / `duplicate_member`, drop group when &lt;2 members remain.
 - **Bridge:** `deleteDuplicates({ groupId, keeperFileEntryId, deleteFileEntryIds })` → `{ deletedCount, failedCount }`; invalid payload → `DELETE_INVALID_COMMAND`.
 - **JS:** `ScanEnginePort.deleteDuplicates`; `buildDeleteDuplicatesCommand`; `ScanSessionController.confirmDelete` refreshes catalog and closes detail when group removed.
 - **Tests:** `DeleteCoordinatorTest`, `DeleteDuplicatesCommandParserTest`, `IndexWriterDeleteTest`; `buildDeleteDuplicatesCommand.test.ts`.
+
+### Android platform delete (M3-04)
+
+- **`AndroidPlatformFileDeleter`:** `PlatformFileDeleter.deleteTargets` — SAF `DocumentsContract.deleteDocument` for Mode A / Mode B SAF union rows; MediaStore `MediaStore.createDeleteRequest` batched per delete command on API 30+ (`DefaultContentDeleteGateway`).
+- **`DeleteIntentLauncher`:** `ReactApplicationContext` + `BaseActivityEventListener` — launches system delete confirmation on foreground Activity; blocks delete executor up to 120 s (after DupBuster two-step confirm in JS).
+- **Fail-closed:** No Activity / no launcher → MediaStore batch returns failure; catalog updated only for confirmed platform deletes (M3-03).
+- **Legacy API 26–29:** `ContentResolver.delete`; `RecoverableSecurityException` uses same confirmation launcher (API 29+).
+- **Factory:** `DeleteCoordinatorFactory.create(ReactApplicationContext)` wires production deleter; non-RN `Context` keeps `PendingPlatformFileDeleter` for headless tests.
+- **Tests:** `AndroidPlatformFileDeleterTest`, `DefaultContentDeleteGatewayTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.delete.*'`.
 
 ### DeleteConfirmModal (M3-01)
 
@@ -567,7 +590,7 @@ Fixture layout per `docs/implementation-plan.md` §9.2. Add new fixtures when ad
 
 ### Product scope (defer list — requires new debate)
 
-Do not implement without explicit new consensus: perceptual image near-dupes; cross-format document dedup; symlink follow; filesystem watchers; payload-only A/V hashing; account/backend sync; auto-delete; secure wipe claims; runtime themes; broad `/sdcard` crawl; near-duplicate audio.
+Do not implement without explicit new consensus: cross-format document dedup; symlink follow; filesystem watchers; payload-only A/V hashing; account/backend sync; auto-delete; secure wipe claims; runtime themes; broad `/sdcard` crawl; near-duplicate audio.
 
 ### UX and copy
 

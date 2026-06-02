@@ -4,16 +4,20 @@ import {StyleSheet, Text, View} from 'react-native';
 import {tokens} from '../tokens/tokens';
 import type {ContentMatchNoticeProps} from '../types/contentMatchNotice';
 
-/** Trust copy for SAME_CONTENT_VIDEO detail (AC-a11y-match-02); omitted for EXACT_BYTES. */
+/** Trust copy for content-match groups (AC-a11y-match-02); omitted for EXACT_BYTES. */
 export function ContentMatchNotice({
   matchKind,
   testID = 'content-match-notice',
 }: ContentMatchNoticeProps): React.JSX.Element | null {
-  if (matchKind !== 'SAME_CONTENT_VIDEO') {
+  const message =
+    matchKind === 'SAME_CONTENT_IMAGE'
+      ? tokens.match.imageContent.notice
+      : matchKind === 'SAME_CONTENT_VIDEO'
+        ? tokens.match.videoContent.notice
+        : null;
+  if (message == null) {
     return null;
   }
-
-  const message = tokens.match.videoContent.notice;
 
   return (
     <View

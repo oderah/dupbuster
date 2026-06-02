@@ -1,12 +1,12 @@
 import type {MatchKind, MediaTypeHint} from './scanEngine';
 
 /** FR-AC-02 preset rules. */
-export type KeeperPreset = 'largest' | 'newest' | 'shortest_path';
+export type KeeperPreset = 'largest' | 'newest' | 'smallest_file';
 
 export const KEEPER_PRESETS = [
   'largest',
   'newest',
-  'shortest_path',
+  'smallest_file',
 ] as const satisfies readonly KeeperPreset[];
 
 /** Member row input for keeper resolution (catalog layer — not bridge). */
@@ -15,7 +15,7 @@ export type KeeperMember = {
   displayName: string;
   sizeBytes: number;
   mtimeMs: number;
-  /** Display path length for shortest-path preset (FR-AC-02). */
+  /** Shortest display path among aliases (catalog metadata; not a keeper preset). */
   pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string | null;

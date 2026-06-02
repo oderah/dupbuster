@@ -24,7 +24,8 @@ export type UnscannableReason =
   | 'LOCKED'
   | 'LARGE_SKIPPED'
   | 'HASH_TIMEOUT'
-  | 'VIDEO_DECODE_FAILED';
+  | 'VIDEO_DECODE_FAILED'
+  | 'IMAGE_DECODE_FAILED';
 
 /** Stable display order for UnscannableSummaryCard rows (FR-UN-02). */
 export const UNSCANNABLE_REASONS = [
@@ -36,6 +37,7 @@ export const UNSCANNABLE_REASONS = [
   'LARGE_SKIPPED',
   'HASH_TIMEOUT',
   'VIDEO_DECODE_FAILED',
+  'IMAGE_DECODE_FAILED',
 ] as const satisfies readonly UnscannableReason[];
 
 export type ScanProgressContentKind = 'none' | 'video_content';
@@ -133,10 +135,14 @@ export const TERMINAL_SCAN_PHASES = [
 ] as const satisfies readonly ScanPhase[];
 
 /** `duplicate_group.match_kind` values (architecture §5.2). */
-export type MatchKind = 'EXACT_BYTES' | 'SAME_CONTENT_VIDEO';
+export type MatchKind =
+  | 'EXACT_BYTES'
+  | 'SAME_CONTENT_IMAGE'
+  | 'SAME_CONTENT_VIDEO';
 
 export const MATCH_KINDS = [
   'EXACT_BYTES',
+  'SAME_CONTENT_IMAGE',
   'SAME_CONTENT_VIDEO',
 ] as const satisfies readonly MatchKind[];
 

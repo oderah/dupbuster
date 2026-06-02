@@ -25,7 +25,7 @@ export function resolvePresetKeeperId(
   }
 
   return members.reduce((best, member) =>
-    member.pathLength < best.pathLength ? member : best,
+    member.sizeBytes < best.sizeBytes ? member : best,
   ).fileEntryId;
 }
 

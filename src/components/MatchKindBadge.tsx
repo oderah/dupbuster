@@ -11,7 +11,7 @@ function resolveBadgeColors(matchKind: MatchKind): {
   borderColor: string;
   textColor: string;
 } {
-  if (matchKind === 'SAME_CONTENT_VIDEO') {
+  if (matchKind === 'SAME_CONTENT_IMAGE' || matchKind === 'SAME_CONTENT_VIDEO') {
     return {
       backgroundColor: tokens.color.surface.caution,
       borderColor: tokens.color.border.caution,

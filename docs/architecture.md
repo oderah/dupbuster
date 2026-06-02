@@ -137,11 +137,12 @@ sequenceDiagram
 | Stage | Condition | Action |
 |-------|-----------|--------|
 | 1. Discovery | Always | Emit path/uri, size, mtime, media_type hint, scan_root_id, generation |
-| 2. Size bucket | Unique size in catalog | Skip further read (except `EMPTY:0`) **and except video** (video still runs `VIDEO_CONTENT_V1`) |
+| 2. Size bucket | Unique size in catalog | Skip further read (except `EMPTY:0`, **images** still run `IMAGE_CONTENT_V1`, and **video** still runs `VIDEO_CONTENT_V1`) |
 | 3. Quick sample | Size > 50 MB | SHA-256(first 64 KiB + last 64 KiB); mismatch → eliminate pair |
 | 4. Full hash | Sample match or ≤ 50 MB | SHA-256 streaming, 1 MiB buffer (`RAW_BYTES`) |
-| 4b. Video content | media_type=video | Compute `VIDEO_CONTENT_V1` (native `VideoFingerprinter`) in parallel with stage 4 |
-| 5. Group | Hash/fingerprint complete | Exact match (`RAW_BYTES`) OR video content match (`VIDEO_CONTENT_V1`) |
+| 4b. Image content | media_type=image | Compute `IMAGE_CONTENT_V1` (native `ImageFingerprinter`) in parallel with stage 4 |
+| 4c. Video content | media_type=video | Compute `VIDEO_CONTENT_V1` (native `VideoFingerprinter`) in parallel with stage 4 |
+| 5. Group | Hash/fingerprint complete | Exact match (`RAW_BYTES`), fuzzy image match (`IMAGE_CONTENT_V1`), or video content match (`VIDEO_CONTENT_V1`) |
 
 ### 4.2 Large-file and timeout policy
 
@@ -151,6 +152,14 @@ sequenceDiagram
 | Size > 2 GB, opt-in on | Full hash attempted |
 | Read exceeds 120 s | `HASH_TIMEOUT` |
 | Zero bytes | Synthetic fingerprint `EMPTY:0` |
+
+**Image content caps (IMAGE_CONTENT_V1):**
+
+- Platform decoders only: Android `BitmapFactory`; iOS `UIImage` / ImageIO (no FFmpeg v1)
+- Downscale ≤ 320×180, grayscale, 64-bit dHash (single frame)
+- 30 s wall-clock per file
+- 50 MB default budget; 2 GB with `settings.largeFiles` opt-in
+- Failure maps to `IMAGE_DECODE_FAILED`
 
 **Video content caps (VIDEO_CONTENT_V1):**
 - Platform decoders only: Android MediaCodec + MediaExtractor; iOS AVAssetReader (no FFmpeg v1)
@@ -505,7 +514,8 @@ All strings to crash SDK, opt-in analytics, and JS bridge errors pass `Redaction
 | `UnscannableSummaryCard` | Row per `unscannable_reason`; CTAs for LARGE_SKIPPED, HASH_TIMEOUT |
 | `DuplicateGroupListItem` | Thumbnail grid max 4 + overflow; reclaimable size |
 | `MatchKindBadge` | Shows `EXACT_BYTES` vs `SAME_CONTENT_VIDEO` |
-| `KeeperSelector` | Presets: largest, newest, shortest path; radiogroup a11y |
+| `KeeperSelector` | Presets: largest, newest, smallest file; radiogroup a11y |
+| `ImageFingerprinter` | **Images only:** `IMAGE_CONTENT_V1` dHash; fuzzy cluster in Grouper |
 | `KeeperEducationSheet` | Once per session |
 | `DeleteConfirmModal` | Two-step; focus trap |
 | `PathChipList` | Multi-path aliases under member |

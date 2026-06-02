@@ -9,7 +9,7 @@ import com.dupbuster.scanengine.discovery.MediaTypeHint
 interface SizeBucketIndex {
   /**
    * Registers [sizeBytes] and returns whether this file should be read for hashing.
-   * Zero-byte and video rows always require a read.
+   * Zero-byte, image, and video rows always require a read.
    */
   fun register(
       sizeBytes: Long,
@@ -33,7 +33,7 @@ class InMemorySizeBucketIndex : SizeBucketIndex {
       mediaTypeHint: MediaTypeHint,
       isEmpty: Boolean,
   ): SizeBucketDisposition {
-    if (isEmpty || mediaTypeHint == MediaTypeHint.VIDEO) {
+    if (isEmpty || mediaTypeHint == MediaTypeHint.VIDEO || mediaTypeHint == MediaTypeHint.IMAGE) {
       return SizeBucketDisposition.NEEDS_HASH
     }
     val next = (counts[sizeBytes] ?: 0) + 1

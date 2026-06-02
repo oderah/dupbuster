@@ -22,6 +22,17 @@ sealed class HashResult {
       val videoUnscannableReason: String,
   ) : HashResult()
 
+  /** Image two-path hash: [rawBytes] (`RAW_BYTES`) + [imageContent] (`IMAGE_CONTENT_V1`) in parallel (FR-FP-09). */
+  data class ImageSuccess(
+      val rawBytes: HashedFile,
+      val imageContent: HashedFile,
+  ) : HashResult()
+
+  data class ImagePartialSuccess(
+      val rawBytes: HashedFile,
+      val imageUnscannableReason: String,
+  ) : HashResult()
+
   /** Unique size in catalog — no byte read (FR-FP-02). Caller may backfill when size collides. */
   data class SizeBucketSkipped(val staged: StagedFile) : HashResult()
 

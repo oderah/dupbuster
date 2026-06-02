@@ -42,7 +42,7 @@ describe('tokens EN freeze (requirements §9)', () => {
     );
     expect(tokens.keeper.preset.largest).toBe('Largest file');
     expect(tokens.keeper.preset.newest).toBe('Newest file');
-    expect(tokens.keeper.preset.shortestPath).toBe('Shortest path');
+    expect(tokens.keeper.preset.smallestFile).toBe('Smallest file');
     expect(tokens.keeper.education.title).toBe('Review before deleting');
     expect(tokens.keeper.education.general).toBe(
       'DupBuster only deletes files you choose to remove. Pick which copy to keep, then confirm before anything is deleted.',
@@ -70,6 +70,8 @@ describe('tokens EN freeze (requirements §9)', () => {
     expect(tokens.unscan.reason.LARGE_SKIPPED).toBe('files over 2 GB');
     expect(tokens.unscan.reason.HASH_TIMEOUT).toBe('timed out while hashing');
     expect(tokens.unscan.reason.VIDEO_DECODE_FAILED).toBe('video decode failed');
+    expect(tokens.unscan.reason.IMAGE_DECODE_FAILED).toBe('image decode failed');
+    expect(tokens.match.imageContent.label).toBe('Same photo, different file');
   });
 
   it('coverage.footer matches requirements §5.3', () => {

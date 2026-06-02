@@ -19,6 +19,7 @@ export function KeeperEducationSheet({
   testID = 'keeper-education-sheet',
 }: KeeperEducationSheetProps): React.JSX.Element {
   const showVideoEducation = matchKind === 'SAME_CONTENT_VIDEO';
+  const showImageEducation = matchKind === 'SAME_CONTENT_IMAGE';
 
   return (
     <Modal
@@ -42,6 +43,11 @@ export function KeeperEducationSheet({
           <Text style={styles.body} maxFontSizeMultiplier={1.3}>
             {keeperEducation.general}
           </Text>
+          {showImageEducation ? (
+            <Text style={styles.body} maxFontSizeMultiplier={1.3}>
+              {tokens.match.imageContent.notice}
+            </Text>
+          ) : null}
           {showVideoEducation ? (
             <Text style={styles.body} maxFontSizeMultiplier={1.3}>
               {keeperEducation.videoContent}

@@ -100,6 +100,41 @@ class DiscoveryEmitterModeBTest {
   }
 
   @Test
+  fun emitModeB_downloadJpegInDownloadsCollection_usesImageMediaHint() {
+    val downloadUri =
+        Uri.parse("content://com.android.providers.media.documents/document/downloads%3A42")
+    val fakeMediaStore =
+        object : MediaStoreDiscoveryQuery {
+          override fun queryCollection(kind: MediaStoreCollectionKind): List<MediaStoreRow> {
+            if (kind != MediaStoreCollectionKind.DOWNLOAD) {
+              return emptyList()
+            }
+            return listOf(
+                MediaStoreRow(
+                    contentUri = downloadUri,
+                    displayName = "download.jpeg",
+                    mimeType = "image/jpeg",
+                    sizeBytes = 4_970,
+                    lastModifiedMs = 1_700_000_000_000L,
+                    collectionKind = MediaStoreCollectionKind.DOWNLOAD,
+                ),
+            )
+          }
+        }
+
+    val emitter =
+        DiscoveryEmitter(context, mediaStoreQuery = fakeMediaStore, uriValidator = UriValidator(context))
+    val entries = mutableListOf<DiscoveredEntry>()
+    emitter.emitModeB(
+        PlatformDiscoveryRequest(scanRootId = 1L, generation = 1, grant = platformGrant),
+        DiscoveryEntryConsumer { entries.add(it) },
+    )
+
+    assertEquals(1, entries.size)
+    assertEquals(MediaTypeHint.IMAGE, entries[0].mediaTypeHint)
+  }
+
+  @Test
   fun emitModeB_deniesNonMediaStoreUri() {
     val fakeMediaStore =
         object : MediaStoreDiscoveryQuery {

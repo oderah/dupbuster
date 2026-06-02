@@ -6,4 +6,5 @@ object UnscannableReason {
   const val LARGE_SKIPPED: String = "LARGE_SKIPPED"
   const val HASH_TIMEOUT: String = "HASH_TIMEOUT"
   const val VIDEO_DECODE_FAILED: String = "VIDEO_DECODE_FAILED"
+  const val IMAGE_DECODE_FAILED: String = "IMAGE_DECODE_FAILED"
 }

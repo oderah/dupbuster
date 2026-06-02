@@ -40,10 +40,10 @@ const members: KeeperMember[] = [
 ];
 
 describe('keeperSelection', () => {
-  it('resolves largest, newest, and shortest-path presets (FR-AC-02)', () => {
+  it('resolves largest, newest, and smallest-file presets (FR-AC-02)', () => {
     expect(resolvePresetKeeperId('largest', members)).toBe(2);
     expect(resolvePresetKeeperId('newest', members)).toBe(3);
-    expect(resolvePresetKeeperId('shortest_path', members)).toBe(2);
+    expect(resolvePresetKeeperId('smallest_file', members)).toBe(1);
   });
 
   it('defaultHighlighted is largest without explicit activation (AC-action-keeper-01)', () => {

@@ -7,4 +7,5 @@ object NormalizationProfile {
   const val EMPTY: String = "EMPTY:0"
   /** Video content fingerprint (M1-13+); grouper maps to [MatchKind.SAME_CONTENT_VIDEO]. */
   const val VIDEO_CONTENT_V1: String = "VIDEO_CONTENT_V1"
+  const val IMAGE_CONTENT_V1: String = "IMAGE_CONTENT_V1"
 }

@@ -139,6 +139,7 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 | M3-03 | Implement `DeleteCoordinator` (native, isolated from hash) | |
 | M3-04 | Android MediaStore deleteRequest integration | API 11+ |
 | M3-05 | iOS PHAssetChangeRequest integration | |
+| M3-12 | `IMAGE_CONTENT_V1`: ImageFingerprinter + fuzzy Grouper + UI (`SAME_CONTENT_IMAGE`) | FR-FP-09/10; AC-equiv-image-content-* |
 | M3-06 | TOCTOU: stat→hash size/mtime change discard + re-queue | AC-integrity-toctou-* |
 | M3-07 | TOCTOU: delete mid-hash tombstone | |
 | M3-08 | Permission revoke mid-scan pause + FD close | AC-integrity-perm-01 |
@@ -338,7 +339,7 @@ tests/fixtures/dupbuster/v1/
 ## 13. Post-v1 backlog (defer list)
 
 Do not implement without new debate consensus:
-1. Image perceptual / near-duplicate photos (resized/recompressed/cropped) + perceptual matching
+1. ~~Image perceptual / near-duplicate photos~~ → **in v1** as M3-12 `IMAGE_CONTENT_V1`
 2. Cross-format document dedup
 3. Cloud upload hashing (opt-in)
 4. `MANAGE_EXTERNAL_STORAGE` broad crawl

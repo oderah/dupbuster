@@ -34,7 +34,6 @@ import type {
   ScanSessionStartRequest,
   ScanSessionState,
 } from '../types/scanSession';
-
 export type ScanSessionListener = (state: ScanSessionState) => void;
 
 /** Owns scan phase state, coverage session keys, and native bridge subscriptions (M2-07). */

@@ -186,6 +186,66 @@ class IndexWriterTest {
   }
 
   @Test
+  fun listImageContentBackfillEntries_includesSkippedJpegAndRawBytesOnlyRows() {
+    val skippedId =
+        writer.upsertSizeBucketSkipped(
+            staged(displayName = "download.jpeg", sizeBytes = 4_970L),
+            generation = 1,
+        )
+    writer.upsertHashed(
+        HashedFile(
+            staged(displayName = "images.jpeg", sizeBytes = 12_680L),
+            "raw-only",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+    writer.upsertHashed(
+        HashedFile(
+            staged(displayName = "notes.txt", sizeBytes = 100L),
+            "t",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+
+    val pending = writer.listImageContentBackfillEntries(generation = 1)
+
+    assertEquals(2, pending.size)
+    assertEquals(skippedId, pending[0].fileEntryId)
+    assertEquals("download.jpeg", pending[0].displayName)
+    assertEquals("images.jpeg", pending[1].displayName)
+  }
+
+  @Test
+  fun listVideoContentBackfillEntries_includesRawBytesOnlyVideoRows() {
+    val videoId =
+        writer.upsertHashed(
+            HashedFile(
+                staged(
+                    displayName = "clip.mp4",
+                    sizeBytes = 1_570_024L,
+                    mediaTypeHint = MediaTypeHint.VIDEO,
+                    durationMs = 60_000L,
+                ),
+                "raw-only",
+                NormalizationProfile.RAW_BYTES,
+            ),
+            generation = 1,
+        )
+    writer.upsertHashed(
+        HashedFile(staged(displayName = "notes.txt", sizeBytes = 100L), "t", NormalizationProfile.RAW_BYTES),
+        generation = 1,
+    )
+
+    val pending = writer.listVideoContentBackfillEntries(generation = 1)
+
+    assertEquals(1, pending.size)
+    assertEquals(videoId, pending[0].fileEntryId)
+    assertEquals("clip.mp4", pending[0].displayName)
+  }
+
+  @Test
   fun listSizeBucketPendingEntries_returnsUnhashedRowsAtSize() {
     val size = 12_680L
     val skippedId = writer.upsertSizeBucketSkipped(staged(sizeBytes = size), generation = 1)
@@ -259,19 +319,35 @@ class IndexWriterTest {
   ): StagedFile = staged(stagedUri("file"), sizeBytes, mediaTypeHint, isSymlink, inode, deviceId)
 
   private fun staged(
+      displayName: String,
+      sizeBytes: Long,
+      mediaTypeHint: MediaTypeHint = MediaTypeHint.IMAGE,
+      durationMs: Long = 0L,
+  ): StagedFile =
+      staged(
+          stagedUri(displayName),
+          sizeBytes,
+          mediaTypeHint,
+          displayName = displayName,
+          durationMs = durationMs,
+      )
+
+  private fun staged(
       uri: Uri,
       sizeBytes: Long,
       mediaTypeHint: MediaTypeHint = MediaTypeHint.OTHER,
       isSymlink: Boolean = false,
       inode: Long? = null,
       deviceId: Long? = null,
+      displayName: String = "file.bin",
+      durationMs: Long = 0L,
   ): StagedFile {
     val entry =
         DiscoveredEntry(
             contentUri = uri,
             scanRootId = rootId,
             generation = 1,
-            displayName = "file.bin",
+            displayName = displayName,
             mediaTypeHint = mediaTypeHint,
             sizeBytes = sizeBytes,
             mtimeNs = 1_000L,
@@ -284,6 +360,7 @@ class IndexWriterTest {
         deviceId = deviceId,
         isSymlink = isSymlink,
         mediaTypeHint = mediaTypeHint,
+        durationMs = durationMs,
     )
   }
 

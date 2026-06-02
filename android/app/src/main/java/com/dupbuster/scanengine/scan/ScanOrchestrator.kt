@@ -240,6 +240,21 @@ class ScanOrchestrator(
           ),
       )
 
+      backfillImageContentFingerprints(
+          hashPipeline = hashPipeline,
+          generation = generation,
+          scanRunId = scanRunId,
+          plan = plan,
+          control = control,
+      )
+      backfillVideoContentFingerprints(
+          hashPipeline = hashPipeline,
+          generation = generation,
+          scanRunId = scanRunId,
+          plan = plan,
+          control = control,
+      )
+
       val groupResult = grouper.rebuildDuplicateGroups()
       groupsFound = groupResult.groupsCreated
       reclaimableBytesEst = groupResult.totalReclaimableBytesEst
@@ -307,6 +322,76 @@ class ScanOrchestrator(
    * When a size collision triggers hashing, re-hash prior size-bucket skips so grouping sees
    * every file at that size (FR-FP-02 backfill; fixes missed duplicate groups).
    */
+  /**
+   * Ensures every indexed image has `IMAGE_CONTENT_V1` before grouping (legacy size-bucket skips
+   * and incremental catalog rows that only stored `RAW_BYTES`).
+   */
+  private fun backfillVideoContentFingerprints(
+      hashPipeline: HashPipeline,
+      generation: Int,
+      scanRunId: Long,
+      plan: ScanRootResolver.ResolvedPlan,
+      control: ScanSessionControl,
+  ) {
+    for (pending in indexWriter.listVideoContentBackfillEntries(generation)) {
+      control.awaitIfPaused()
+      if (control.isCancelled()) {
+        return
+      }
+      val entry = pending.toDiscoveredEntry()
+      val grant = grantForEntry(entry, plan)
+      when (val statResult = statFile(entry, grant)) {
+        is StatResult.Success ->
+            processHashResult(
+                hashPipeline = hashPipeline,
+                staged = statResult.staged,
+                generation = generation,
+                scanRunId = scanRunId,
+                plan = plan,
+            )
+        is StatResult.Unscannable ->
+            indexWriter.upsertUnscannable(
+                statResult.reason,
+                stagedFromDiscovered(entry),
+                generation,
+            )
+      }
+    }
+  }
+
+  private fun backfillImageContentFingerprints(
+      hashPipeline: HashPipeline,
+      generation: Int,
+      scanRunId: Long,
+      plan: ScanRootResolver.ResolvedPlan,
+      control: ScanSessionControl,
+  ) {
+    for (pending in indexWriter.listImageContentBackfillEntries(generation)) {
+      control.awaitIfPaused()
+      if (control.isCancelled()) {
+        return
+      }
+      val entry = pending.toDiscoveredEntry()
+      val grant = grantForEntry(entry, plan)
+      when (val statResult = statFile(entry, grant)) {
+        is StatResult.Success ->
+            processHashResult(
+                hashPipeline = hashPipeline,
+                staged = statResult.staged,
+                generation = generation,
+                scanRunId = scanRunId,
+                plan = plan,
+            )
+        is StatResult.Unscannable ->
+            indexWriter.upsertUnscannable(
+                statResult.reason,
+                stagedFromDiscovered(entry),
+                generation,
+            )
+      }
+    }
+  }
+
   private fun backfillSizeBucketSkippedPeers(
       hashPipeline: HashPipeline,
       sizeBytes: Long,

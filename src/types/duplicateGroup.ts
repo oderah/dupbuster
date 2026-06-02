@@ -34,7 +34,7 @@ export type DuplicateGroupMember = {
   displayName: string;
   sizeBytes: number;
   mtimeMs: number;
-  /** Display path length for shortest-path keeper preset (FR-AC-02). */
+  /** Shortest display path among aliases (catalog metadata). */
   pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string | null;

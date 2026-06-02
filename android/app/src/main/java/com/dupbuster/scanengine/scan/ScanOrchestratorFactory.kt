@@ -2,7 +2,11 @@ package com.dupbuster.scanengine.scan
 
 import android.content.Context
 import com.dupbuster.scanengine.bridge.ScanProgressBridge
+import com.dupbuster.scanengine.hash.ContentResolverImageBitmapExtractor
+import com.dupbuster.scanengine.hash.ContentResolverVideoFrameExtractor
 import com.dupbuster.scanengine.hash.HashPipeline
+import com.dupbuster.scanengine.hash.ImageFingerprinter
+import com.dupbuster.scanengine.hash.VideoFingerprinter
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.CheckpointStore
 import com.dupbuster.scanengine.index.Grouper
@@ -35,7 +39,10 @@ object ScanOrchestratorFactory {
               appContext,
               sizeBucketIndex = SqliteSizeBucketIndex(writer),
               durationBucketIndex = SqliteDurationBucketIndex(writer),
-              videoFingerprinter = null,
+              imageFingerprinter =
+                  ImageFingerprinter(ContentResolverImageBitmapExtractor(appContext)),
+              videoFingerprinter =
+                  VideoFingerprinter(ContentResolverVideoFrameExtractor(appContext)),
           )
         },
         progressBridge = progressBridge,

@@ -147,7 +147,7 @@ export const tokens = {
     preset: {
       largest: 'Largest file',
       newest: 'Newest file',
-      shortestPath: 'Shortest path',
+      smallestFile: 'Smallest file',
     },
     education: {
       title: 'Review before deleting',
@@ -188,6 +188,7 @@ export const tokens = {
       LARGE_SKIPPED: 'files over 2 GB',
       HASH_TIMEOUT: 'timed out while hashing',
       VIDEO_DECODE_FAILED: 'video decode failed',
+      IMAGE_DECODE_FAILED: 'image decode failed',
     },
   },
 
@@ -195,6 +196,11 @@ export const tokens = {
   match: {
     exact: {
       label: 'Identical files',
+    },
+    imageContent: {
+      label: 'Same photo, different file',
+      notice:
+        'These files show the same picture saved with different compression or size. Review each file before choosing what to keep or delete.',
     },
     videoContent: {
       label: 'Same video, different quality',
@@ -263,6 +269,7 @@ export const tokens = {
     },
     group: {
       exact: 'Identical files, {count} copies',
+      imageContent: 'Same photo at different quality, {count} files',
       videoContent: 'Same video at different quality, {count} files',
     },
     path: {

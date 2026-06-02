@@ -9,13 +9,14 @@ import kotlin.math.min
 
 /**
  * Duration pre-bucket (video) → size bucket → quick sample (> 50 MB) → full SHA-256.
- * Video files also run `VIDEO_CONTENT_V1` in parallel via [VideoFingerprinter] (M1-13).
+ * Image files run `IMAGE_CONTENT_V1` in parallel; video files run `VIDEO_CONTENT_V1` (M1-13 / M3-12).
  */
 class HashPipeline(
     context: Context,
     private val contentReader: FileContentReader = ContentResolverFileContentReader(context),
     private val sizeBucketIndex: SizeBucketIndex = InMemorySizeBucketIndex(),
     private val durationBucketIndex: DurationBucketIndex = InMemoryDurationBucketIndex(),
+    private val imageFingerprinter: ImageFingerprinter? = null,
     private val videoFingerprinter: VideoFingerprinter? = null,
 ) {
 
@@ -90,6 +91,33 @@ class HashPipeline(
             normalizationProfile = profile,
             quickSampleHash = quickSampleHash,
         )
+
+    val withImage =
+        if (staged.mediaTypeHint == MediaTypeHint.IMAGE && imageFingerprinter != null) {
+          when (val imageOutcome = imageFingerprinter.fingerprint(staged, settings)) {
+            is ImageFingerprinter.Outcome.Success -> {
+              val imageHashed =
+                  HashedFile(
+                      staged = staged,
+                      hashValue = imageOutcome.fingerprint.hashValue,
+                      normalizationProfile = NormalizationProfile.IMAGE_CONTENT_V1,
+                      frameHashesBlob = imageOutcome.fingerprint.frameHashesBlob,
+                  )
+              HashResult.ImageSuccess(rawBytes = rawHashed, imageContent = imageHashed)
+            }
+            is ImageFingerprinter.Outcome.Unscannable ->
+                HashResult.ImagePartialSuccess(
+                    rawBytes = rawHashed,
+                    imageUnscannableReason = imageOutcome.reason,
+                )
+          }
+        } else {
+          null
+        }
+
+    if (withImage != null) {
+      return withImage
+    }
 
     if (staged.mediaTypeHint != MediaTypeHint.VIDEO || videoFingerprinter == null) {
       return HashResult.Success(rawHashed)

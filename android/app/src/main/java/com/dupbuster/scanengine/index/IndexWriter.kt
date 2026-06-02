@@ -2,8 +2,10 @@ package com.dupbuster.scanengine.index
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
+import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashResult
 import com.dupbuster.scanengine.hash.HashedFile
+import com.dupbuster.scanengine.hash.NormalizationProfile
 import com.dupbuster.scanengine.hash.VideoContentMatcher
 import android.net.Uri
 import com.dupbuster.scanengine.security.ScanRootGrant
@@ -110,6 +112,18 @@ class IndexWriter(private val database: CatalogDatabase) {
               videoUnscannableReason = result.videoUnscannableReason,
               generation = generation,
           )
+      is HashResult.ImageSuccess ->
+          upsertImageDualHashed(
+              rawBytes = result.rawBytes,
+              imageContent = result.imageContent,
+              generation = generation,
+          )
+      is HashResult.ImagePartialSuccess ->
+          upsertImagePartialHashed(
+              rawBytes = result.rawBytes,
+              imageUnscannableReason = result.imageUnscannableReason,
+              generation = generation,
+          )
       is HashResult.SizeBucketSkipped -> upsertSizeBucketSkipped(result.staged, generation)
       is HashResult.SymlinkNode -> upsertSymlink(result.staged, generation)
       is HashResult.Unscannable -> upsertUnscannable(result.reason, staged, generation)
@@ -139,6 +153,53 @@ class IndexWriter(private val database: CatalogDatabase) {
         fingerprintId = videoFingerprintId,
         rawContentFingerprintId = rawFingerprintId,
         unscannableReason = null,
+        isSymlink = false,
+    )
+  }
+
+  /** Image two-path persist: `fingerprint_id` = IMAGE_CONTENT_V1, `raw_content_fingerprint_id` = RAW_BYTES. */
+  fun upsertImageDualHashed(
+      rawBytes: HashedFile,
+      imageContent: HashedFile,
+      generation: Int,
+  ): Long {
+    val rawFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = rawBytes.hashValue,
+            normalizationProfile = rawBytes.normalizationProfile,
+        )
+    val imageFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = imageContent.hashValue,
+            normalizationProfile = imageContent.normalizationProfile,
+            frameHashesBlob = imageContent.frameHashesBlob,
+        )
+    return upsertFileEntry(
+        staged = rawBytes.staged,
+        generation = generation,
+        fingerprintId = imageFingerprintId,
+        rawContentFingerprintId = rawFingerprintId,
+        unscannableReason = null,
+        isSymlink = false,
+    )
+  }
+
+  fun upsertImagePartialHashed(
+      rawBytes: HashedFile,
+      imageUnscannableReason: String,
+      generation: Int,
+  ): Long {
+    val rawFingerprintId =
+        getOrCreateFingerprint(
+            hashValue = rawBytes.hashValue,
+            normalizationProfile = rawBytes.normalizationProfile,
+        )
+    return upsertFileEntry(
+        staged = rawBytes.staged,
+        generation = generation,
+        fingerprintId = rawFingerprintId,
+        rawContentFingerprintId = null,
+        unscannableReason = imageUnscannableReason,
         isSymlink = false,
     )
   }
@@ -220,6 +281,101 @@ class IndexWriter(private val database: CatalogDatabase) {
    * Rows indexed at [sizeBytes] without a fingerprint (size-bucket skip). Used to backfill
    * when a later file collides on size (architecture: caller backfill on collision).
    */
+  /**
+   * Image rows missing `IMAGE_CONTENT_V1` (size-bucket skip legacy rows or RAW_BYTES-only index).
+   * Backfilled before grouping so recompressed exports cluster (FR-FP-09).
+   */
+  fun listImageContentBackfillEntries(generation: Int): List<SizeBucketPendingEntry> {
+    val sql =
+        """
+        SELECT fe.id, fe.root_id, fe.uri_or_path, fe.display_name, fe.size, fe.mtime_ns, fe.last_seen_generation
+        FROM file_entry fe
+        LEFT JOIN fingerprint f ON f.id = fe.fingerprint_id
+        WHERE fe.last_seen_generation = ?
+          AND fe.unscannable_reason IS NULL
+          AND fe.is_symlink = 0
+          AND (fe.duration_ms IS NULL OR fe.duration_ms = 0)
+          AND (
+            fe.fingerprint_id IS NULL
+            OR (
+              f.normalization_profile = '${NormalizationProfile.RAW_BYTES}'
+              AND fe.raw_content_fingerprint_id IS NULL
+            )
+          )
+        ORDER BY fe.id ASC
+        """
+            .trimIndent()
+    val rows = mutableListOf<SizeBucketPendingEntry>()
+    database.readable().rawQuery(sql, arrayOf(generation.toString())).use { cursor ->
+      while (cursor.moveToNext()) {
+        val displayName = cursor.getString(3) ?: continue
+        if (MediaTypeHint.fromFileName(displayName) != MediaTypeHint.IMAGE) {
+          continue
+        }
+        rows.add(
+            SizeBucketPendingEntry(
+                fileEntryId = cursor.getLong(0),
+                rootId = cursor.getLong(1),
+                uriOrPath = cursor.getString(2),
+                displayName = displayName,
+                sizeBytes = cursor.getLong(4),
+                mtimeNs = cursor.getLong(5),
+                generation = cursor.getInt(6),
+            ),
+        )
+      }
+    }
+    return rows
+  }
+
+  /**
+   * Video rows missing `VIDEO_CONTENT_V1` (RAW_BYTES-only index from scans before video decode
+   * wiring). Backfilled before grouping so cross-resolution dupes cluster (FR-FP-07).
+   */
+  fun listVideoContentBackfillEntries(generation: Int): List<SizeBucketPendingEntry> {
+    val sql =
+        """
+        SELECT fe.id, fe.root_id, fe.uri_or_path, fe.display_name, fe.size, fe.mtime_ns, fe.last_seen_generation
+        FROM file_entry fe
+        LEFT JOIN fingerprint f ON f.id = fe.fingerprint_id
+        WHERE fe.last_seen_generation = ?
+          AND fe.unscannable_reason IS NULL
+          AND fe.is_symlink = 0
+          AND fe.duration_ms IS NOT NULL
+          AND fe.duration_ms > 0
+          AND (
+            fe.fingerprint_id IS NULL
+            OR (
+              f.normalization_profile = '${NormalizationProfile.RAW_BYTES}'
+              AND fe.raw_content_fingerprint_id IS NULL
+            )
+          )
+        ORDER BY fe.id ASC
+        """
+            .trimIndent()
+    val rows = mutableListOf<SizeBucketPendingEntry>()
+    database.readable().rawQuery(sql, arrayOf(generation.toString())).use { cursor ->
+      while (cursor.moveToNext()) {
+        val displayName = cursor.getString(3) ?: continue
+        if (MediaTypeHint.fromFileName(displayName) != MediaTypeHint.VIDEO) {
+          continue
+        }
+        rows.add(
+            SizeBucketPendingEntry(
+                fileEntryId = cursor.getLong(0),
+                rootId = cursor.getLong(1),
+                uriOrPath = cursor.getString(2),
+                displayName = displayName,
+                sizeBytes = cursor.getLong(4),
+                mtimeNs = cursor.getLong(5),
+                generation = cursor.getInt(6),
+            ),
+        )
+      }
+    }
+    return rows
+  }
+
   fun listSizeBucketPendingEntries(
       sizeBytes: Long,
       generation: Int,

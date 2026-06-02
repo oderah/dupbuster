@@ -26,13 +26,18 @@ describe('ScanEngine bridge types', () => {
       'LARGE_SKIPPED',
       'HASH_TIMEOUT',
       'VIDEO_DECODE_FAILED',
+      'IMAGE_DECODE_FAILED',
     ];
-    expect(reasons).toHaveLength(8);
+    expect(reasons).toHaveLength(9);
     expect(UNSCANNABLE_REASONS).toEqual(reasons);
   });
 
   it('keeps match kinds as a closed set', () => {
-    const kinds: MatchKind[] = ['EXACT_BYTES', 'SAME_CONTENT_VIDEO'];
+    const kinds: MatchKind[] = [
+      'EXACT_BYTES',
+      'SAME_CONTENT_IMAGE',
+      'SAME_CONTENT_VIDEO',
+    ];
     expect(MATCH_KINDS).toEqual(kinds);
   });
 

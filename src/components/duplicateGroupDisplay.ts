@@ -13,6 +13,9 @@ import type {
 import {formatBytes} from '../utils/formatBytes';
 
 export function getMatchKindLabel(matchKind: MatchKind): string {
+  if (matchKind === 'SAME_CONTENT_IMAGE') {
+    return tokens.match.imageContent.label;
+  }
   if (matchKind === 'SAME_CONTENT_VIDEO') {
     return tokens.match.videoContent.label;
   }
@@ -25,9 +28,11 @@ export function formatGroupAccessibilityLabel(
   memberCount: number,
 ): string {
   const template =
-    matchKind === 'SAME_CONTENT_VIDEO'
-      ? tokens.a11y.group.videoContent
-      : tokens.a11y.group.exact;
+    matchKind === 'SAME_CONTENT_IMAGE'
+      ? tokens.a11y.group.imageContent
+      : matchKind === 'SAME_CONTENT_VIDEO'
+        ? tokens.a11y.group.videoContent
+        : tokens.a11y.group.exact;
   return formatToken(template, {count: memberCount});
 }
 

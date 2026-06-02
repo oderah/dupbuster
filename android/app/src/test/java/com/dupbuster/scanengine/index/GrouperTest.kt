@@ -7,6 +7,7 @@ import com.dupbuster.scanengine.discovery.DiscoveredEntry
 import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashedFile
 import com.dupbuster.scanengine.hash.NormalizationProfile
+import com.dupbuster.scanengine.hash.VideoFingerprintCodec
 import com.dupbuster.scanengine.security.ScanRootMode
 import com.dupbuster.scanengine.stat.StagedFile
 import org.junit.Assert.assertEquals
@@ -156,13 +157,31 @@ class GrouperTest {
 
   @Test
   fun rebuildDuplicateGroups_videoProfile_sameContentVideoMatchKind() {
-    val videoHash = "videocontent"
-    writer.upsertHashed(
-        HashedFile(staged(uriSuffix = "v3"), videoHash, NormalizationProfile.VIDEO_CONTENT_V1),
+    val frameHashes = longArrayOf(10, 20, 30, 40, 50)
+    val blob = VideoFingerprintCodec.encodeFrameHashesBlob(frameHashes)
+    val videoHash = VideoFingerprintCodec.canonicalHashValue(frameHashes)
+    val stagedA = staged(uriSuffix = "v3", mediaTypeHint = MediaTypeHint.VIDEO, durationMs = 60_000)
+    val stagedB = staged(uriSuffix = "v4", mediaTypeHint = MediaTypeHint.VIDEO, durationMs = 60_000)
+    writer.upsertVideoDualHashed(
+        rawBytes = HashedFile(stagedA, "raw-a", NormalizationProfile.RAW_BYTES),
+        videoContent =
+            HashedFile(
+                staged = stagedA,
+                hashValue = videoHash,
+                normalizationProfile = NormalizationProfile.VIDEO_CONTENT_V1,
+                frameHashesBlob = blob,
+            ),
         generation = 1,
     )
-    writer.upsertHashed(
-        HashedFile(staged(uriSuffix = "v4"), videoHash, NormalizationProfile.VIDEO_CONTENT_V1),
+    writer.upsertVideoDualHashed(
+        rawBytes = HashedFile(stagedB, "raw-b", NormalizationProfile.RAW_BYTES),
+        videoContent =
+            HashedFile(
+                staged = stagedB,
+                hashValue = videoHash,
+                normalizationProfile = NormalizationProfile.VIDEO_CONTENT_V1,
+                frameHashesBlob = blob,
+            ),
         generation = 1,
     )
 
@@ -216,6 +235,7 @@ class GrouperTest {
       sizeBytes: Long = 100L,
       mediaTypeHint: MediaTypeHint = MediaTypeHint.OTHER,
       isSymlink: Boolean = false,
+      durationMs: Long = 0L,
   ): StagedFile {
     val uri = Uri.parse("content://test/document/$uriSuffix")
     val entry =
@@ -236,6 +256,7 @@ class GrouperTest {
         deviceId = null,
         isSymlink = isSymlink,
         mediaTypeHint = mediaTypeHint,
+        durationMs = durationMs,
     )
   }
 }

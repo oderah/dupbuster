@@ -31,8 +31,8 @@ describe('keeperDisplay', () => {
   it('uses frozen preset labels', () => {
     expect(getKeeperPresetLabel('largest')).toBe(tokens.keeper.preset.largest);
     expect(getKeeperPresetLabel('newest')).toBe(tokens.keeper.preset.newest);
-    expect(getKeeperPresetLabel('shortest_path')).toBe(
-      tokens.keeper.preset.shortestPath,
+    expect(getKeeperPresetLabel('smallest_file')).toBe(
+      tokens.keeper.preset.smallestFile,
     );
   });
 

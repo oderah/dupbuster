@@ -20,7 +20,6 @@ import type {
   UnscannableReason,
 } from '../types/scanEngine';
 import {MATCH_KINDS, MEDIA_TYPE_HINTS, UNSCANNABLE_REASONS} from '../types/scanEngine';
-
 export type ScanEngineUnsubscribe = () => void;
 
 /** Injectable ScanEngine surface for ScanSessionController (bridge law preserved). */

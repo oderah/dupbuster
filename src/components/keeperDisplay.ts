@@ -11,7 +11,7 @@ export function getKeeperPresetLabel(preset: KeeperPreset): string {
   if (preset === 'newest') {
     return tokens.keeper.preset.newest;
   }
-  return tokens.keeper.preset.shortestPath;
+  return tokens.keeper.preset.smallestFile;
 }
 
 export function formatKeeperMemberAccessibilityLabel(
