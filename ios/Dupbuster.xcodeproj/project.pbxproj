@@ -146,6 +146,16 @@
 		D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
 		D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3572B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m */; };
 		D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4F8A3582B68220000A75B9A /* DBCatalogReaderTests.m */; };
+		D4M303122B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */; };
+		D4M303222B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */; };
+		D4M303142B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303042B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m */; };
+		D4M303242B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303042B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m */; };
+		D4M303162B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303062B68230000A75B9A /* DBPlatformFileDeleter.m */; };
+		D4M303262B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303062B68230000A75B9A /* DBPlatformFileDeleter.m */; };
+		D4M303182B68230000A75B9A /* DBDeleteCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */; };
+		D4M303282B68230000A75B9A /* DBDeleteCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */; };
+		D4M303202B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */; };
+		D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -299,6 +309,16 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Dupbuster/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Dupbuster/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		D4M303012B68230000A75B9A /* DBDeleteDuplicatesCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDeleteDuplicatesCommand.h; path = ScanEngine/Delete/DBDeleteDuplicatesCommand.h; sourceTree = "<group>"; };
+		D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteDuplicatesCommand.m; path = ScanEngine/Delete/DBDeleteDuplicatesCommand.m; sourceTree = "<group>"; };
+		D4M303032B68230000A75B9A /* DBDeleteDuplicatesCommandParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDeleteDuplicatesCommandParser.h; path = ScanEngine/Delete/DBDeleteDuplicatesCommandParser.h; sourceTree = "<group>"; };
+		D4M303042B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteDuplicatesCommandParser.m; path = ScanEngine/Delete/DBDeleteDuplicatesCommandParser.m; sourceTree = "<group>"; };
+		D4M303052B68230000A75B9A /* DBPlatformFileDeleter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBPlatformFileDeleter.h; path = ScanEngine/Delete/DBPlatformFileDeleter.h; sourceTree = "<group>"; };
+		D4M303062B68230000A75B9A /* DBPlatformFileDeleter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBPlatformFileDeleter.m; path = ScanEngine/Delete/DBPlatformFileDeleter.m; sourceTree = "<group>"; };
+		D4M303072B68230000A75B9A /* DBDeleteCoordinator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDeleteCoordinator.h; path = ScanEngine/Delete/DBDeleteCoordinator.h; sourceTree = "<group>"; };
+		D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinator.m; path = ScanEngine/Delete/DBDeleteCoordinator.m; sourceTree = "<group>"; };
+		D4M303092B68230000A75B9A /* DBDeleteCoordinatorFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBDeleteCoordinatorFactory.h; path = ScanEngine/Delete/DBDeleteCoordinatorFactory.h; sourceTree = "<group>"; };
+		D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBDeleteCoordinatorFactory.m; path = ScanEngine/Delete/DBDeleteCoordinatorFactory.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -355,6 +375,7 @@
 				D4F8A2AE2B68180000A75B9A /* Index */,
 				D4F8A2D02B681A0000A75B9A /* Bridge */,
 				D4F8A33F2B68210000A75B9A /* Scan */,
+				D4M303002B68230000A75B9A /* Delete */,
 			);
 			name = ScanEngine;
 			sourceTree = "<group>";
@@ -590,6 +611,23 @@
 				5709B34CF0A7D63546082F79 /* Pods-Dupbuster.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		D4M303002B68230000A75B9A /* Delete */ = {
+			isa = PBXGroup;
+			children = (
+				D4M303012B68230000A75B9A /* DBDeleteDuplicatesCommand.h */,
+				D4M303022B68230000A75B9A /* DBDeleteDuplicatesCommand.m */,
+				D4M303032B68230000A75B9A /* DBDeleteDuplicatesCommandParser.h */,
+				D4M303042B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m */,
+				D4M303052B68230000A75B9A /* DBPlatformFileDeleter.h */,
+				D4M303062B68230000A75B9A /* DBPlatformFileDeleter.m */,
+				D4M303072B68230000A75B9A /* DBDeleteCoordinator.h */,
+				D4M303082B68230000A75B9A /* DBDeleteCoordinator.m */,
+				D4M303092B68230000A75B9A /* DBDeleteCoordinatorFactory.h */,
+				D4M303102B68230000A75B9A /* DBDeleteCoordinatorFactory.m */,
+			);
+			name = Delete;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -832,6 +870,11 @@
 				D4F8A3752B68220000A75B9A /* DBCatalogReader.m in Sources */,
 				D4F8A3772B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
 				D4F8A3782B68220000A75B9A /* DBCatalogReaderTests.m in Sources */,
+				D4M303122B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */,
+				D4M303142B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */,
+				D4M303162B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */,
+				D4M303182B68230000A75B9A /* DBDeleteCoordinator.m in Sources */,
+				D4M303202B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -898,6 +941,11 @@
 				D4F8A3712B68210000A75B9A /* DBScanProgressBridge.m in Sources */,
 				D4F8A3742B68220000A75B9A /* DBCatalogReader.m in Sources */,
 				D4F8A3762B68220000A75B9A /* DBCatalogSnapshotBridgeMapper.m in Sources */,
+				D4M303222B68230000A75B9A /* DBDeleteDuplicatesCommand.m in Sources */,
+				D4M303242B68230000A75B9A /* DBDeleteDuplicatesCommandParser.m in Sources */,
+				D4M303262B68230000A75B9A /* DBPlatformFileDeleter.m in Sources */,
+				D4M303282B68230000A75B9A /* DBDeleteCoordinator.m in Sources */,
+				D4M303302B68230000A75B9A /* DBDeleteCoordinatorFactory.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -5,6 +5,8 @@ import com.dupbuster.scanengine.bridge.CatalogSnapshotBridgeMapper
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.CatalogReader
 import com.dupbuster.scanengine.index.IndexWriter
+import com.dupbuster.scanengine.delete.DeleteCoordinatorFactory
+import com.dupbuster.scanengine.delete.DeleteDuplicatesCommandParser
 import com.dupbuster.scanengine.scan.ScanOrchestrator
 import com.dupbuster.scanengine.scan.ScanOrchestratorFactory
 import com.dupbuster.scanengine.scan.ScanStartRequestParser
@@ -146,6 +148,10 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
     )
   }
 
+  private val deleteCoordinator by lazy {
+    DeleteCoordinatorFactory.create(reactApplicationContext)
+  }
+
   override fun getName(): String = NAME
 
   @DoNotStrip
@@ -197,7 +203,27 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
 
   @DoNotStrip
   override fun deleteDuplicates(command: ReadableMap, promise: Promise) {
-    rejectNotImplemented("deleteDuplicates", promise)
+    val parsed =
+        try {
+          DeleteDuplicatesCommandParser.parse(command)
+        } catch (error: IllegalArgumentException) {
+          promise.reject(CODE_DELETE_INVALID, error.message, error)
+          return
+        }
+
+    deleteCoordinator.deleteDuplicates(parsed) { result ->
+      reactApplicationContext.runOnNativeModulesQueueThread {
+        if (!reactApplicationContext.hasActiveReactInstance()) {
+          return@runOnNativeModulesQueueThread
+        }
+        val payload =
+            Arguments.createMap().apply {
+              putDouble("deletedCount", result.deletedCount.toDouble())
+              putDouble("failedCount", result.failedCount.toDouble())
+            }
+        promise.resolve(payload)
+      }
+    }
   }
 
   @DoNotStrip
@@ -236,5 +262,6 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
     private const val CODE_SCAN_START_FAILED = "SCAN_START_FAILED"
     private const val CODE_SCAN_CONTROL_FAILED = "SCAN_CONTROL_FAILED"
     private const val CODE_CATALOG_READ_FAILED = "CATALOG_READ_FAILED"
+    private const val CODE_DELETE_INVALID = "DELETE_INVALID_COMMAND"
   }
 }

@@ -4,6 +4,8 @@
 #import "DBHashPipeline.h"
 
 @class DBCatalogDatabase;
+
+#import "DBUriValidator.h"
 @class DBHashedFile;
 @class DBSizeBucketPendingEntry;
 @class DBStagedFile;
@@ -59,6 +61,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)purgeEntriesNotSeenInGeneration:(NSInteger)rootId generation:(NSInteger)generation;
 
 - (NSInteger)fileEntryCount;
+
+- (nullable NSSet<NSNumber *> *)memberFileEntryIdsForGroupId:(NSInteger)groupId;
+
+- (BOOL)loadDeleteTargetForFileEntryId:(NSInteger)fileEntryId
+                             uriString:(NSString *_Nullable *_Nonnull)uriString
+                                 grant:(DBScanRootGrant *_Nullable *_Nonnull)grant;
+
+- (BOOL)applyDuplicateDeleteForGroupId:(NSInteger)groupId
+                     keeperFileEntryId:(NSInteger)keeperFileEntryId
+                  deletedFileEntryIds:(NSArray<NSNumber *> *)deletedFileEntryIds
+                                error:(NSError *_Nullable *_Nullable)error;
 
 @end
 

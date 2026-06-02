@@ -11,6 +11,10 @@
 #import "DBNormalizationProfile.h"
 #import "DBStagedFile.h"
 #import "DBCheckpointStore.h"
+#import "DBGrouper.h"
+#import "DBScanRootGrant.h"
+#import "DBScanStartRequest.h"
+#import "DBScanStartRequestParser.h"
 #import "DBVideoContentMatcher.h"
 
 @implementation DBIndexWriter {
@@ -639,6 +643,160 @@
     return staged.discovered.phAssetLocalIdentifier;
   }
   return staged.discovered.contentURL.absoluteString;
+}
+
+- (NSSet<NSNumber *> *)memberFileEntryIdsForGroupId:(NSInteger)groupId
+{
+  NSMutableSet<NSNumber *> *members = [NSMutableSet set];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(
+      db, "SELECT file_entry_id FROM duplicate_member WHERE group_id = ?", -1, &stmt, NULL);
+  sqlite3_bind_int64(stmt, 1, groupId);
+  BOOL found = NO;
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    found = YES;
+    [members addObject:@(sqlite3_column_int64(stmt, 0))];
+  }
+  sqlite3_finalize(stmt);
+  return found ? [members copy] : nil;
+}
+
+- (BOOL)loadDeleteTargetForFileEntryId:(NSInteger)fileEntryId
+                             uriString:(NSString **)uriString
+                                 grant:(DBScanRootGrant **)grant
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(
+      db,
+      "SELECT fe.uri_or_path, sr.uri_or_grant, sr.mode "
+      "FROM file_entry fe INNER JOIN scan_root sr ON sr.id = fe.root_id WHERE fe.id = ?",
+      -1,
+      &stmt,
+      NULL);
+  sqlite3_bind_int64(stmt, 1, fileEntryId);
+  if (sqlite3_step(stmt) != SQLITE_ROW) {
+    sqlite3_finalize(stmt);
+    return NO;
+  }
+  NSString *uri = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 0)];
+  NSString *grantUri = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 1)];
+  NSString *modeValue = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 2)];
+  sqlite3_finalize(stmt);
+
+  NSError *modeError = nil;
+  DBScanRootMode mode = [DBScanStartRequestParser modeFromBridgeValue:modeValue error:&modeError];
+  if (modeError != nil) {
+    return NO;
+  }
+
+  *uriString = uri;
+  *grant = [[DBScanRootGrant alloc] initWithUriGrant:grantUri mode:mode];
+  return YES;
+}
+
+- (BOOL)applyDuplicateDeleteForGroupId:(NSInteger)groupId
+                     keeperFileEntryId:(NSInteger)keeperFileEntryId
+                  deletedFileEntryIds:(NSArray<NSNumber *> *)deletedFileEntryIds
+                                error:(NSError **)error
+{
+  (void)error;
+  if (deletedFileEntryIds.count == 0) {
+    return YES;
+  }
+
+  sqlite3 *db = _database.db;
+  sqlite3_exec(db, "BEGIN IMMEDIATE TRANSACTION", NULL, NULL, NULL);
+
+  sqlite3_stmt *keeperStmt = NULL;
+  sqlite3_prepare_v2(
+      db,
+      "UPDATE duplicate_member SET is_keeper = 1 WHERE group_id = ? AND file_entry_id = ?",
+      -1,
+      &keeperStmt,
+      NULL);
+  sqlite3_bind_int64(keeperStmt, 1, groupId);
+  sqlite3_bind_int64(keeperStmt, 2, keeperFileEntryId);
+  sqlite3_step(keeperStmt);
+  sqlite3_finalize(keeperStmt);
+
+  for (NSNumber *fileEntryId in deletedFileEntryIds) {
+    sqlite3_stmt *memberStmt = NULL;
+    sqlite3_prepare_v2(
+        db,
+        "DELETE FROM duplicate_member WHERE group_id = ? AND file_entry_id = ?",
+        -1,
+        &memberStmt,
+        NULL);
+    sqlite3_bind_int64(memberStmt, 1, groupId);
+    sqlite3_bind_int64(memberStmt, 2, fileEntryId.integerValue);
+    sqlite3_step(memberStmt);
+    sqlite3_finalize(memberStmt);
+
+    sqlite3_stmt *aliasStmt = NULL;
+    sqlite3_prepare_v2(db, "DELETE FROM file_path WHERE file_entry_id = ?", -1, &aliasStmt, NULL);
+    sqlite3_bind_int64(aliasStmt, 1, fileEntryId.integerValue);
+    sqlite3_step(aliasStmt);
+    sqlite3_finalize(aliasStmt);
+
+    sqlite3_stmt *entryStmt = NULL;
+    sqlite3_prepare_v2(db, "DELETE FROM file_entry WHERE id = ?", -1, &entryStmt, NULL);
+    sqlite3_bind_int64(entryStmt, 1, fileEntryId.integerValue);
+    sqlite3_step(entryStmt);
+    sqlite3_finalize(entryStmt);
+  }
+
+  NSMutableArray<NSNumber *> *remainingIds = [NSMutableArray array];
+  sqlite3_stmt *remainingStmt = NULL;
+  sqlite3_prepare_v2(
+      db, "SELECT file_entry_id FROM duplicate_member WHERE group_id = ?", -1, &remainingStmt, NULL);
+  sqlite3_bind_int64(remainingStmt, 1, groupId);
+  while (sqlite3_step(remainingStmt) == SQLITE_ROW) {
+    [remainingIds addObject:@(sqlite3_column_int64(remainingStmt, 0))];
+  }
+  sqlite3_finalize(remainingStmt);
+
+  if (remainingIds.count < 2) {
+    sqlite3_stmt *dropMembers = NULL;
+    sqlite3_prepare_v2(db, "DELETE FROM duplicate_member WHERE group_id = ?", -1, &dropMembers, NULL);
+    sqlite3_bind_int64(dropMembers, 1, groupId);
+    sqlite3_step(dropMembers);
+    sqlite3_finalize(dropMembers);
+
+    sqlite3_stmt *dropGroup = NULL;
+    sqlite3_prepare_v2(db, "DELETE FROM duplicate_group WHERE id = ?", -1, &dropGroup, NULL);
+    sqlite3_bind_int64(dropGroup, 1, groupId);
+    sqlite3_step(dropGroup);
+    sqlite3_finalize(dropGroup);
+  } else {
+    NSMutableArray<NSNumber *> *sizes = [NSMutableArray array];
+    for (NSNumber *fileEntryId in remainingIds) {
+      sqlite3_stmt *sizeStmt = NULL;
+      sqlite3_prepare_v2(db, "SELECT size FROM file_entry WHERE id = ?", -1, &sizeStmt, NULL);
+      sqlite3_bind_int64(sizeStmt, 1, fileEntryId.integerValue);
+      if (sqlite3_step(sizeStmt) == SQLITE_ROW) {
+        [sizes addObject:@(sqlite3_column_int64(sizeStmt, 0))];
+      }
+      sqlite3_finalize(sizeStmt);
+    }
+    int64_t reclaimable = [DBGrouper estimateReclaimableBytesForSizes:sizes];
+    sqlite3_stmt *updateGroup = NULL;
+    sqlite3_prepare_v2(
+        db,
+        "UPDATE duplicate_group SET member_count = ?, reclaimable_bytes_est = ? WHERE id = ?",
+        -1,
+        &updateGroup,
+        NULL);
+    sqlite3_bind_int64(updateGroup, 1, (int64_t)remainingIds.count);
+    sqlite3_bind_int64(updateGroup, 2, reclaimable);
+    sqlite3_bind_int64(updateGroup, 3, groupId);
+    sqlite3_step(updateGroup);
+    sqlite3_finalize(updateGroup);
+  }
+
+  sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+  return YES;
 }
 
 @end

@@ -1,3 +1,4 @@
+import {buildDeleteDuplicatesCommand} from './buildDeleteDuplicatesCommand';
 import type {ScanEnginePort} from '../native/scanEnginePort';
 import type {CoverageBannerVariant} from '../types/coverageBanner';
 import type {KeeperPreset} from '../types/keeper';
@@ -171,9 +172,29 @@ export class ScanSessionController {
     this.dispatch(reduceScanSessionCancelDeleteConfirm(this.state));
   }
 
-  /** Closes modal; native deleteDuplicates wired in M3-03+. */
-  confirmDelete(): void {
+  /** Invokes native DeleteCoordinator after two-step confirm (M3-03). */
+  async confirmDelete(): Promise<void> {
+    const groupId = this.state.selectedGroupId;
+    if (groupId == null || !this.state.deleteConfirmVisible) {
+      return;
+    }
+    const group = this.state.groupDetailsById[groupId];
+    const selection = this.state.keeperSelectionsByGroupId[groupId];
+    const command =
+      group != null && selection != null
+        ? buildDeleteDuplicatesCommand(group, selection)
+        : null;
+    if (command != null) {
+      await this.engine.deleteDuplicates(command);
+    }
     this.dispatch(reduceScanSessionConfirmDelete(this.state));
+    await this.refreshCatalog();
+    if (this.state.selectedGroupId != null) {
+      const detail = this.state.groupDetailsById[this.state.selectedGroupId];
+      if (detail == null) {
+        this.dispatch(reduceScanSessionCloseGroup(this.state));
+      }
+    }
   }
 
   dismissKeeperEducation(): void {

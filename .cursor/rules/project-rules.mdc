@@ -476,6 +476,15 @@ New code must land in these areas unless architecture is amended first.
 - **Mock catalog:** `createMockCatalogSnapshot()` member `201` has two paths for shell QA / M2-SMOKE-31.
 - **Tests:** `npm test -- --testPathPattern='PathChip|pathDisplay|KeeperSelector'`; `CatalogReaderTest` hard-link case; a11y gate in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-a11y-path-01, AC-integrity-hardlink-01 (display), US-14.
 
+### DeleteCoordinator (M3-03)
+
+- **Android:** `com.dupbuster.scanengine.delete.DeleteCoordinator` — dedicated `dupbuster-delete` executor (not `ScanOrchestrator` hash pool); `UriValidator` + `DISCOVERY` provenance before delete; `PendingPlatformFileDeleter` until M3-04 MediaStore wiring.
+- **iOS:** `ScanEngine/Delete/DBDeleteCoordinator` — serial `com.dupbuster.delete` queue; `DBPendingPlatformFileDeleter` until M3-05 PHAsset delete.
+- **Catalog:** `IndexWriter.applyDuplicateDelete` / `DBIndexWriter applyDuplicateDeleteForGroupId:` — mark `is_keeper`, remove deleted `file_entry` / `duplicate_member`, drop group when &lt;2 members remain.
+- **Bridge:** `deleteDuplicates({ groupId, keeperFileEntryId, deleteFileEntryIds })` → `{ deletedCount, failedCount }`; invalid payload → `DELETE_INVALID_COMMAND`.
+- **JS:** `ScanEnginePort.deleteDuplicates`; `buildDeleteDuplicatesCommand`; `ScanSessionController.confirmDelete` refreshes catalog and closes detail when group removed.
+- **Tests:** `DeleteCoordinatorTest`, `DeleteDuplicatesCommandParserTest`, `IndexWriterDeleteTest`; `buildDeleteDuplicatesCommand.test.ts`.
+
 ### DeleteConfirmModal (M3-01)
 
 - **`src/components/DeleteConfirmModal.tsx`:** Two-step destructive confirm (`review` → `confirm`); danger border/surface on confirm primary only; `accessibilityViewIsModal` + `useModalFocusTrap` (heading focus on open/step change, return focus to delete trigger on dismiss — A11Y-07 / AC-a11y-delete-01).
@@ -483,7 +492,7 @@ New code must land in these areas unless architecture is amended first.
 - **`src/hooks/useModalFocusTrap.ts`:** Shared modal focus helper (`AccessibilityInfo.setAccessibilityFocus`).
 - **`src/controllers/deleteConfirmCounts.ts`:** `resolveDeleteConfirmCounts` for modal body (non-keeper count + reclaimable bytes).
 - **Tokens:** `delete.*` (trigger, `review.*`, `confirm.*`), `a11y.delete.*` — EN freeze per architecture §9.1 / US-12.
-- **Composition:** `DuplicateGroupDetailScreen` delete trigger after `KeeperSelector` (AC-a11y-match-04); disabled until `isKeeperSelectionComplete`. `ScanSessionScreen` wires modal + `ScanSessionController.beginDeleteFlow` / `advanceDeleteConfirm` / `goBackDeleteConfirm` / `cancelDeleteConfirm` / `confirmDelete` (native `deleteDuplicates` is M3-03+).
+- **Composition:** `DuplicateGroupDetailScreen` delete trigger after `KeeperSelector` (AC-a11y-match-04); disabled until `isKeeperSelectionComplete`. `ScanSessionScreen` wires modal + `ScanSessionController.beginDeleteFlow` / `advanceDeleteConfirm` / `goBackDeleteConfirm` / `cancelDeleteConfirm` / `confirmDelete` (calls native `deleteDuplicates` via M3-03 `DeleteCoordinator`).
 - **Education gate:** `reduceScanSessionBeginDeleteFlow` → `KeeperEducationSheet` once per session, then opens modal on dismiss (`pendingDeleteGroupId`).
 - **Tests:** `npm test -- --testPathPattern='DeleteConfirm|deleteConfirm|scanSessionReducer'`; a11y gate cases in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-action-delete-01, AC-action-keeper-01/02, AC-a11y-delete-01, AC-a11y-match-04.
 

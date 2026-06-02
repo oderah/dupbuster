@@ -86,6 +86,7 @@ describe('createNativeScanEnginePort', () => {
       pauseScan: jest.fn(),
       resumeScan: jest.fn(),
       cancelScan: jest.fn(),
+      deleteDuplicates: jest.fn(),
       getCatalogMeta: jest.fn(),
       getCatalogSnapshot: jest.fn(),
     });

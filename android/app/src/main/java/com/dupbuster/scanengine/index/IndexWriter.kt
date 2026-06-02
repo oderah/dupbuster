@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase
 import com.dupbuster.scanengine.hash.HashResult
 import com.dupbuster.scanengine.hash.HashedFile
 import com.dupbuster.scanengine.hash.VideoContentMatcher
+import android.net.Uri
+import com.dupbuster.scanengine.security.ScanRootGrant
 import com.dupbuster.scanengine.security.ScanRootMode
 import com.dupbuster.scanengine.stat.StagedFile
 
@@ -348,6 +350,138 @@ class IndexWriter(private val database: CatalogDatabase) {
         database.readable().rawQuery("SELECT COUNT(*) FROM file_entry", null)
     cursor.use {
       return if (it.moveToFirst()) it.getInt(0) else 0
+    }
+  }
+
+  fun loadDuplicateGroupMemberIds(groupId: Long): Set<Long>? {
+    val ids = linkedSetOf<Long>()
+    database
+        .readable()
+        .rawQuery(
+            "SELECT file_entry_id FROM duplicate_member WHERE group_id = ?",
+            arrayOf(groupId.toString()),
+        )
+        .use { cursor ->
+      if (!cursor.moveToFirst()) {
+        return null
+      }
+      do {
+        ids.add(cursor.getLong(0))
+      } while (cursor.moveToNext())
+    }
+    return ids
+  }
+
+  fun loadFileEntryDeleteTarget(fileEntryId: Long): FileEntryDeleteTarget? {
+    database
+        .readable()
+        .rawQuery(
+            """
+            SELECT fe.uri_or_path, sr.uri_or_grant, sr.mode
+            FROM file_entry fe
+            INNER JOIN scan_root sr ON sr.id = fe.root_id
+            WHERE fe.id = ?
+            """
+                .trimIndent(),
+            arrayOf(fileEntryId.toString()),
+        )
+        .use { cursor ->
+      if (!cursor.moveToFirst()) {
+        return null
+      }
+      val uriOrPath = cursor.getString(0)
+      val grantUri = cursor.getString(1)
+      val mode =
+          ScanRootMode.fromBridgeValue(cursor.getString(2))
+              ?: return null
+      return FileEntryDeleteTarget(
+          fileEntryId = fileEntryId,
+          uriOrPath = uriOrPath,
+          grant = ScanRootGrant(uriGrant = Uri.parse(grantUri), mode = mode),
+      )
+    }
+  }
+
+  /**
+   * Persists successful platform deletes: marks keeper, removes deleted rows, updates or drops group.
+   */
+  fun applyDuplicateDelete(
+      groupId: Long,
+      keeperFileEntryId: Long,
+      deletedFileEntryIds: List<Long>,
+  ) {
+    if (deletedFileEntryIds.isEmpty()) {
+      return
+    }
+    val db = database.writable()
+    db.beginTransaction()
+    try {
+      val keeperValues =
+          ContentValues().apply {
+            put("is_keeper", 1)
+          }
+      db.update(
+          "duplicate_member",
+          keeperValues,
+          "group_id = ? AND file_entry_id = ?",
+          arrayOf(groupId.toString(), keeperFileEntryId.toString()),
+      )
+
+      val deletePlaceholders = deletedFileEntryIds.joinToString(",") { "?" }
+      val deleteArgs =
+          (listOf(groupId.toString()) + deletedFileEntryIds.map { it.toString() }).toTypedArray()
+      db.delete(
+          "duplicate_member",
+          "group_id = ? AND file_entry_id IN ($deletePlaceholders)",
+          deleteArgs,
+      )
+
+      val fileIdArgs = deletedFileEntryIds.map { it.toString() }.toTypedArray()
+      db.delete(
+          "file_path",
+          "file_entry_id IN ($deletePlaceholders)",
+          fileIdArgs,
+      )
+      db.delete("file_entry", "id IN ($deletePlaceholders)", fileIdArgs)
+
+      val remainingIds = mutableListOf<Long>()
+      db.rawQuery(
+              "SELECT file_entry_id FROM duplicate_member WHERE group_id = ?",
+              arrayOf(groupId.toString()),
+          )
+          .use { cursor ->
+        while (cursor.moveToNext()) {
+          remainingIds.add(cursor.getLong(0))
+        }
+      }
+
+      if (remainingIds.size < 2) {
+        db.delete("duplicate_member", "group_id = ?", arrayOf(groupId.toString()))
+        db.delete("duplicate_group", "id = ?", arrayOf(groupId.toString()))
+      } else {
+        val sizes = mutableListOf<Long>()
+        val sizePlaceholders = remainingIds.joinToString(",") { "?" }
+        val sizeArgs = remainingIds.map { it.toString() }.toTypedArray()
+        db.rawQuery(
+                "SELECT size FROM file_entry WHERE id IN ($sizePlaceholders)",
+                sizeArgs,
+            )
+            .use { cursor ->
+          while (cursor.moveToNext()) {
+            sizes.add(cursor.getLong(0))
+          }
+        }
+        val groupValues =
+            ContentValues().apply {
+              put("member_count", remainingIds.size)
+              put("reclaimable_bytes_est", Grouper.estimateReclaimableBytes(sizes))
+            }
+        db.update("duplicate_group", groupValues, "id = ?", arrayOf(groupId.toString()))
+      }
+
+      db.setTransactionSuccessful()
+    } finally {
+      db.endTransaction()
     }
   }
 

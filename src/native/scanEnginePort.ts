@@ -7,6 +7,8 @@ import type {
   CatalogSnapshotGroupSummary,
   CatalogSnapshotMember,
   CatalogSnapshotThumbnail,
+  DeleteDuplicatesCommand,
+  DeleteDuplicatesResult,
   MatchKind,
   MediaTypeHint,
   ScanErrorEvent,
@@ -35,6 +37,9 @@ export type ScanEnginePort = {
   cancelScan: (scanRunId: number) => Promise<void>;
   getCatalogMeta: () => Promise<CatalogMeta>;
   getCatalogSnapshot: () => Promise<ScanCatalogSnapshot>;
+  deleteDuplicates: (
+    command: DeleteDuplicatesCommand,
+  ) => Promise<DeleteDuplicatesResult>;
 };
 
 export type MockScanEngineOptions = {
@@ -56,6 +61,57 @@ function delay(ms: number): Promise<void> {
 }
 
 /** Deterministic mock catalog for RN shell until native orchestrator is live. */
+function applyMockDeleteToCatalog(
+  snapshot: ScanCatalogSnapshot,
+  command: DeleteDuplicatesCommand,
+): ScanCatalogSnapshot {
+  const detail = snapshot.groupDetailsById[command.groupId];
+  if (detail == null) {
+    return snapshot;
+  }
+  const deleteSet = new Set(command.deleteFileEntryIds);
+  const remainingMembers = detail.members.filter(
+    member => !deleteSet.has(member.fileEntryId),
+  );
+  if (remainingMembers.length < 2) {
+    const restDetails = {...snapshot.groupDetailsById};
+    delete restDetails[command.groupId];
+    return {
+      duplicateGroups: snapshot.duplicateGroups.filter(
+        group => group.groupId !== command.groupId,
+      ),
+      unscannableCounts: snapshot.unscannableCounts,
+      groupDetailsById: restDetails,
+    };
+  }
+  const reclaimableBytesEst = remainingMembers
+    .filter(member => member.fileEntryId !== command.keeperFileEntryId)
+    .reduce((sum, member) => sum + member.sizeBytes, 0);
+  const updatedDetail: DuplicateGroupDetail = {
+    ...detail,
+    members: remainingMembers,
+    memberCount: remainingMembers.length,
+    reclaimableBytesEst,
+  };
+  return {
+    ...snapshot,
+    duplicateGroups: snapshot.duplicateGroups.map(group =>
+      group.groupId === command.groupId
+        ? {
+            ...group,
+            memberCount: remainingMembers.length,
+            reclaimableBytesEst,
+          }
+        : group,
+    ),
+    groupDetailsById: {
+      ...snapshot.groupDetailsById,
+      [command.groupId]: updatedDetail,
+    },
+    unscannableCounts: snapshot.unscannableCounts,
+  };
+}
+
 export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
   const videoGroupId = 1;
   const exactGroupId = 2;
@@ -156,7 +212,7 @@ export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
 export function createMockScanEnginePort(
   options: MockScanEngineOptions = {},
 ): ScanEnginePort {
-  const catalogSnapshot = options.catalogSnapshot ?? createMockCatalogSnapshot();
+  let catalogSnapshot = options.catalogSnapshot ?? createMockCatalogSnapshot();
   const catalogMeta = options.catalogMeta ?? DEFAULT_MOCK_CATALOG_META;
   const simulateScan = options.simulateScan ?? true;
 
@@ -307,6 +363,13 @@ export function createMockScanEnginePort(
     },
     async getCatalogSnapshot() {
       return catalogSnapshot;
+    },
+    async deleteDuplicates(command) {
+      catalogSnapshot = applyMockDeleteToCatalog(catalogSnapshot, command);
+      return {
+        deletedCount: command.deleteFileEntryIds.length,
+        failedCount: 0,
+      };
     },
   };
 }
@@ -548,6 +611,7 @@ type NativeScanEngineModule = {
   pauseScan: ScanEnginePort['pauseScan'];
   resumeScan: ScanEnginePort['resumeScan'];
   cancelScan: ScanEnginePort['cancelScan'];
+  deleteDuplicates: ScanEnginePort['deleteDuplicates'];
   getCatalogMeta: ScanEnginePort['getCatalogMeta'];
   getCatalogSnapshot: () => Promise<CatalogSnapshot>;
 };
@@ -560,6 +624,7 @@ export function createNativeScanEnginePort(
   const pauseScan = module.pauseScan.bind(module);
   const resumeScan = module.resumeScan.bind(module);
   const cancelScan = module.cancelScan.bind(module);
+  const deleteDuplicates = module.deleteDuplicates.bind(module);
   const getCatalogMeta = module.getCatalogMeta.bind(module);
   const getCatalogSnapshot = module.getCatalogSnapshot.bind(module);
 
@@ -582,6 +647,7 @@ export function createNativeScanEnginePort(
     pauseScan: scanRunId => pauseScan(scanRunId),
     resumeScan: scanRunId => resumeScan(scanRunId),
     cancelScan: scanRunId => cancelScan(scanRunId),
+    deleteDuplicates: command => deleteDuplicates(command),
     getCatalogMeta: () => getCatalogMeta(),
     getCatalogSnapshot: async () => {
       const snapshot = await getCatalogSnapshot();

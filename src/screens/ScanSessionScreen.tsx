@@ -217,7 +217,9 @@ export function ScanSessionScreen({
         onCancel={() => controller.cancelDeleteConfirm()}
         onContinue={() => controller.advanceDeleteConfirm()}
         onGoBack={() => controller.goBackDeleteConfirm()}
-        onConfirm={() => controller.confirmDelete()}
+        onConfirm={() => {
+          controller.confirmDelete().catch(() => {});
+        }}
         testID={`${testID}-delete-confirm`}
       />
 

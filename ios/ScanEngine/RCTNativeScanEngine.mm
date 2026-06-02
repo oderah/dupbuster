@@ -11,13 +11,19 @@
 #import "DBScanOrchestratorFactory.h"
 #import "DBScanStartRequest.h"
 #import "DBScanStartRequestParser.h"
+#import "DBDeleteCoordinator.h"
+#import "DBDeleteCoordinatorFactory.h"
+#import "DBDeleteDuplicatesCommand.h"
+#import "DBDeleteDuplicatesCommandParser.h"
 
 static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED";
 static NSString *const kScanStartFailed = @"SCAN_START_FAILED";
 static NSString *const kScanControlFailed = @"SCAN_CONTROL_FAILED";
+static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
 
 @implementation RCTNativeScanEngine {
   DBScanOrchestrator *_orchestrator;
+  DBDeleteCoordinator *_deleteCoordinator;
 }
 
 - (DBScanOrchestrator *)orchestrator
@@ -44,6 +50,14 @@ static NSString *const kScanControlFailed = @"SCAN_CONTROL_FAILED";
     }];
   }
   return _orchestrator;
+}
+
+- (DBDeleteCoordinator *)deleteCoordinator
+{
+  if (_deleteCoordinator == nil) {
+    _deleteCoordinator = [DBDeleteCoordinatorFactory createCoordinator];
+  }
+  return _deleteCoordinator;
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -114,10 +128,33 @@ static NSString *const kScanControlFailed = @"SCAN_CONTROL_FAILED";
                  resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject
 {
-  (void)command;
-  reject(kScanEngineNotImplemented,
-         @"deleteDuplicates is not implemented until M3 DeleteCoordinator",
-         nil);
+  NSMutableDictionary *payload = [NSMutableDictionary dictionary];
+  payload[@"groupId"] = @(command.groupId());
+  payload[@"keeperFileEntryId"] = @(command.keeperFileEntryId());
+  NSMutableArray<NSNumber *> *deleteIds = [NSMutableArray array];
+  for (double fileEntryId : command.deleteFileEntryIds()) {
+    [deleteIds addObject:@(fileEntryId)];
+  }
+  payload[@"deleteFileEntryIds"] = deleteIds;
+
+  NSError *parseError = nil;
+  DBDeleteDuplicatesCommand *parsed = [DBDeleteDuplicatesCommandParser parseCommand:payload error:&parseError];
+  if (parsed == nil) {
+    reject(kDeleteInvalidCommand, parseError.localizedDescription, parseError);
+    return;
+  }
+
+  [[self deleteCoordinator] deleteDuplicates:parsed
+                                  completion:^(DBDeleteDuplicatesResult *result, NSError *error) {
+    if (error != nil) {
+      reject(kDeleteInvalidCommand, error.localizedDescription, error);
+      return;
+    }
+    resolve(@{
+      @"deletedCount" : @(result.deletedCount),
+      @"failedCount" : @(result.failedCount),
+    });
+  }];
 }
 
 - (void)getCatalogMeta:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
