@@ -344,17 +344,13 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
       }
       DBStagedFile *restaged = [self restatForToctouWithEntry:entry grant:grant];
       if (restaged == nil) {
-        return [self upsertToctouUnscannableForStaged:staged
-                                           generation:generation
-                                            scanRunId:scanRunId];
+        return [self tombstoneDeletedMidHashForStaged:staged generation:generation];
       }
       staged = restaged;
       continue;
     }
     if (preCheck == DBToctouVerifyOutcomeIoFailure) {
-      return [self upsertToctouUnscannableForStaged:staged
-                                         generation:generation
-                                          scanRunId:scanRunId];
+      return [self tombstoneDeletedMidHashForStaged:staged generation:generation];
     }
 
     DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:[[DBHashSettings alloc] init]];
@@ -382,16 +378,12 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
       }
       DBStagedFile *restaged = [self restatForToctouWithEntry:entry grant:grant];
       if (restaged == nil) {
-        return [self upsertToctouUnscannableForStaged:staged
-                                           generation:generation
-                                            scanRunId:scanRunId];
+        return [self tombstoneDeletedMidHashForStaged:staged generation:generation];
       }
       staged = restaged;
       continue;
     }
-    return [self upsertToctouUnscannableForStaged:staged
-                                       generation:generation
-                                        scanRunId:scanRunId];
+    return [self tombstoneDeletedMidHashForStaged:staged generation:generation];
   }
 }
 
@@ -415,6 +407,11 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                                  unscannableReason:DBUnscannableReasonPermissionDenied
                                                          scanRunId:@(scanRunId)]);
   return fileEntryId;
+}
+
+- (NSInteger)tombstoneDeletedMidHashForStaged:(DBStagedFile *)staged generation:(NSInteger)generation
+{
+  return [_indexWriter tombstoneDeletedMidHashWithStaged:staged currentGeneration:generation];
 }
 
 - (NSInteger)persistHashOutcome:(DBHashPipeline *)hashPipeline

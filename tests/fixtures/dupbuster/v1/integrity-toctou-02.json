@@ -1,0 +1,16 @@
+{
+  "id": "integrity-toctou-02",
+  "description": "File deleted during hash leaves catalog row tombstoned (stale last_seen_generation) and scan completes without crash (AC-integrity-toctou-02)",
+  "platform": "both",
+  "input": {
+    "priorGeneration": 1,
+    "currentGeneration": 2,
+    "deletedAfterStat": true
+  },
+  "expect": {
+    "scanCompletes": true,
+    "noBridgeError": true,
+    "lastSeenGenerationUnchanged": true,
+    "purgedAfterSuccessfulRun": true
+  }
+}

@@ -277,6 +277,35 @@ class IndexWriterTest {
   }
 
   @Test
+  fun tombstoneDeletedMidHash_existingEntry_leavesGenerationUnchanged() {
+    val uri = stagedUri("vanished.bin")
+    val staged = staged(uri, sizeBytes = 50)
+    writer.upsertHashed(
+        HashedFile(staged, "h-vanished", NormalizationProfile.RAW_BYTES),
+        generation = 1,
+    )
+
+    val id = writer.tombstoneDeletedMidHash(staged, currentGeneration = 2)
+    assertTrue(id > 0)
+    database.readable().rawQuery(
+        "SELECT last_seen_generation FROM file_entry WHERE id = ?",
+        arrayOf(id.toString()),
+    ).use { cursor ->
+      assertTrue(cursor.moveToFirst())
+      assertEquals(1, cursor.getInt(0))
+    }
+    assertEquals(1, writer.purgeEntriesNotSeenInGeneration(rootId, generation = 2))
+    assertEquals(0, writer.fileEntryCount())
+  }
+
+  @Test
+  fun tombstoneDeletedMidHash_noPriorEntry_returnsZero() {
+    val staged = staged(stagedUri("never-indexed.bin"), sizeBytes = 10)
+    assertEquals(0L, writer.tombstoneDeletedMidHash(staged, currentGeneration = 1))
+    assertEquals(0, writer.fileEntryCount())
+  }
+
+  @Test
   fun purgeEntriesNotSeenInGeneration_removesStaleRows() {
     writer.upsertHashed(
         HashedFile(staged(sizeBytes = 1), "h1", NormalizationProfile.RAW_BYTES),

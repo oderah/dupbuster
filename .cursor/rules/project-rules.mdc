@@ -515,6 +515,13 @@ New code must land in these areas unless architecture is amended first.
 - **Scope:** AC-integrity-toctou-01 only; delete mid-hash tombstone is M3-07 (`AC-integrity-toctou-02`).
 - **Tests:** `ToctouStatVerifierTest`, `ScanOrchestratorTest` (mismatch re-queue); `DBToctouStatVerifierTests`; fixture `integrity-toctou-01.json`.
 
+### TOCTOU delete mid-hash tombstone (M3-07)
+
+- **Android:** `IndexWriter.tombstoneDeletedMidHash` — leaves `last_seen_generation` unchanged when file vanishes during hash; `ScanOrchestrator` routes TOCTOU `IoFailure` and failed restat to tombstone (no `onScanError`).
+- **iOS:** `DBIndexWriter tombstoneDeletedMidHashWithStaged:` + `DBScanOrchestrator tombstoneDeletedMidHashForStaged:` parity.
+- **Scope:** AC-integrity-toctou-02; stale rows purged by existing `purgeEntriesNotSeenInGeneration` after successful run (FR-IX-03).
+- **Tests:** `IndexWriterTest`, `ScanOrchestratorTest` (deleted mid-hash completes); `DBIndexWriterTests`; fixture `integrity-toctou-02.json`.
+
 ### iOS platform delete (M3-05)
 
 - **`DBPhAssetPlatformFileDeleter`:** Mode B PHAsset rows → `PHAssetChangeRequest deleteAssets` via `performChangesAndWait` (requires `PHAccessLevelReadWrite` authorized or limited). Mode A `file://` → `NSFileCoordinator` delete + security-scoped grant URL access.

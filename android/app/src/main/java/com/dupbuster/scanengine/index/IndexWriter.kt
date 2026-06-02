@@ -274,6 +274,23 @@ class IndexWriter(private val database: CatalogDatabase) {
       )
 
   /**
+   * File vanished during hash (AC-integrity-toctou-02 / FR-IX-03). Does not bump
+   * [last_seen_generation], so [purgeEntriesNotSeenInGeneration] removes the row after a
+   * successful run. Returns existing entry id, or 0 when there was no prior catalog row.
+   */
+  fun tombstoneDeletedMidHash(staged: StagedFile, currentGeneration: Int): Long {
+    val inode = staged.inode
+    val deviceId = staged.deviceId
+    if (inode != null && deviceId != null) {
+      findFileEntryIdByInodeDevice(inode, deviceId)?.let {
+        return it
+      }
+    }
+    val rootId = staged.discovered.scanRootId
+    return findFileEntryIdByUri(rootId, uriOrPath(staged)) ?: 0L
+  }
+
+  /**
    * Counts indexed non-video rows with [sizeBytes] for size-bucket elimination (FR-FP-02).
    * Video rows (`duration_ms > 0`) are excluded — video always hashes (M1-14).
    */

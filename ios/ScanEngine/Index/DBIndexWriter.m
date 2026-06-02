@@ -125,6 +125,22 @@
                                isSymlink:staged.isSymlink];
 }
 
+- (NSInteger)tombstoneDeletedMidHashWithStaged:(DBStagedFile *)staged
+                              currentGeneration:(NSInteger)currentGeneration
+{
+  (void)currentGeneration;
+  NSNumber *inode = staged.inode;
+  NSNumber *deviceId = staged.deviceId;
+  if (inode != nil && deviceId != nil) {
+    NSInteger existing = [self fileEntryIdForInode:inode.longLongValue deviceId:deviceId.longLongValue];
+    if (existing > 0) {
+      return existing;
+    }
+  }
+  NSInteger rootId = staged.discovered.scanRootId;
+  return [self fileEntryIdForRootId:rootId uriOrPath:[self uriOrPathForStaged:staged]];
+}
+
 - (NSInteger)beginScanRunWithGeneration:(NSInteger)generation rootId:(NSInteger)rootId
 {
   NSError *error = nil;

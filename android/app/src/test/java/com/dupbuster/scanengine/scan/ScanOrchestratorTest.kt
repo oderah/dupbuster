@@ -11,6 +11,8 @@ import com.dupbuster.scanengine.discovery.DiscoveryEntryConsumer
 import com.dupbuster.scanengine.discovery.DiscoveryResult
 import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.discovery.PlatformDiscoveryGrant
+import com.dupbuster.scanengine.hash.HashedFile
+import com.dupbuster.scanengine.hash.NormalizationProfile
 import com.dupbuster.scanengine.hash.HashPipeline
 import com.dupbuster.scanengine.hash.ContentOpenOutcome
 import com.dupbuster.scanengine.hash.FileContentReader
@@ -179,6 +181,111 @@ class ScanOrchestratorTest {
       assertEquals(payload.size.toLong(), cursor.getLong(0))
       assertEquals(200L, cursor.getLong(1))
     }
+  }
+
+  @Test
+  fun startScan_fileDeletedMidHash_tombstonesAndCompletesWithoutError() {
+    val payload = "gone-mid-hash".toByteArray(Charsets.UTF_8)
+    val entryUri = Uri.parse("$contentUri/deleted")
+    var verifyReads = 0
+    val emittedErrors = mutableListOf<String>()
+    val platformRootId =
+        indexWriter.findOrInsertScanRoot(
+            PlatformDiscoveryGrant.MARKER_URI.toString(),
+            ScanRootMode.PLATFORM_DISCOVERY,
+        )
+
+    indexWriter.upsertHashed(
+        HashedFile(
+            staged(
+                DiscoveredEntry(
+                    contentUri = entryUri,
+                    scanRootId = platformRootId,
+                    generation = 1,
+                    displayName = "deleted.bin",
+                    mediaTypeHint = MediaTypeHint.OTHER,
+                    sizeBytes = payload.size.toLong(),
+                    mtimeNs = 100L,
+                ),
+                payload.size.toLong(),
+                100L,
+            ),
+            "prior-hash",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+    val priorRunId = indexWriter.beginScanRun(generation = 1, rootId = platformRootId)
+    indexWriter.completeScanRun(priorRunId)
+
+    val tombstoneOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner =
+                ScanDiscoveryRunner { _, _, generation, consumer, _ ->
+                  consumer.onEntry(
+                      DiscoveredEntry(
+                          contentUri = entryUri,
+                          scanRootId = platformRootId,
+                          generation = generation,
+                          displayName = "deleted.bin",
+                          mediaTypeHint = MediaTypeHint.OTHER,
+                          sizeBytes = payload.size.toLong(),
+                          mtimeNs = 100L,
+                      ),
+                  )
+                  DiscoveryResult(1, 0, 0, cancelled = false)
+                },
+            statFile = { entry, _ ->
+              StatResult.Success(staged(entry, payload.size.toLong(), 100L))
+            },
+            hashPipelineFactory = { _ ->
+              HashPipeline(
+                  context,
+                  FakeContentReader(payload),
+                  sizeBucketIndex = alwaysNeedsHashIndex(),
+              )
+            },
+            progressBridge =
+                ScanProgressBridge(
+                    emitProgress = { map ->
+                      emittedPhases.add(map.getString("phase")!!)
+                    },
+                ),
+            emitError = { map -> emittedErrors.add(map.getString("unscannableReason")!!) },
+            toctouVerifier =
+                ToctouStatVerifier(
+                    object : FileStatReader {
+                      override fun readStat(uri: Uri): FileStatReadOutcome {
+                        verifyReads++
+                        val staged = latestStaged ?: return FileStatReadOutcome.IoFailure
+                        if (verifyReads == 1) {
+                          return FileStatReadOutcome.Ok(
+                              FileStat(
+                                  staged.sizeBytes,
+                                  staged.mtimeNs,
+                                  staged.inode,
+                                  staged.deviceId,
+                                  staged.isSymlink,
+                              ),
+                          )
+                        }
+                        return FileStatReadOutcome.IoFailure
+                      }
+                    },
+                ),
+            executor = java.util.concurrent.Executor { it.run() },
+        )
+
+    tombstoneOrchestrator.startScan(
+        ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+    )
+
+    assertTrue(emittedPhases.last() == ScanPhase.COMPLETE)
+    assertTrue(emittedErrors.isEmpty())
+    assertEquals(0, indexWriter.fileEntryCount())
   }
 
   @Test

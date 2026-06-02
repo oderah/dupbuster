@@ -83,6 +83,29 @@
   XCTAssertEqual([self aliasCount], 1);
 }
 
+- (void)testTombstoneDeletedMidHash_existingEntry_leavesGenerationUnchanged
+{
+  DBStagedFile *staged = [self stagedWithUri:@"file:///vanished.bin" sizeBytes:50];
+  DBHashedFile *hashed =
+      [[DBHashedFile alloc] initWithStaged:staged
+                                 hashValue:@"h-vanished"
+                      normalizationProfile:DBNormalizationProfileRawBytes
+                           quickSampleHash:nil];
+  [self.writer upsertHashedFile:hashed generation:1];
+  NSInteger fileEntryId = [self.writer tombstoneDeletedMidHashWithStaged:staged currentGeneration:2];
+  XCTAssertGreaterThan(fileEntryId, 0);
+  XCTAssertEqual([self lastSeenGenerationForFileEntryId:fileEntryId], 1);
+  XCTAssertEqual([self.writer purgeEntriesNotSeenInGeneration:self.rootId generation:2], 1);
+  XCTAssertEqual([self.writer fileEntryCount], 0);
+}
+
+- (void)testTombstoneDeletedMidHash_noPriorEntry_returnsZero
+{
+  DBStagedFile *staged = [self stagedWithUri:@"file:///never-indexed.bin" sizeBytes:10];
+  XCTAssertEqual([self.writer tombstoneDeletedMidHashWithStaged:staged currentGeneration:1], 0);
+  XCTAssertEqual([self.writer fileEntryCount], 0);
+}
+
 - (DBStagedFile *)stagedWithUri:(NSString *)uri
                       sizeBytes:(int64_t)sizeBytes
                           inode:(nullable NSNumber *)inode
@@ -141,6 +164,20 @@
   }
   sqlite3_finalize(stmt);
   return reason;
+}
+
+- (NSInteger)lastSeenGenerationForFileEntryId:(NSInteger)fileEntryId
+{
+  sqlite3_stmt *stmt = NULL;
+  sqlite3_prepare_v2(
+      self.database.db, "SELECT last_seen_generation FROM file_entry WHERE id = ?", -1, &stmt, NULL);
+  sqlite3_bind_int64(stmt, 1, fileEntryId);
+  NSInteger generation = 0;
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    generation = sqlite3_column_int(stmt, 0);
+  }
+  sqlite3_finalize(stmt);
+  return generation;
 }
 
 - (NSInteger)aliasCount

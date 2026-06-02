@@ -141,7 +141,7 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 | M3-05 | iOS PHAssetChangeRequest integration | `DBPhAssetPlatformFileDeleter` |
 | M3-12 | `IMAGE_CONTENT_V1`: ImageFingerprinter + fuzzy Grouper + UI (`SAME_CONTENT_IMAGE`) | FR-FP-09/10; AC-equiv-image-content-* |
 | M3-06 | TOCTOU: stat→hash size/mtime change discard + re-queue | `ToctouStatVerifier` / `DBToctouStatVerifier`; AC-integrity-toctou-01 |
-| M3-07 | TOCTOU: delete mid-hash tombstone | |
+| M3-07 | TOCTOU: delete mid-hash tombstone | `IndexWriter.tombstoneDeletedMidHash`; AC-integrity-toctou-02 |
 | M3-08 | Permission revoke mid-scan pause + FD close | AC-integrity-perm-01 |
 | M3-09 | Process kill resume/restart prompt | AC-integrity-resume-01 |
 | M3-10 | Reclaimable space calculation on group detail | |

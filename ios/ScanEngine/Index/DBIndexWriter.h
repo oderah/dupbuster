@@ -40,6 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
                                   staged:(DBStagedFile *)staged
                               generation:(NSInteger)generation;
 
+/** AC-integrity-toctou-02: file vanished mid-hash; do not bump last_seen_generation. */
+- (NSInteger)tombstoneDeletedMidHashWithStaged:(DBStagedFile *)staged
+                              currentGeneration:(NSInteger)currentGeneration;
+
 - (NSInteger)persistHashPipelineResult:(DBHashPipelineResult *)result
                                 staged:(DBStagedFile *)staged
                             generation:(NSInteger)generation;

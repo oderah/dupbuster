@@ -313,11 +313,11 @@ class ScanOrchestrator(
           if (mismatchAttempts > ToctouStatVerifier.MAX_MISMATCH_RETRIES) {
             return upsertToctouUnscannable(staged, generation, scanRunId)
           }
-          staged = restatForToctou(entry, grant) ?: return upsertToctouUnscannable(staged, generation, scanRunId)
+          staged = restatForToctou(entry, grant) ?: return tombstoneDeletedMidHash(staged, generation)
           continue
         }
         ToctouVerifyOutcome.IoFailure ->
-            return upsertToctouUnscannable(staged, generation, scanRunId)
+            return tombstoneDeletedMidHash(staged, generation)
       }
 
       val hashResult = hashPipeline.hash(staged, HashSettings())
@@ -344,11 +344,11 @@ class ScanOrchestrator(
                 plan = plan,
             )
           }
-          staged = restatForToctou(entry, grant) ?: return upsertToctouUnscannable(staged, generation, scanRunId)
+          staged = restatForToctou(entry, grant) ?: return tombstoneDeletedMidHash(staged, generation)
           continue
         }
         ToctouVerifyOutcome.IoFailure ->
-            return upsertToctouUnscannable(staged, generation, scanRunId)
+            return tombstoneDeletedMidHash(staged, generation)
       }
     }
   }
@@ -379,6 +379,10 @@ class ScanOrchestrator(
     )
     return fileEntryId
   }
+
+  /** AC-integrity-toctou-02: deleted mid-hash — leave stale generation for purge; no bridge error. */
+  private fun tombstoneDeletedMidHash(staged: StagedFile, generation: Int): Long =
+      indexWriter.tombstoneDeletedMidHash(staged, generation)
 
   private fun persistHashOutcome(
       hashPipeline: HashPipeline,
