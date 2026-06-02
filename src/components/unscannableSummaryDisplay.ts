@@ -17,6 +17,7 @@ const REASON_LABELS: Record<UnscannableReason, string> = {
   LARGE_SKIPPED: tokens.unscan.reason.LARGE_SKIPPED,
   HASH_TIMEOUT: tokens.unscan.reason.HASH_TIMEOUT,
   VIDEO_DECODE_FAILED: tokens.unscan.reason.VIDEO_DECODE_FAILED,
+  IMAGE_DECODE_FAILED: tokens.unscan.reason.IMAGE_DECODE_FAILED,
 };
 
 export function getUnscannableReasonLabel(reason: UnscannableReason): string {
