@@ -59,40 +59,49 @@ function delay(ms: number): Promise<void> {
 export function createMockCatalogSnapshot(): ScanCatalogSnapshot {
   const videoGroupId = 1;
   const exactGroupId = 2;
+  const videoPath1080 = 'content://test/videos/vacation-1080p.mp4';
+  const videoPath720 = 'content://test/videos/vacation-720p.mp4';
   const videoMembers = [
     {
       fileEntryId: 101,
       displayName: 'vacation-1080p.mp4',
       sizeBytes: 4_000_000,
       mtimeMs: 2000,
-      pathLength: 22,
+      pathLength: videoPath1080.length,
       mediaTypeHint: 'video' as const,
+      paths: [videoPath1080],
     },
     {
       fileEntryId: 102,
       displayName: 'vacation-720p.mp4',
       sizeBytes: 1_000_000,
       mtimeMs: 1000,
-      pathLength: 21,
+      pathLength: videoPath720.length,
       mediaTypeHint: 'video' as const,
+      paths: [videoPath720],
     },
   ];
+  const exactPrimaryPath = 'content://test/photos/photo-copy.jpg';
+  const exactAliasPath = 'content://test/mirror/photo-copy-link.jpg';
+  const exactDupPath = 'content://test/photos/photo-dup.jpg';
   const exactMembers = [
     {
       fileEntryId: 201,
       displayName: 'photo-copy.jpg',
       sizeBytes: 512_000,
       mtimeMs: 3000,
-      pathLength: 18,
+      pathLength: Math.min(exactPrimaryPath.length, exactAliasPath.length),
       mediaTypeHint: 'image' as const,
+      paths: [exactPrimaryPath, exactAliasPath],
     },
     {
       fileEntryId: 202,
       displayName: 'photo-dup.jpg',
       sizeBytes: 512_000,
       mtimeMs: 2500,
-      pathLength: 17,
+      pathLength: exactDupPath.length,
       mediaTypeHint: 'image' as const,
+      paths: [exactDupPath],
     },
   ];
   const videoDetail = {
@@ -326,7 +335,21 @@ function mapCatalogThumbnail(
   };
 }
 
+function mapMemberPaths(paths: readonly string[] | undefined): readonly string[] {
+  if (paths == null || paths.length === 0) {
+    return [];
+  }
+  const normalized = paths.filter(
+    (path): path is string => typeof path === 'string' && path.length > 0,
+  );
+  if (normalized.length > 0) {
+    return normalized;
+  }
+  return [];
+}
+
 function mapCatalogMember(member: CatalogSnapshotMember): DuplicateGroupMember {
+  const paths = mapMemberPaths(member.paths);
   return {
     fileEntryId: member.fileEntryId,
     displayName: member.displayName,
@@ -337,6 +360,7 @@ function mapCatalogMember(member: CatalogSnapshotMember): DuplicateGroupMember {
       ? member.mediaTypeHint
       : 'other',
     thumbnailUri: member.thumbnailUri ?? null,
+    paths,
   };
 }
 

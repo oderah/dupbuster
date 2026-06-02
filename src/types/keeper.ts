@@ -19,6 +19,7 @@ export type KeeperMember = {
   pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string | null;
+  paths: readonly string[];
 };
 
 /**

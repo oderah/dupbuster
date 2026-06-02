@@ -467,6 +467,15 @@ New code must land in these areas unless architecture is amended first.
 - **Types:** `src/types/contentMatchNotice.ts`.
 - **Tests:** `npm test -- --testPathPattern='ContentMatchNotice|DuplicateGroupDetail'`; a11y gate case in `__tests__/a11y/m2GateComponents.a11y.test.tsx`.
 
+### PathChipList (M3-02)
+
+- **`src/components/PathChipList.tsx`:** Hard-link alias chips under keeper member rows when `paths.length >= 2`; LTR path text (A11Y-10); single container `accessibilityLabel` from `a11y.path.sameFile` (A11Y-08 / AC-a11y-path-01); path chips hidden from accessibility tree.
+- **`src/components/pathDisplay.ts`:** `shouldShowPathChipList`, `formatPathChipListAccessibilityLabel`.
+- **Catalog paths:** `CatalogReader` / `DBCatalogReader` load primary `uri_or_path` + `file_path` aliases into `paths`; `pathLength` = shortest path among all locations (FR-AC-02). Bridge member field `paths` on `getCatalogSnapshot` only (not progress events).
+- **Composition:** `KeeperSelector` renders `PathChipList` per member; `keeperMembers` passes `paths` from `DuplicateGroupMember`.
+- **Mock catalog:** `createMockCatalogSnapshot()` member `201` has two paths for shell QA / M2-SMOKE-31.
+- **Tests:** `npm test -- --testPathPattern='PathChip|pathDisplay|KeeperSelector'`; `CatalogReaderTest` hard-link case; a11y gate in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-a11y-path-01, AC-integrity-hardlink-01 (display), US-14.
+
 ### DeleteConfirmModal (M3-01)
 
 - **`src/components/DeleteConfirmModal.tsx`:** Two-step destructive confirm (`review` → `confirm`); danger border/surface on confirm primary only; `accessibilityViewIsModal` + `useModalFocusTrap` (heading focus on open/step change, return focus to delete trigger on dismiss — A11Y-07 / AC-a11y-delete-01).

@@ -72,6 +72,7 @@ describe('duplicateGroupDisplay', () => {
         mtimeMs: 1,
         pathLength: 8,
         mediaTypeHint: 'video',
+        paths: [],
       },
     ]);
     expect(slots).toHaveLength(1);

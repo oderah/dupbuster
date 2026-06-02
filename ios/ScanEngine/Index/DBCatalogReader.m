@@ -93,8 +93,55 @@ static const NSInteger kDBCatalogReaderThumbnailPreviewLimit = 4;
   return [rows copy];
 }
 
+- (NSDictionary<NSNumber *, NSArray<NSString *> *> *)loadPathAliasesByFileEntryId
+{
+  NSMutableDictionary<NSNumber *, NSMutableArray<NSString *> *> *aliasesByFileEntryId =
+      [NSMutableDictionary dictionary];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(
+      db,
+      "SELECT file_entry_id, alias_path FROM file_path ORDER BY file_entry_id ASC, alias_path ASC",
+      -1,
+      &stmt,
+      NULL);
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    NSInteger fileEntryId = sqlite3_column_int64(stmt, 0);
+    NSString *aliasPath = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 1)];
+    NSMutableArray<NSString *> *aliases = aliasesByFileEntryId[@(fileEntryId)];
+    if (aliases == nil) {
+      aliases = [NSMutableArray array];
+      aliasesByFileEntryId[@(fileEntryId)] = aliases;
+    }
+    [aliases addObject:aliasPath];
+  }
+  sqlite3_finalize(stmt);
+
+  NSMutableDictionary<NSNumber *, NSArray<NSString *> *> *result = [NSMutableDictionary dictionary];
+  for (NSNumber *fileEntryId in aliasesByFileEntryId) {
+    result[fileEntryId] = [aliasesByFileEntryId[fileEntryId] copy];
+  }
+  return [result copy];
+}
+
++ (NSArray<NSString *> *)buildMemberPathsForFileEntryId:(NSInteger)fileEntryId
+                                        primaryUriOrPath:(NSString *)primaryUriOrPath
+                                    aliasesByFileEntryId:(NSDictionary<NSNumber *, NSArray<NSString *> *> *)
+                                                             aliasesByFileEntryId
+{
+  NSMutableOrderedSet<NSString *> *ordered = [NSMutableOrderedSet orderedSet];
+  [ordered addObject:primaryUriOrPath];
+  for (NSString *alias in aliasesByFileEntryId[@(fileEntryId)] ?: @[]) {
+    if (![alias isEqualToString:primaryUriOrPath]) {
+      [ordered addObject:alias];
+    }
+  }
+  return [ordered array];
+}
+
 - (NSDictionary<NSNumber *, NSArray<DBCatalogMember *> *> *)loadMembersByGroupId
 {
+  NSDictionary<NSNumber *, NSArray<NSString *> *> *aliasesByFileEntryId = [self loadPathAliasesByFileEntryId];
   NSMutableDictionary<NSNumber *, NSMutableArray<DBCatalogMember *> *> *membersByGroupId =
       [NSMutableDictionary dictionary];
   sqlite3_stmt *stmt = NULL;
@@ -110,7 +157,9 @@ static const NSInteger kDBCatalogReaderThumbnailPreviewLimit = 4;
       NULL);
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     NSInteger groupId = sqlite3_column_int64(stmt, 0);
-    DBCatalogMember *member = [self memberFromStatement:stmt startingAtColumn:1];
+    DBCatalogMember *member = [self memberFromStatement:stmt
+                                         startingAtColumn:1
+                                   aliasesByFileEntryId:aliasesByFileEntryId];
     NSMutableArray<DBCatalogMember *> *members = membersByGroupId[@(groupId)];
     if (members == nil) {
       members = [NSMutableArray array];
@@ -147,22 +196,36 @@ static const NSInteger kDBCatalogReaderThumbnailPreviewLimit = 4;
   return [counts copy];
 }
 
-- (DBCatalogMember *)memberFromStatement:(sqlite3_stmt *)stmt startingAtColumn:(int)column
+- (DBCatalogMember *)memberFromStatement:(sqlite3_stmt *)stmt
+                        startingAtColumn:(int)column
+                      aliasesByFileEntryId:(NSDictionary<NSNumber *, NSArray<NSString *> *> *)
+                                           aliasesByFileEntryId
 {
+  NSInteger fileEntryId = sqlite3_column_int64(stmt, column);
   NSString *displayName = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, column + 1)];
   NSString *uriOrPath = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, column + 2)];
   int64_t durationMs = sqlite3_column_type(stmt, column + 5) == SQLITE_NULL ? 0 : sqlite3_column_int64(stmt, column + 5);
   DBCatalogMediaTypeHint mediaTypeHint = [DBCatalogReader resolveMediaTypeHintForDisplayName:displayName
                                                                                   durationMs:durationMs];
+  NSArray<NSString *> *paths = [DBCatalogReader buildMemberPathsForFileEntryId:fileEntryId
+                                                             primaryUriOrPath:uriOrPath
+                                                         aliasesByFileEntryId:aliasesByFileEntryId];
+  NSInteger shortestPathLength = uriOrPath.length;
+  for (NSString *path in paths) {
+    if ((NSInteger)path.length < shortestPathLength) {
+      shortestPathLength = (NSInteger)path.length;
+    }
+  }
 
   DBCatalogMember *member = [[DBCatalogMember alloc] init];
-  member.fileEntryId = sqlite3_column_int64(stmt, column);
+  member.fileEntryId = fileEntryId;
   member.displayName = displayName;
   member.sizeBytes = sqlite3_column_int64(stmt, column + 3);
   member.mtimeMs = sqlite3_column_int64(stmt, column + 4) / 1000000LL;
-  member.pathLength = uriOrPath.length;
+  member.pathLength = shortestPathLength;
   member.mediaTypeHint = mediaTypeHint;
   member.thumbnailUri = [DBCatalogReader thumbnailUriForMediaTypeHint:mediaTypeHint uriOrPath:uriOrPath];
+  member.paths = paths;
   return member;
 }
 

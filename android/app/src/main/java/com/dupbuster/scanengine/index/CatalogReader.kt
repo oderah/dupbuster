@@ -17,6 +17,8 @@ class CatalogReader(private val database: CatalogDatabase) {
       val pathLength: Int,
       val mediaTypeHint: MediaTypeHint,
       val thumbnailUri: String?,
+      /** Primary `uri_or_path` first, then `file_path` aliases (US-14 / AC-integrity-hardlink-01). */
+      val paths: List<String>,
   )
 
   data class CatalogGroupSummary(
@@ -110,6 +112,7 @@ class CatalogReader(private val database: CatalogDatabase) {
   }
 
   private fun loadMembersByGroupId(): Map<Long, List<CatalogMember>> {
+    val aliasesByFileEntryId = loadPathAliasesByFileEntryId()
     val membersByGroupId = linkedMapOf<Long, MutableList<CatalogMember>>()
     database
         .readable()
@@ -132,7 +135,12 @@ class CatalogReader(private val database: CatalogDatabase) {
         .use { cursor ->
           while (cursor.moveToNext()) {
             val groupId = cursor.getLong(0)
-            val member = rowToCatalogMember(cursor, startColumn = 1)
+            val member =
+                rowToCatalogMember(
+                    cursor,
+                    startColumn = 1,
+                    aliasesByFileEntryId = aliasesByFileEntryId,
+                )
             membersByGroupId.getOrPut(groupId) { mutableListOf() }.add(member)
           }
         }
@@ -162,7 +170,35 @@ class CatalogReader(private val database: CatalogDatabase) {
     return counts
   }
 
-  private fun rowToCatalogMember(cursor: Cursor, startColumn: Int): CatalogMember {
+  private fun loadPathAliasesByFileEntryId(): Map<Long, List<String>> {
+    val aliasesByFileEntryId = linkedMapOf<Long, MutableList<String>>()
+    database
+        .readable()
+        .rawQuery(
+            """
+            SELECT file_entry_id, alias_path
+            FROM file_path
+            ORDER BY file_entry_id ASC, alias_path ASC
+            """
+                .trimIndent(),
+            null,
+        )
+        .use { cursor ->
+          while (cursor.moveToNext()) {
+            val fileEntryId = cursor.getLong(0)
+            val aliasPath = cursor.getString(1)
+            aliasesByFileEntryId.getOrPut(fileEntryId) { mutableListOf() }.add(aliasPath)
+          }
+        }
+    return aliasesByFileEntryId
+  }
+
+  private fun rowToCatalogMember(
+      cursor: Cursor,
+      startColumn: Int,
+      aliasesByFileEntryId: Map<Long, List<String>>,
+  ): CatalogMember {
+    val fileEntryId = cursor.getLong(startColumn)
     val displayName = cursor.getString(startColumn + 1)
     val uriOrPath = cursor.getString(startColumn + 2)
     val durationMs =
@@ -172,15 +208,32 @@ class CatalogReader(private val database: CatalogDatabase) {
           cursor.getLong(startColumn + 5)
         }
     val mediaTypeHint = resolveMediaTypeHint(displayName, durationMs)
+    val paths = buildMemberPaths(fileEntryId, uriOrPath, aliasesByFileEntryId)
     return CatalogMember(
-        fileEntryId = cursor.getLong(startColumn),
+        fileEntryId = fileEntryId,
         displayName = displayName,
         sizeBytes = cursor.getLong(startColumn + 3),
         mtimeMs = cursor.getLong(startColumn + 4) / 1_000_000L,
-        pathLength = uriOrPath.length,
+        pathLength = paths.minOfOrNull(String::length) ?: uriOrPath.length,
         mediaTypeHint = mediaTypeHint,
         thumbnailUri = thumbnailUriFor(mediaTypeHint, uriOrPath),
+        paths = paths,
     )
+  }
+
+  internal fun buildMemberPaths(
+      fileEntryId: Long,
+      primaryUriOrPath: String,
+      aliasesByFileEntryId: Map<Long, List<String>>,
+  ): List<String> {
+    val ordered = linkedSetOf<String>()
+    ordered.add(primaryUriOrPath)
+    for (alias in aliasesByFileEntryId[fileEntryId].orEmpty()) {
+      if (alias != primaryUriOrPath) {
+        ordered.add(alias)
+      }
+    }
+    return ordered.toList()
   }
 
   internal fun resolveMediaTypeHint(displayName: String, durationMs: Long): MediaTypeHint {

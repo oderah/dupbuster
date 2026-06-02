@@ -3,6 +3,7 @@ import ReactTestRenderer from 'react-test-renderer';
 
 import {ContentMatchNotice} from '../../src/components/ContentMatchNotice';
 import {DeleteConfirmModal} from '../../src/components/DeleteConfirmModal';
+import {PathChipList} from '../../src/components/PathChipList';
 import {CoverageBanner} from '../../src/components/CoverageBanner';
 import {KeeperSelector} from '../../src/components/KeeperSelector';
 import {MatchKindBadge} from '../../src/components/MatchKindBadge';
@@ -30,6 +31,7 @@ const members: KeeperMember[] = [
     mtimeMs: 100,
     pathLength: 30,
     mediaTypeHint: 'other',
+    paths: ['content://test/docs/tiny.bin'],
   },
   {
     fileEntryId: 20,
@@ -38,6 +40,10 @@ const members: KeeperMember[] = [
     mtimeMs: 200,
     pathLength: 6,
     mediaTypeHint: 'other',
+    paths: [
+      'content://test/docs/big.bin',
+      'content://test/mirror/big-link.bin',
+    ],
   },
 ];
 
@@ -197,6 +203,20 @@ describe('M2 gate components — automated a11y (M2-10)', () => {
     it('prominent SAME_CONTENT_VIDEO has zero critical violations', () => {
       const root = renderRoot(
         <MatchKindBadge matchKind="SAME_CONTENT_VIDEO" presentation="prominent" />,
+      );
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
+  });
+
+  describe('PathChipList', () => {
+    it('multi-path list has zero critical violations (M3-02)', () => {
+      const root = renderRoot(
+        <PathChipList
+          paths={[
+            'content://test/photos/a.jpg',
+            'content://test/mirror/a-link.jpg',
+          ]}
+        />,
       );
       expect(root).toHaveZeroCriticalA11yViolations();
     });

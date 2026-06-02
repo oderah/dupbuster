@@ -29,6 +29,7 @@ describe('DuplicateGroupDetailScreen', () => {
         mtimeMs: 2000,
         pathLength: 22,
         mediaTypeHint: 'video' as const,
+        paths: ['content://test/videos/vacation-1080p.mp4'],
       },
       {
         fileEntryId: 102,
@@ -37,6 +38,7 @@ describe('DuplicateGroupDetailScreen', () => {
         mtimeMs: 1000,
         pathLength: 21,
         mediaTypeHint: 'video' as const,
+        paths: ['content://test/videos/vacation-720p.mp4'],
       },
     ],
   };

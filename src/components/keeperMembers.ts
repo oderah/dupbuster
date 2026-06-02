@@ -12,5 +12,6 @@ export function toKeeperMembers(
     pathLength: member.pathLength,
     mediaTypeHint: member.mediaTypeHint,
     thumbnailUri: member.thumbnailUri,
+    paths: member.paths,
   }));
 }

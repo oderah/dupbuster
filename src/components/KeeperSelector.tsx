@@ -15,6 +15,7 @@ import {
   getKeeperPresetLabel,
 } from './keeperDisplay';
 import {getMediaTypeLabel} from './duplicateGroupDisplay';
+import {PathChipList} from './PathChipList';
 
 export function KeeperSelector({
   members,
@@ -99,6 +100,10 @@ export function KeeperSelector({
                 <Text style={styles.memberMeta} maxFontSizeMultiplier={1.3}>
                   {getMediaTypeLabel(member.mediaTypeHint)}
                 </Text>
+                <PathChipList
+                  paths={member.paths}
+                  testID={`${testID}-member-${member.fileEntryId}-paths`}
+                />
               </View>
               <View
                 style={[

@@ -14,6 +14,7 @@ const members: KeeperMember[] = [
     mtimeMs: 1,
     pathLength: 10,
     mediaTypeHint: 'image',
+    paths: [],
   },
   {
     fileEntryId: 2,
@@ -22,6 +23,7 @@ const members: KeeperMember[] = [
     mtimeMs: 2,
     pathLength: 5,
     mediaTypeHint: 'image',
+    paths: [],
   },
 ];
 

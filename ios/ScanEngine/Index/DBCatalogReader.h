@@ -14,6 +14,8 @@ typedef NSString *DBCatalogMediaTypeHint NS_TYPED_ENUM;
 @property (nonatomic, assign) NSInteger pathLength;
 @property (nonatomic, copy) DBCatalogMediaTypeHint mediaTypeHint;
 @property (nonatomic, copy, nullable) NSString *thumbnailUri;
+/** Primary `uri_or_path` first, then `file_path` aliases (US-14). */
+@property (nonatomic, copy) NSArray<NSString *> *paths;
 @end
 
 @interface DBCatalogGroupSummary : NSObject

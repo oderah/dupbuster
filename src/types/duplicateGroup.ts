@@ -38,6 +38,8 @@ export type DuplicateGroupMember = {
   pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string | null;
+  /** Primary path first, then hard-link aliases (catalog read — not progress bridge). */
+  paths: readonly string[];
 };
 
 export type DuplicateGroupDetail = {

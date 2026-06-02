@@ -30,6 +30,7 @@ object CatalogSnapshotBridgeMapper {
           "pathLength",
           "mediaTypeHint",
           "thumbnailUri",
+          "paths",
       )
 
   fun toReadableMap(snapshot: CatalogReader.CatalogSnapshot): ReadableMap {
@@ -150,7 +151,16 @@ object CatalogSnapshotBridgeMapper {
       if (member.thumbnailUri != null) {
         putString("thumbnailUri", member.thumbnailUri)
       }
+      putArray("paths", pathsArray(member.paths))
     }
+  }
+
+  private fun pathsArray(paths: List<String>): WritableArray {
+    val array = JavaOnlyArray()
+    for (path in paths) {
+      array.pushString(path)
+    }
+    return array
   }
 
   private fun unscannableCountsMap(counts: Map<String, Int>): WritableMap {

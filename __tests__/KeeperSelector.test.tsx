@@ -21,6 +21,7 @@ const members: KeeperMember[] = [
     mtimeMs: 100,
     pathLength: 30,
     mediaTypeHint: 'other',
+    paths: ['content://test/docs/tiny.bin'],
   },
   {
     fileEntryId: 20,
@@ -29,6 +30,10 @@ const members: KeeperMember[] = [
     mtimeMs: 200,
     pathLength: 6,
     mediaTypeHint: 'other',
+    paths: [
+      'content://test/docs/big.bin',
+      'content://test/mirror/big-link.bin',
+    ],
   },
 ];
 
@@ -117,6 +122,28 @@ describe('KeeperSelector', () => {
       findByTestId(tree!.root, 'keeper-selector-member-10')?.props.onPress();
     });
     expect(onSelectMember).toHaveBeenCalledWith(10);
+  });
+
+  it('renders PathChipList for hard-link member with multiple paths (M3-02)', () => {
+    const selection = createKeeperSelectionState(members);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <KeeperSelector
+          members={members}
+          selection={selection}
+          onSelectMember={jest.fn()}
+          onApplyPreset={jest.fn()}
+        />,
+      );
+    });
+
+    expect(
+      findByTestId(tree!.root, 'keeper-selector-member-20-paths-chip-0'),
+    ).not.toBeNull();
+    expect(
+      findByTestId(tree!.root, 'keeper-selector-member-10-paths-chip-0'),
+    ).toBeNull();
   });
 
   it('renders remember-session toggle from frozen token (FR-AC-05)', () => {

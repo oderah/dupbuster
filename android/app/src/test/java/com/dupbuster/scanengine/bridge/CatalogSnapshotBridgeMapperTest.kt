@@ -24,6 +24,7 @@ class CatalogSnapshotBridgeMapperTest {
             pathLength = 24,
             mediaTypeHint = MediaTypeHint.IMAGE,
             thumbnailUri = "content://test/photo.jpg",
+            paths = listOf("content://test/photo.jpg"),
         )
     val snapshot =
         CatalogReader.CatalogSnapshot(
@@ -58,5 +59,9 @@ class CatalogSnapshotBridgeMapperTest {
     val detail = map.getMap("groupDetailsById")!!.getMap("1")!!
     assertEquals(1, detail.getArray("members")!!.size())
     assertEquals("photo.jpg", detail.getArray("members")!!.getMap(0)!!.getString("displayName"))
+    assertEquals(
+        "content://test/photo.jpg",
+        detail.getArray("members")!!.getMap(0)!!.getArray("paths")!!.getString(0),
+    )
   }
 }

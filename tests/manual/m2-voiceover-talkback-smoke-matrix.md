@@ -140,7 +140,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | Row IDs | Blocked until | Reason |
 |---------|---------------|--------|
 | M2-SMOKE-30 | M3-01 | `DeleteConfirmModal` not implemented |
-| M2-SMOKE-31 | M3-02 | `PathChipList` not implemented |
+| M2-SMOKE-31 | M3-02 | `PathChipList` implemented — manual QA pending |
 | M2-SMOKE-29 (delete focus order) | M3 | Delete button not implemented — notice-before-delete partial until M3 |
 
 ---
@@ -215,7 +215,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | ID | Ref | Setup | Steps | Expected | iOS | Android |
 |----|-----|-------|-------|----------|-----|---------|
 | M2-SMOKE-30 | A11Y-07, AC-a11y-delete-01 | — | Open delete confirm | **Blocked (M3-01)** — focus trap; heading focused; focus returns to delete trigger on dismiss | — | — |
-| M2-SMOKE-31 | A11Y-08, AC-a11y-path-01 | — | Hard-link member with 2+ paths | **Blocked (M3-02)** — single label **`Same file, {n} locations`** (`a11y.path.sameFile`) | — | — |
+| M2-SMOKE-31 | A11Y-08, AC-a11y-path-01 | — | Hard-link member with 2+ paths (mock exact group member `201`) | Single label **`Same file, {n} locations`** (`a11y.path.sameFile`); path chips not read individually | — | — |
 
 ### 5.7 Unscannable summary
 
@@ -283,7 +283,7 @@ Run S4; progress indicator should use **static pulse dot** instead of animated f
 | Manual smoke: partial library, denied, progress cadence, cancel terminal | 01–07, 11–17, 34 (video subcopy) |
 | Manual smoke: 200% font scale dismiss/CTA | 08, 20 |
 | Manual smoke: delete modal focus | 30 (blocked M3) |
-| Manual smoke: PathChipList multi-path | 31 (blocked M3) |
+| Manual smoke: PathChipList multi-path | 31 (ready for QA) |
 | Manual smoke: ContentMatchNotice polite on mount | 28 |
 | Manual smoke: ContentMatchNotice before delete | 29 (partial until M3 delete) |
 | AC-a11y-coverage-01 through AC-a11y-path-01 | Coverage + progress + keeper rows; path/delete blocked |

@@ -109,6 +109,7 @@ export type CatalogSnapshotMember = {
   pathLength: number;
   mediaTypeHint: MediaTypeHint;
   thumbnailUri?: string;
+  paths?: readonly string[];
 };
 
 export type CatalogSnapshotGroupDetail = {

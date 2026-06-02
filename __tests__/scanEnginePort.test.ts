@@ -150,6 +150,7 @@ describe('mapCatalogSnapshot', () => {
               pathLength: 18,
               mediaTypeHint: 'video',
               thumbnailUri: 'content://test/a.mp4',
+              paths: ['content://test/a.mp4'],
             },
           ],
         },

@@ -16,6 +16,7 @@ describe('resolveDeleteConfirmCounts', () => {
         mtimeMs: 1,
         pathLength: 5,
         mediaTypeHint: 'other' as const,
+        paths: [],
       },
       {
         fileEntryId: 2,
@@ -24,6 +25,7 @@ describe('resolveDeleteConfirmCounts', () => {
         mtimeMs: 2,
         pathLength: 5,
         mediaTypeHint: 'other' as const,
+        paths: [],
       },
       {
         fileEntryId: 3,
@@ -32,6 +34,7 @@ describe('resolveDeleteConfirmCounts', () => {
         mtimeMs: 3,
         pathLength: 5,
         mediaTypeHint: 'other' as const,
+        paths: [],
       },
     ],
   };

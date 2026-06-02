@@ -55,6 +55,7 @@ static NSSet<NSString *> *DBCatalogSnapshotBridgeAllowedMemberKeys(void)
       @"pathLength",
       @"mediaTypeHint",
       @"thumbnailUri",
+      @"paths",
     ]];
   });
   return keys;
@@ -141,6 +142,7 @@ static NSSet<NSString *> *DBCatalogSnapshotBridgeAllowedMemberKeys(void)
     if (member.thumbnailUri != nil) {
       payload[@"thumbnailUri"] = member.thumbnailUri;
     }
+    payload[@"paths"] = member.paths ?: @[];
     [payloads addObject:[payload copy]];
   }
   return [payloads copy];

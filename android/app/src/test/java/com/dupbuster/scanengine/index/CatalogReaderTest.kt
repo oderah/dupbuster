@@ -107,14 +107,84 @@ class CatalogReaderTest {
     assertNull(reader.thumbnailUriFor(MediaTypeHint.TEXT, "content://test/doc.txt"))
   }
 
-  private fun staged(uriSuffix: String, sizeBytes: Long = 100L): StagedFile {
-    val uri = Uri.parse("content://test/tree/docs/$uriSuffix")
+  @Test
+  fun buildMemberPaths_ordersPrimaryThenAliases() {
+    val paths =
+        reader.buildMemberPaths(
+            fileEntryId = 1L,
+            primaryUriOrPath = "content://primary",
+            aliasesByFileEntryId = mapOf(1L to listOf("content://alias", "content://primary")),
+        )
+    assertEquals(listOf("content://primary", "content://alias"), paths)
+  }
+
+  @Test
+  fun readSnapshot_hardLinkMember_exposesMultiplePaths() {
+    val uriA =
+        Uri.parse(
+            "content://com.android.externalstorage.documents/document/primary%3Aa.jpg",
+        )
+    val uriB =
+        Uri.parse(
+            "content://com.android.externalstorage.documents/document/primary%3Ab.jpg",
+        )
+    val uriAlias =
+        Uri.parse(
+            "content://com.android.externalstorage.documents/document/primary%3Aa-alias.jpg",
+        )
+    val inodeA = 42L
+    val inodeB = 43L
+    val device = 3L
+
+    writer.upsertHashed(
+        HashedFile(
+            staged(uriA, 200, inode = inodeA, deviceId = device),
+            "hash-link",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+    writer.upsertHashed(
+        HashedFile(
+            staged(uriB, 200, inode = inodeB, deviceId = device),
+            "hash-link",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+    writer.upsertHashed(
+        HashedFile(
+            staged(uriAlias, 200, inode = inodeA, deviceId = device),
+            "hash-link",
+            NormalizationProfile.RAW_BYTES,
+        ),
+        generation = 1,
+    )
+
+    grouper.rebuildDuplicateGroups()
+    val snapshot = reader.readSnapshot()
+    val hardLinkMember =
+        snapshot.groupDetailsById.values
+            .flatMap { it.members }
+            .firstOrNull { it.paths.size >= 2 }
+    requireNotNull(hardLinkMember) { "expected a catalog member with hard-link aliases" }
+    assertEquals(2, hardLinkMember.paths.size)
+    assertTrue(hardLinkMember.paths.contains(uriA.toString()))
+    assertTrue(hardLinkMember.paths.contains(uriAlias.toString()))
+  }
+
+  private fun staged(
+      uri: Uri,
+      sizeBytes: Long = 100L,
+      inode: Long? = null,
+      deviceId: Long? = null,
+  ): StagedFile {
     val entry =
         DiscoveredEntry(
             contentUri = uri,
             scanRootId = rootId,
             generation = 1,
-            displayName = "photo-$uriSuffix",
+            displayName = "photo-${uri.lastPathSegment}",
             mediaTypeHint = MediaTypeHint.IMAGE,
             sizeBytes = sizeBytes,
             mtimeNs = 2_000_000_000L,
@@ -123,10 +193,14 @@ class CatalogReaderTest {
         discovered = entry,
         sizeBytes = sizeBytes,
         mtimeNs = entry.mtimeNs,
-        inode = null,
-        deviceId = null,
+        inode = inode,
+        deviceId = deviceId,
         isSymlink = false,
         mediaTypeHint = MediaTypeHint.IMAGE,
     )
+  }
+
+  private fun staged(uriSuffix: String, sizeBytes: Long = 100L): StagedFile {
+    return staged(Uri.parse("content://test/tree/docs/$uriSuffix"), sizeBytes)
   }
 }
