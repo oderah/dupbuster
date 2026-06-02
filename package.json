@@ -5,10 +5,11 @@
   "scripts": {
     "android": "bash scripts/run-android-wsl.sh",
     "android:connect": "bash scripts/connect-android-metro.sh",
+    "android:reload": "bash scripts/connect-android-metro.sh && bash -c 'SDK=\"${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}\"; DEV=\"${ANDROID_SERIAL:-emulator-5554}\"; \"$SDK/platform-tools/adb\" -s \"$DEV\" shell am force-stop com.dupbuster; \"$SDK/platform-tools/adb\" -s \"$DEV\" shell am start -n com.dupbuster/.MainActivity'",
     "android:rn": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start --host 0.0.0.0 --port 8081",
+    "start": "react-native start --reset-cache --host 0.0.0.0 --port 8081",
     "test": "jest",
     "test:a11y": "jest --testPathPattern='__tests__/a11y/'"
   },

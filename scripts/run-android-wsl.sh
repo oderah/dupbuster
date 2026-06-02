@@ -24,6 +24,12 @@ cd "$ROOT/android"
 
 "$ADB" -s "$DEVICE" install -r "$APK"
 "$ADB" -s "$DEVICE" reverse "tcp:${PORT}" "tcp:${PORT}"
+if [[ -f "$ROOT/scripts/com.dupbuster_preferences.xml" ]]; then
+  "$ADB" -s "$DEVICE" push "$ROOT/scripts/com.dupbuster_preferences.xml" /data/local/tmp/dupbuster_rn_prefs.xml >/dev/null
+  "$ADB" -s "$DEVICE" shell run-as com.dupbuster cp /data/local/tmp/dupbuster_rn_prefs.xml \
+    shared_prefs/com.dupbuster_preferences.xml
+fi
 "$ADB" -s "$DEVICE" shell am start -n "com.dupbuster/.MainActivity"
 
 echo "Installed on $DEVICE. Ensure Metro is running: npm start"
+echo "If the app shows 'Loading from 10.0.2.2:${PORT}', run: npm run android:connect"
