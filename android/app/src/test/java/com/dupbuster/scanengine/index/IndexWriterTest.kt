@@ -186,6 +186,22 @@ class IndexWriterTest {
   }
 
   @Test
+  fun listSizeBucketPendingEntries_returnsUnhashedRowsAtSize() {
+    val size = 12_680L
+    val skippedId = writer.upsertSizeBucketSkipped(staged(sizeBytes = size), generation = 1)
+    writer.upsertHashed(
+        HashedFile(staged(stagedUri("hashed"), size), "abc", NormalizationProfile.RAW_BYTES),
+        generation = 1,
+    )
+
+    val pending = writer.listSizeBucketPendingEntries(size, generation = 1)
+
+    assertEquals(1, pending.size)
+    assertEquals(skippedId, pending[0].fileEntryId)
+    assertEquals(size, pending[0].sizeBytes)
+  }
+
+  @Test
   fun countVideosWithinDurationGate_findsMatchingDuration() {
     writer.upsertHashed(
         HashedFile(

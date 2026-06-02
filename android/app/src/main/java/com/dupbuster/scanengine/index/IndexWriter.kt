@@ -214,6 +214,56 @@ class IndexWriter(private val database: CatalogDatabase) {
    * Counts indexed non-video rows with [sizeBytes] for size-bucket elimination (FR-FP-02).
    * Video rows (`duration_ms > 0`) are excluded — video always hashes (M1-14).
    */
+  /**
+   * Rows indexed at [sizeBytes] without a fingerprint (size-bucket skip). Used to backfill
+   * when a later file collides on size (architecture: caller backfill on collision).
+   */
+  fun listSizeBucketPendingEntries(
+      sizeBytes: Long,
+      generation: Int,
+      excludeFileEntryId: Long? = null,
+  ): List<SizeBucketPendingEntry> {
+    val args = mutableListOf(sizeBytes.toString(), generation.toString())
+    val excludeClause =
+        if (excludeFileEntryId != null) {
+          args.add(excludeFileEntryId.toString())
+          " AND id != ?"
+        } else {
+          ""
+        }
+    val sql =
+        """
+        SELECT id, root_id, uri_or_path, display_name, size, mtime_ns, last_seen_generation
+        FROM file_entry
+        WHERE size = ?
+          AND last_seen_generation = ?
+          AND fingerprint_id IS NULL
+          AND unscannable_reason IS NULL
+          AND is_symlink = 0
+          AND (duration_ms IS NULL OR duration_ms = 0)
+          $excludeClause
+        ORDER BY id ASC
+        """
+            .trimIndent()
+    val rows = mutableListOf<SizeBucketPendingEntry>()
+    database.readable().rawQuery(sql, args.toTypedArray()).use { cursor ->
+      while (cursor.moveToNext()) {
+        rows.add(
+            SizeBucketPendingEntry(
+                fileEntryId = cursor.getLong(0),
+                rootId = cursor.getLong(1),
+                uriOrPath = cursor.getString(2),
+                displayName = cursor.getString(3),
+                sizeBytes = cursor.getLong(4),
+                mtimeNs = cursor.getLong(5),
+                generation = cursor.getInt(6),
+            ),
+        )
+      }
+    }
+    return rows
+  }
+
   fun countIndexedFilesWithSize(sizeBytes: Long): Int {
     val cursor =
         database

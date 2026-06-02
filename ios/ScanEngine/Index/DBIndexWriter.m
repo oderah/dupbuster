@@ -1,5 +1,7 @@
 #import "DBIndexWriter.h"
 
+#import "DBSizeBucketPendingEntry.h"
+
 #import <sqlite3.h>
 
 #import "DBCatalogDatabase.h"
@@ -229,6 +231,45 @@
   }
   sqlite3_finalize(stmt);
   return count;
+}
+
+- (NSArray<DBSizeBucketPendingEntry *> *)listSizeBucketPendingEntriesWithSizeBytes:(int64_t)sizeBytes
+                                                                        generation:(NSInteger)generation
+                                                                excludeFileEntryId:(NSInteger)excludeFileEntryId
+{
+  NSMutableArray<DBSizeBucketPendingEntry *> *rows = [NSMutableArray array];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  const char *sql =
+      "SELECT id, root_id, uri_or_path, display_name, size, mtime_ns, last_seen_generation "
+      "FROM file_entry "
+      "WHERE size = ? "
+      "AND last_seen_generation = ? "
+      "AND fingerprint_id IS NULL "
+      "AND unscannable_reason IS NULL "
+      "AND is_symlink = 0 "
+      "AND (duration_ms IS NULL OR duration_ms = 0) "
+      "AND id != ? "
+      "ORDER BY id ASC";
+  if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+    return rows;
+  }
+  sqlite3_bind_int64(stmt, 1, sizeBytes);
+  sqlite3_bind_int(stmt, 2, (int)generation);
+  sqlite3_bind_int64(stmt, 3, (sqlite3_int64)excludeFileEntryId);
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    DBSizeBucketPendingEntry *entry =
+        [[DBSizeBucketPendingEntry alloc] initWithFileEntryId:sqlite3_column_int(stmt, 0)
+                                                       rootId:sqlite3_column_int(stmt, 1)
+                                                    uriOrPath:[NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 2)]
+                                                  displayName:[NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 3)]
+                                                    sizeBytes:sqlite3_column_int64(stmt, 4)
+                                                      mtimeNs:sqlite3_column_int64(stmt, 5)
+                                                   generation:sqlite3_column_int(stmt, 6)];
+    [rows addObject:entry];
+  }
+  sqlite3_finalize(stmt);
+  return rows;
 }
 
 - (NSInteger)countVideosWithinDurationGate:(int64_t)durationMs

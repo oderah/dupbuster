@@ -20,6 +20,7 @@ import com.dupbuster.scanengine.index.CheckpointStore
 import com.dupbuster.scanengine.index.Grouper
 import com.dupbuster.scanengine.index.IndexWriter
 import com.dupbuster.scanengine.index.ScanRunStatus
+import com.dupbuster.scanengine.index.SqliteSizeBucketIndex
 import com.dupbuster.scanengine.security.ScanRootGrant
 import com.dupbuster.scanengine.security.ScanRootMode
 import com.dupbuster.scanengine.stat.StatResult
@@ -109,6 +110,43 @@ class ScanOrchestratorTest {
     assertTrue(emittedPhases.contains(ScanPhase.GROUPING))
     assertTrue(emittedPhases.last() == ScanPhase.COMPLETE)
     assertEquals(2, indexWriter.fileEntryCount())
+    assertTrue(Grouper(database).rebuildDuplicateGroups().groupsCreated >= 1)
+  }
+
+  @Test
+  fun startScan_sizeBucketCollision_backfillsSkippedPeerAndGroups() {
+    val payload = "duplicate-payload".toByteArray(Charsets.UTF_8)
+    val payloadSize = payload.size.toLong()
+    val sizeBucketOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner = fakeDiscoveryRunner(),
+            statFile = { entry, _ ->
+              StatResult.Success(staged(entry, payloadSize))
+            },
+            hashPipelineFactory = { writer ->
+              HashPipeline(
+                  context,
+                  FakeContentReader(payload),
+                  sizeBucketIndex = SqliteSizeBucketIndex(writer),
+              )
+            },
+            progressBridge =
+                ScanProgressBridge(
+                    emitProgress = { map ->
+                      emittedPhases.add(map.getString("phase")!!)
+                    },
+                ),
+            emitError = {},
+            executor = java.util.concurrent.Executor { it.run() },
+        )
+
+    sizeBucketOrchestrator.startScan(
+        ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+    )
+
     assertTrue(Grouper(database).rebuildDuplicateGroups().groupsCreated >= 1)
   }
 

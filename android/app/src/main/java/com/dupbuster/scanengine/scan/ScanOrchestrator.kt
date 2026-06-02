@@ -201,6 +201,7 @@ class ScanOrchestrator(
                       staged = statResult.staged,
                       generation = generation,
                       scanRunId = scanRunId,
+                      plan = plan,
                   )
               is StatResult.Unscannable ->
                   indexWriter.upsertUnscannable(
@@ -276,6 +277,7 @@ class ScanOrchestrator(
       staged: StagedFile,
       generation: Int,
       scanRunId: Long,
+      plan: ScanRootResolver.ResolvedPlan,
   ): Long {
     val hashResult = hashPipeline.hash(staged, HashSettings())
     val fileEntryId = indexWriter.persistHashResult(hashResult, staged, generation)
@@ -288,7 +290,65 @@ class ScanOrchestrator(
           ),
       )
     }
+    if (hashResult !is HashResult.SizeBucketSkipped) {
+      backfillSizeBucketSkippedPeers(
+          hashPipeline = hashPipeline,
+          sizeBytes = staged.sizeBytes,
+          generation = generation,
+          scanRunId = scanRunId,
+          plan = plan,
+          excludeFileEntryId = fileEntryId,
+      )
+    }
     return fileEntryId
+  }
+
+  /**
+   * When a size collision triggers hashing, re-hash prior size-bucket skips so grouping sees
+   * every file at that size (FR-FP-02 backfill; fixes missed duplicate groups).
+   */
+  private fun backfillSizeBucketSkippedPeers(
+      hashPipeline: HashPipeline,
+      sizeBytes: Long,
+      generation: Int,
+      scanRunId: Long,
+      plan: ScanRootResolver.ResolvedPlan,
+      excludeFileEntryId: Long,
+  ) {
+    val pending =
+        indexWriter.listSizeBucketPendingEntries(
+            sizeBytes = sizeBytes,
+            generation = generation,
+            excludeFileEntryId = excludeFileEntryId,
+        )
+    for (peer in pending) {
+      val entry = peer.toDiscoveredEntry()
+      val grant = grantForEntry(entry, plan)
+      when (val statResult = statFile(entry, grant)) {
+        is StatResult.Success ->
+            processHashResult(
+                hashPipeline = hashPipeline,
+                staged = statResult.staged,
+                generation = generation,
+                scanRunId = scanRunId,
+                plan = plan,
+            )
+        is StatResult.Unscannable ->
+            indexWriter.upsertUnscannable(
+                statResult.reason,
+                stagedFromDiscovered(entry),
+                generation,
+            ).also { id ->
+              emitError(
+                  ScanErrorBridgeMapper.toReadableMap(
+                      fileEntryId = id,
+                      unscannableReason = statResult.reason,
+                      scanRunId = scanRunId,
+                  ),
+              )
+            }
+      }
+    }
   }
 
   private fun reportHashingProgress(

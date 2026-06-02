@@ -11,6 +11,7 @@
 #import "DBScanRootResolver.h"
 #import "DBScanRunStatus.h"
 #import "DBScanSessionControl.h"
+#import "DBSizeBucketPendingEntry.h"
 #import "DBStagedFile.h"
 
 NSString *const DBScanOrchestratorErrorDomain = @"com.dupbuster.scanengine.scan.orchestrator";
@@ -251,7 +252,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
         fileEntryId = [self processHashResult:hashPipeline
                                        staged:statResult.staged
                                    generation:generation
-                                    scanRunId:scanRunId];
+                                    scanRunId:scanRunId
+                                         plan:plan];
       } else {
         fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
                                                          staged:DBStagedFromDiscovered(entry)
@@ -316,6 +318,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                         staged:(DBStagedFile *)staged
                     generation:(NSInteger)generation
                      scanRunId:(NSInteger)scanRunId
+                          plan:(DBScanRootResolverPlan *)plan
 {
   DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:[[DBHashSettings alloc] init]];
   NSInteger fileEntryId = [_indexWriter persistHashPipelineResult:hashResult staged:staged generation:generation];
@@ -326,7 +329,47 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                                    unscannableReason:reason
                                                            scanRunId:@(scanRunId)]);
   }
+  if (hashResult.outcome != DBHashPipelineOutcomeSizeBucketSkipped) {
+    [self backfillSizeBucketSkippedPeersWithHashPipeline:hashPipeline
+                                               sizeBytes:staged.sizeBytes
+                                              generation:generation
+                                               scanRunId:scanRunId
+                                                    plan:plan
+                                      excludeFileEntryId:fileEntryId];
+  }
   return fileEntryId;
+}
+
+- (void)backfillSizeBucketSkippedPeersWithHashPipeline:(DBHashPipeline *)hashPipeline
+                                             sizeBytes:(int64_t)sizeBytes
+                                            generation:(NSInteger)generation
+                                             scanRunId:(NSInteger)scanRunId
+                                                  plan:(DBScanRootResolverPlan *)plan
+                                    excludeFileEntryId:(NSInteger)excludeFileEntryId
+{
+  NSArray<DBSizeBucketPendingEntry *> *pending =
+      [_indexWriter listSizeBucketPendingEntriesWithSizeBytes:sizeBytes
+                                                   generation:generation
+                                           excludeFileEntryId:excludeFileEntryId];
+  for (DBSizeBucketPendingEntry *peer in pending) {
+    DBDiscoveredEntry *entry = [peer toDiscoveredEntry];
+    DBScanRootGrant *grant = [self grantForEntry:entry plan:plan];
+    DBStatStageResult *statResult = _statFile(entry, grant);
+    if (statResult.outcome == DBStatStageOutcomeSuccess) {
+      [self processHashResult:hashPipeline
+                       staged:statResult.staged
+                   generation:generation
+                    scanRunId:scanRunId
+                         plan:plan];
+    } else {
+      NSInteger fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
+                                                                 staged:DBStagedFromDiscovered(entry)
+                                                             generation:generation];
+      _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
+                                                     unscannableReason:statResult.unscannableReason
+                                                             scanRunId:@(scanRunId)]);
+    }
+  }
 }
 
 - (void)finishCancelledWithScanRunId:(NSInteger)scanRunId

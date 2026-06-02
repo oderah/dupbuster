@@ -5,6 +5,7 @@
 
 @class DBCatalogDatabase;
 @class DBHashedFile;
+@class DBSizeBucketPendingEntry;
 @class DBStagedFile;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -48,6 +49,11 @@ NS_ASSUME_NONNULL_BEGIN
                            generation:(NSInteger)generation;
 
 - (NSInteger)countIndexedFilesWithSize:(int64_t)sizeBytes;
+
+- (NSArray<DBSizeBucketPendingEntry *> *)listSizeBucketPendingEntriesWithSizeBytes:(int64_t)sizeBytes
+                                                                        generation:(NSInteger)generation
+                                                                excludeFileEntryId:(NSInteger)excludeFileEntryId;
+
 - (NSInteger)countVideosWithinDurationGate:(int64_t)durationMs;
 
 - (NSInteger)purgeEntriesNotSeenInGeneration:(NSInteger)rootId generation:(NSInteger)generation;
