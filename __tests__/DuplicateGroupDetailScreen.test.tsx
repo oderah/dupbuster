@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
-import {createKeeperSelectionState} from '../src/controllers/keeperSelection';
+import {
+  createKeeperSelectionState,
+  selectKeeperMember,
+} from '../src/controllers/keeperSelection';
 import {DuplicateGroupDetailScreen} from '../src/screens/DuplicateGroupDetailScreen';
 import {tokens} from '../src/tokens/tokens';
 
@@ -154,6 +157,57 @@ describe('DuplicateGroupDetailScreen', () => {
     });
 
     expect(findByTestId(tree!.root, 'duplicate-group-detail-keeper')).not.toBeNull();
+  });
+
+  it('renders delete trigger after KeeperSelector (AC-a11y-match-04)', () => {
+    const activated = selectKeeperMember(keeperSelection, 101);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen
+          group={group}
+          {...keeperProps}
+          keeperSelection={activated}
+          deleteEnabled
+          onDeletePress={jest.fn()}
+        />,
+      );
+    });
+
+    const notice = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-content-match-notice',
+    );
+    const keeper = findByTestId(tree!.root, 'duplicate-group-detail-keeper');
+    const deleteTrigger = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-delete-trigger',
+    );
+    const flat = tree!.root.findAll(() => true);
+    expect(flat.indexOf(notice!)).toBeLessThan(flat.indexOf(keeper!));
+    expect(flat.indexOf(keeper!)).toBeLessThan(flat.indexOf(deleteTrigger!));
+    expect(JSON.stringify(tree!.toJSON())).toContain(tokens.delete.trigger);
+  });
+
+  it('disables delete trigger until keeper is explicitly selected (AC-action-keeper-01)', () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <DuplicateGroupDetailScreen
+          group={group}
+          {...keeperProps}
+          deleteEnabled={false}
+          onDeletePress={jest.fn()}
+        />,
+      );
+    });
+
+    const deleteTrigger = findByTestId(
+      tree!.root,
+      'duplicate-group-detail-delete-trigger',
+    );
+    expect(deleteTrigger?.props.accessibilityState?.disabled).toBe(true);
+    expect(deleteTrigger?.props.disabled).toBe(true);
   });
 
   it('uses group a11y label on scroll container (AC-a11y-match-01)', () => {

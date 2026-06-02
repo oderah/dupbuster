@@ -395,7 +395,7 @@ New code must land in these areas unless architecture is amended first.
 - **`DuplicateGroupDetailScreen`:** Composes `KeeperSelector`; reclaimable line switches to non-keeper sum after explicit keeper pick.
 - **Tokens:** `keeper.preset.*`, `keeper.education.title` / `general` / `dismiss` (catalog copy); `keeper.education.videoContent` unchanged.
 - **`DuplicateGroupMember`:** Requires `mtimeMs` + `pathLength` for preset resolution.
-- **Deferred:** delete button + `DeleteConfirmModal` (M3).
+- **Delete:** `DeleteConfirmModal` + detail delete trigger (M3-01); native delete coordinator (M3-03+).
 - **Tests:** `npm test -- --testPathPattern='Keeper|keeper'` + tokens keeper preset/education tests; AC-action-keeper-01/02, AC-a11y-keeper-01, FR-AC-02/05/06.
 
 ### ScanSessionController (M2-07)
@@ -466,6 +466,17 @@ New code must land in these areas unless architecture is amended first.
 - **Composition:** `DuplicateGroupDetailScreen` — after thumbnail grid, before `KeeperSelector` (and before delete when M3 lands; AC-a11y-match-04).
 - **Types:** `src/types/contentMatchNotice.ts`.
 - **Tests:** `npm test -- --testPathPattern='ContentMatchNotice|DuplicateGroupDetail'`; a11y gate case in `__tests__/a11y/m2GateComponents.a11y.test.tsx`.
+
+### DeleteConfirmModal (M3-01)
+
+- **`src/components/DeleteConfirmModal.tsx`:** Two-step destructive confirm (`review` → `confirm`); danger border/surface on confirm primary only; `accessibilityViewIsModal` + `useModalFocusTrap` (heading focus on open/step change, return focus to delete trigger on dismiss — A11Y-07 / AC-a11y-delete-01).
+- **`src/components/deleteConfirmDisplay.ts`:** Step copy via `getDeleteConfirmStepCopy` + `formatToken` for `{count}` / `{size}`.
+- **`src/hooks/useModalFocusTrap.ts`:** Shared modal focus helper (`AccessibilityInfo.setAccessibilityFocus`).
+- **`src/controllers/deleteConfirmCounts.ts`:** `resolveDeleteConfirmCounts` for modal body (non-keeper count + reclaimable bytes).
+- **Tokens:** `delete.*` (trigger, `review.*`, `confirm.*`), `a11y.delete.*` — EN freeze per architecture §9.1 / US-12.
+- **Composition:** `DuplicateGroupDetailScreen` delete trigger after `KeeperSelector` (AC-a11y-match-04); disabled until `isKeeperSelectionComplete`. `ScanSessionScreen` wires modal + `ScanSessionController.beginDeleteFlow` / `advanceDeleteConfirm` / `goBackDeleteConfirm` / `cancelDeleteConfirm` / `confirmDelete` (native `deleteDuplicates` is M3-03+).
+- **Education gate:** `reduceScanSessionBeginDeleteFlow` → `KeeperEducationSheet` once per session, then opens modal on dismiss (`pendingDeleteGroupId`).
+- **Tests:** `npm test -- --testPathPattern='DeleteConfirm|deleteConfirm|scanSessionReducer'`; a11y gate cases in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-action-delete-01, AC-action-keeper-01/02, AC-a11y-delete-01, AC-a11y-match-04.
 
 ### MatchKindBadge (M2-12)
 

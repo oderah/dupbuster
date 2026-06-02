@@ -18,7 +18,11 @@ import {
   reduceScanSessionOnScanError,
   reduceScanSessionOnScanStarted,
   reduceScanSessionOpenGroup,
-  reduceScanSessionPrepareDeleteAttempt,
+  reduceScanSessionAdvanceDeleteConfirm,
+  reduceScanSessionBeginDeleteFlow,
+  reduceScanSessionCancelDeleteConfirm,
+  reduceScanSessionConfirmDelete,
+  reduceScanSessionGoBackDeleteConfirm,
   reduceScanSessionSelectKeeper,
   reduceScanSessionSetCoverageVariant,
   reduceScanSessionSetRememberLargest,
@@ -150,9 +154,26 @@ export class ScanSessionController {
     this.dispatch(reduceScanSessionSetRememberLargest(this.state, value));
   }
 
-  /** AC-action-keeper-02 — call before first delete attempt (M3 wires delete). */
-  prepareDeleteAttempt(): void {
-    this.dispatch(reduceScanSessionPrepareDeleteAttempt(this.state));
+  /** AC-action-keeper-02 + AC-action-delete-01 — education gate then two-step modal. */
+  beginDeleteFlow(groupId: number): void {
+    this.dispatch(reduceScanSessionBeginDeleteFlow(this.state, groupId));
+  }
+
+  advanceDeleteConfirm(): void {
+    this.dispatch(reduceScanSessionAdvanceDeleteConfirm(this.state));
+  }
+
+  goBackDeleteConfirm(): void {
+    this.dispatch(reduceScanSessionGoBackDeleteConfirm(this.state));
+  }
+
+  cancelDeleteConfirm(): void {
+    this.dispatch(reduceScanSessionCancelDeleteConfirm(this.state));
+  }
+
+  /** Closes modal; native deleteDuplicates wired in M3-03+. */
+  confirmDelete(): void {
+    this.dispatch(reduceScanSessionConfirmDelete(this.state));
   }
 
   dismissKeeperEducation(): void {

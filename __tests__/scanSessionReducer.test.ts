@@ -6,8 +6,12 @@ import {
   reduceScanSessionOnCatalogMetaLoaded,
   reduceScanSessionOnProgress,
   reduceScanSessionOnScanError,
+  reduceScanSessionAdvanceDeleteConfirm,
+  reduceScanSessionBeginDeleteFlow,
+  reduceScanSessionCancelDeleteConfirm,
+  reduceScanSessionDismissKeeperEducation,
+  reduceScanSessionGoBackDeleteConfirm,
   reduceScanSessionOpenGroup,
-  reduceScanSessionPrepareDeleteAttempt,
   reduceScanSessionSetCoverageVariant,
   shouldRefreshCatalogAfterProgress,
 } from '../src/controllers/scanSessionReducer';
@@ -98,17 +102,44 @@ describe('scanSessionReducer', () => {
     expect(selection?.selectedFileEntryId).toBe(101);
   });
 
-  it('shows keeper education once per session (AC-action-keeper-02)', () => {
+  it('shows keeper education once per session then delete modal (AC-action-keeper-02)', () => {
     let state = createInitialScanSessionState();
-    state = reduceScanSessionPrepareDeleteAttempt(state);
+    state = reduceScanSessionBeginDeleteFlow(state, 9);
     expect(state.keeperEducationVisible).toBe(true);
+    expect(state.pendingDeleteGroupId).toBe(9);
+    state = reduceScanSessionDismissKeeperEducation(state);
+    expect(state.keeperEducationVisible).toBe(false);
+    expect(state.deleteConfirmVisible).toBe(true);
+    expect(state.deleteConfirmStep).toBe('review');
+    expect(state.selectedGroupId).toBe(9);
+  });
+
+  it('opens delete confirm directly when education already shown', () => {
+    let state = createInitialScanSessionState();
     state = {
       ...state,
       keeperEducationSession: {educationShown: true},
-      keeperEducationVisible: false,
     };
-    state = reduceScanSessionPrepareDeleteAttempt(state);
+    state = reduceScanSessionBeginDeleteFlow(state, 4);
     expect(state.keeperEducationVisible).toBe(false);
+    expect(state.deleteConfirmVisible).toBe(true);
+    expect(state.deleteConfirmStep).toBe('review');
+  });
+
+  it('advances and cancels two-step delete confirm (AC-action-delete-01)', () => {
+    let state = createInitialScanSessionState();
+    state = {
+      ...state,
+      keeperEducationSession: {educationShown: true},
+      deleteConfirmVisible: true,
+      deleteConfirmStep: 'review',
+    };
+    state = reduceScanSessionAdvanceDeleteConfirm(state);
+    expect(state.deleteConfirmStep).toBe('confirm');
+    state = reduceScanSessionGoBackDeleteConfirm(state);
+    expect(state.deleteConfirmStep).toBe('review');
+    state = reduceScanSessionCancelDeleteConfirm(state);
+    expect(state.deleteConfirmVisible).toBe(false);
   });
 
   it('identifies terminal phases for catalog refresh', () => {

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
 import {ContentMatchNotice} from '../../src/components/ContentMatchNotice';
+import {DeleteConfirmModal} from '../../src/components/DeleteConfirmModal';
 import {CoverageBanner} from '../../src/components/CoverageBanner';
 import {KeeperSelector} from '../../src/components/KeeperSelector';
 import {MatchKindBadge} from '../../src/components/MatchKindBadge';
@@ -202,6 +203,36 @@ describe('M2 gate components — automated a11y (M2-10)', () => {
   });
 
   describe('DeleteConfirmModal', () => {
-    it.todo('M3 — add gate case when DeleteConfirmModal is implemented');
+    it('review step has zero critical violations (M3-01)', () => {
+      const root = renderRoot(
+        <DeleteConfirmModal
+          visible
+          step="review"
+          deleteCount={2}
+          reclaimableBytes={4096}
+          onCancel={jest.fn()}
+          onContinue={jest.fn()}
+          onConfirm={jest.fn()}
+          onGoBack={jest.fn()}
+        />,
+      );
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
+
+    it('confirm step has zero critical violations (M3-01)', () => {
+      const root = renderRoot(
+        <DeleteConfirmModal
+          visible
+          step="confirm"
+          deleteCount={2}
+          reclaimableBytes={4096}
+          onCancel={jest.fn()}
+          onContinue={jest.fn()}
+          onConfirm={jest.fn()}
+          onGoBack={jest.fn()}
+        />,
+      );
+      expect(root).toHaveZeroCriticalA11yViolations();
+    });
   });
 });

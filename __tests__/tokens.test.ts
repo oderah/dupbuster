@@ -104,6 +104,24 @@ describe('tokens a11y freeze (architecture §9.3)', () => {
     expect(tokens.a11y.scan.videoContent).toBe('Analyzing video content');
   });
 
+  it('delete confirm strings are frozen (US-12 / AC-action-delete-01)', () => {
+    expect(tokens.delete.trigger).toBe('Delete duplicates');
+    expect(tokens.delete.review.title).toBe('Delete duplicate files?');
+    expect(tokens.delete.review.body).toBe(
+      '{count} files will be removed. You can free up {size}.',
+    );
+    expect(tokens.delete.review.continue).toBe('Continue');
+    expect(tokens.delete.review.cancel).toBe('Cancel');
+    expect(tokens.delete.confirm.title).toBe('Confirm deletion');
+    expect(tokens.delete.confirm.body).toBe(
+      'This cannot be undone. {count} files will be permanently deleted from your device.',
+    );
+    expect(tokens.delete.confirm.confirm).toBe('Delete files');
+    expect(tokens.delete.confirm.back).toBe('Go back');
+    expect(tokens.a11y.delete.trigger).toBe('Delete duplicate files');
+    expect(tokens.a11y.delete.cancel).toBe('Cancel deletion');
+  });
+
   it('a11y.keeper, group, path strings are verbatim', () => {
     expect(tokens.a11y.keeper.group).toBe('Choose file to keep');
     expect(tokens.a11y.group.exact).toBe('Identical files, {count} copies');

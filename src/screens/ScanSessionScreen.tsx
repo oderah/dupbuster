@@ -1,4 +1,4 @@
-import React, {Suspense} from 'react';
+import React, {Suspense, useRef} from 'react';
 import {
   Modal,
   Pressable,
@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 
 import {CoverageBanner} from '../components/CoverageBanner';
+import {DeleteConfirmModal} from '../components/DeleteConfirmModal';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
 import {ScanStatusChip} from '../components/ScanStatusChip';
 import {UnscannableSummaryCard} from '../components/UnscannableSummaryCard';
+import {resolveDeleteConfirmCounts} from '../controllers/deleteConfirmCounts';
+import {isKeeperSelectionComplete} from '../controllers/keeperSelection';
 import type {ScanSessionController} from '../controllers/scanSessionController';
 import {DuplicateGroupDetailScreen} from '../screens/DuplicateGroupDetailScreen';
 import {tokens} from '../tokens/tokens';
@@ -43,6 +46,7 @@ export function ScanSessionScreen({
   onOpenSettings,
   testID = 'scan-session',
 }: ScanSessionScreenProps): React.JSX.Element {
+  const deleteTriggerRef = useRef<React.ComponentRef<typeof Pressable>>(null);
   const selectedGroup =
     state.selectedGroupId != null
       ? state.groupDetailsById[state.selectedGroupId]
@@ -65,6 +69,11 @@ export function ScanSessionScreen({
     state.phase === 'complete' ||
     state.phase === 'error' ||
     state.phase === 'cancelled';
+
+  const deleteCounts =
+    selectedGroup && keeperSelection
+      ? resolveDeleteConfirmCounts(selectedGroup, keeperSelection)
+      : {deleteCount: 0, reclaimableBytes: 0};
 
   return (
     <View testID={testID} style={styles.root}>
@@ -180,10 +189,37 @@ export function ScanSessionScreen({
               controller.setRememberLargestForSession(value)
             }
             showRememberSession
+            deleteEnabled={
+              keeperSelection != null &&
+              isKeeperSelectionComplete(keeperSelection)
+            }
+            deleteTriggerRef={deleteTriggerRef}
+            onDeletePress={() => {
+              if (
+                selectedGroup &&
+                keeperSelection &&
+                isKeeperSelectionComplete(keeperSelection)
+              ) {
+                controller.beginDeleteFlow(selectedGroup.groupId);
+              }
+            }}
             testID={`${testID}-group-detail`}
           />
         ) : null}
       </Modal>
+
+      <DeleteConfirmModal
+        visible={state.deleteConfirmVisible}
+        step={state.deleteConfirmStep}
+        deleteCount={deleteCounts.deleteCount}
+        reclaimableBytes={deleteCounts.reclaimableBytes}
+        returnFocusRef={deleteTriggerRef}
+        onCancel={() => controller.cancelDeleteConfirm()}
+        onContinue={() => controller.advanceDeleteConfirm()}
+        onGoBack={() => controller.goBackDeleteConfirm()}
+        onConfirm={() => controller.confirmDelete()}
+        testID={`${testID}-delete-confirm`}
+      />
 
       {state.keeperEducationVisible ? (
         <Suspense fallback={null}>

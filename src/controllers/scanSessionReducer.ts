@@ -145,6 +145,9 @@ export function createInitialScanSessionState(
     keeperSelectionsByGroupId: {},
     rememberLargestForSession: false,
     keeperEducationVisible: false,
+    pendingDeleteGroupId: null,
+    deleteConfirmVisible: false,
+    deleteConfirmStep: 'review',
   };
 }
 
@@ -157,6 +160,9 @@ export function reduceScanSessionOnScanStarted(
     scanRunId,
     selectedGroupId: null,
     keeperEducationVisible: false,
+    pendingDeleteGroupId: null,
+    deleteConfirmVisible: false,
+    deleteConfirmStep: 'review',
   };
 }
 
@@ -345,6 +351,9 @@ export function reduceScanSessionCloseGroup(
     ...state,
     selectedGroupId: null,
     keeperEducationVisible: false,
+    pendingDeleteGroupId: null,
+    deleteConfirmVisible: false,
+    deleteConfirmStep: 'review',
   };
 }
 
@@ -402,27 +411,107 @@ export function reduceScanSessionSetRememberLargest(
   };
 }
 
+function openDeleteConfirmForGroup(
+  state: ScanSessionState,
+  groupId: number,
+): ScanSessionState {
+  return {
+    ...state,
+    pendingDeleteGroupId: null,
+    deleteConfirmVisible: true,
+    deleteConfirmStep: 'review',
+    selectedGroupId: groupId,
+  };
+}
+
+/** AC-action-keeper-02 + AC-action-delete-01 — education gate then two-step modal. */
+export function reduceScanSessionBeginDeleteFlow(
+  state: ScanSessionState,
+  groupId: number,
+): ScanSessionState {
+  if (shouldShowKeeperEducation(state.keeperEducationSession)) {
+    return {
+      ...state,
+      pendingDeleteGroupId: groupId,
+      keeperEducationVisible: true,
+    };
+  }
+  return openDeleteConfirmForGroup(state, groupId);
+}
+
+/** @deprecated Use reduceScanSessionBeginDeleteFlow — kept for reducer tests. */
 export function reduceScanSessionPrepareDeleteAttempt(
   state: ScanSessionState,
 ): ScanSessionState {
-  if (!shouldShowKeeperEducation(state.keeperEducationSession)) {
+  if (state.selectedGroupId == null) {
     return state;
   }
-  return {
-    ...state,
-    keeperEducationVisible: true,
-  };
+  return reduceScanSessionBeginDeleteFlow(state, state.selectedGroupId);
 }
 
 export function reduceScanSessionDismissKeeperEducation(
   state: ScanSessionState,
 ): ScanSessionState {
-  return {
+  const pendingGroupId = state.pendingDeleteGroupId;
+  const next: ScanSessionState = {
     ...state,
     keeperEducationVisible: false,
     keeperEducationSession: markKeeperEducationShown(
       state.keeperEducationSession,
     ),
+  };
+  if (pendingGroupId != null) {
+    return openDeleteConfirmForGroup(
+      {...next, pendingDeleteGroupId: null},
+      pendingGroupId,
+    );
+  }
+  return next;
+}
+
+export function reduceScanSessionAdvanceDeleteConfirm(
+  state: ScanSessionState,
+): ScanSessionState {
+  if (!state.deleteConfirmVisible) {
+    return state;
+  }
+  return {
+    ...state,
+    deleteConfirmStep: 'confirm',
+  };
+}
+
+export function reduceScanSessionGoBackDeleteConfirm(
+  state: ScanSessionState,
+): ScanSessionState {
+  if (!state.deleteConfirmVisible) {
+    return state;
+  }
+  return {
+    ...state,
+    deleteConfirmStep: 'review',
+  };
+}
+
+export function reduceScanSessionCancelDeleteConfirm(
+  state: ScanSessionState,
+): ScanSessionState {
+  return {
+    ...state,
+    deleteConfirmVisible: false,
+    deleteConfirmStep: 'review',
+    pendingDeleteGroupId: null,
+  };
+}
+
+export function reduceScanSessionConfirmDelete(
+  state: ScanSessionState,
+): ScanSessionState {
+  return {
+    ...state,
+    deleteConfirmVisible: false,
+    deleteConfirmStep: 'review',
+    pendingDeleteGroupId: null,
   };
 }
 

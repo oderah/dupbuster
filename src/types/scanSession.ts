@@ -7,6 +7,7 @@ import type {CoverageBannerSessionState} from '../controllers/coverageSessionSta
 import type {RescanPromptPresentation, RescanPromptSessionState} from '../controllers/rescanPromptSessionState';
 import type {ScanProgressA11yState} from '../controllers/scanProgressA11y';
 import type {KeeperEducationSessionState} from '../controllers/keeperEducationSession';
+import type {DeleteConfirmStep} from './deleteConfirmModal';
 
 export const IDLE_PROGRESS: ScanProgressEvent = {
   filesProcessed: 0,
@@ -44,6 +45,9 @@ export type ScanSessionState = {
   keeperSelectionsByGroupId: Readonly<Record<number, KeeperSelectionState>>;
   rememberLargestForSession: boolean;
   keeperEducationVisible: boolean;
+  pendingDeleteGroupId: number | null;
+  deleteConfirmVisible: boolean;
+  deleteConfirmStep: DeleteConfirmStep;
 };
 
 export type ScanSessionControllerOptions = {

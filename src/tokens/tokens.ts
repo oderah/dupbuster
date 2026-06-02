@@ -124,6 +124,23 @@ export const tokens = {
     },
   },
 
+  /** US-12 / AC-action-delete-01 — two-step destructive confirm (architecture §9.1). */
+  delete: {
+    trigger: 'Delete duplicates',
+    review: {
+      title: 'Delete duplicate files?',
+      body: '{count} files will be removed. You can free up {size}.',
+      continue: 'Continue',
+      cancel: 'Cancel',
+    },
+    confirm: {
+      title: 'Confirm deletion',
+      body: 'This cannot be undone. {count} files will be permanently deleted from your device.',
+      confirm: 'Delete files',
+      back: 'Go back',
+    },
+  },
+
   keeper: {
     rememberSession: 'Use largest for the rest of this session',
     /** FR-AC-02 — preset shortcuts (architecture §9.1 catalog copy). */
@@ -250,6 +267,10 @@ export const tokens = {
     },
     path: {
       sameFile: 'Same file, {n} locations',
+    },
+    delete: {
+      trigger: 'Delete duplicate files',
+      cancel: 'Cancel deletion',
     },
   },
 } as const;

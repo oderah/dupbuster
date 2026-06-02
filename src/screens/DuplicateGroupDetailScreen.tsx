@@ -1,5 +1,5 @@
 import React from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
 
 import {tokens} from '../tokens/tokens';
 import type {DuplicateGroupDetailScreenProps} from '../types/duplicateGroup';
@@ -27,6 +27,9 @@ export function DuplicateGroupDetailScreen({
   rememberSession,
   onRememberSessionChange,
   showRememberSession,
+  deleteEnabled = false,
+  deleteTriggerRef,
+  onDeletePress,
   testID = 'duplicate-group-detail',
 }: DuplicateGroupDetailScreenProps): React.JSX.Element {
   const accessibilityLabel = formatGroupAccessibilityLabel(
@@ -89,6 +92,28 @@ export function DuplicateGroupDetailScreen({
         showRememberSession={showRememberSession}
         testID={`${testID}-keeper`}
       />
+
+      <Pressable
+        ref={deleteTriggerRef}
+        testID={`${testID}-delete-trigger`}
+        accessibilityRole="button"
+        accessibilityLabel={tokens.a11y.delete.trigger}
+        accessibilityState={{disabled: !deleteEnabled}}
+        disabled={!deleteEnabled}
+        onPress={onDeletePress}
+        style={[
+          styles.deleteButton,
+          deleteEnabled ? styles.deleteButtonEnabled : styles.deleteButtonDisabled,
+        ]}>
+        <Text
+          style={[
+            styles.deleteButtonLabel,
+            !deleteEnabled && styles.deleteButtonLabelDisabled,
+          ]}
+          maxFontSizeMultiplier={1.3}>
+          {tokens.delete.trigger}
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -126,6 +151,28 @@ const styles = StyleSheet.create({
   },
   memberMeta: {
     ...tokens.typography.caption,
+    color: tokens.color.text.secondary,
+  },
+  deleteButton: {
+    minHeight: tokens.component.touchTargetMin,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: tokens.radius.md,
+    paddingHorizontal: tokens.spacing.lg,
+    marginTop: tokens.spacing.sm,
+  },
+  deleteButtonEnabled: {
+    backgroundColor: tokens.color.action.danger,
+  },
+  deleteButtonDisabled: {
+    backgroundColor: tokens.color.surface.secondary,
+  },
+  deleteButtonLabel: {
+    ...tokens.typography.body,
+    fontWeight: '600',
+    color: tokens.color.text.onDanger,
+  },
+  deleteButtonLabelDisabled: {
     color: tokens.color.text.secondary,
   },
 });

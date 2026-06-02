@@ -1,3 +1,6 @@
+import type {RefObject} from 'react';
+import type {Pressable} from 'react-native';
+
 import type {KeeperPreset, KeeperSelectionState} from './keeper';
 import type {MatchKind, MediaTypeHint} from './scanEngine';
 
@@ -53,6 +56,9 @@ export type DuplicateGroupDetailScreenProps = {
   rememberSession?: boolean;
   onRememberSessionChange?: (value: boolean) => void;
   showRememberSession?: boolean;
+  deleteEnabled?: boolean;
+  deleteTriggerRef?: RefObject<Pressable | null>;
+  onDeletePress?: () => void;
   testID?: string;
 };
 
