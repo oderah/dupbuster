@@ -233,6 +233,7 @@ class ScanOrchestrator(
       }
 
       val hashPipeline = hashPipelineFactory(indexWriter)
+      val hashSettings = HashSettings(largeFilesOptIn = request.largeFilesOptIn)
       val totalFiles = entries.size
       var filesProcessed = 0
       var groupsFound = 0
@@ -282,6 +283,7 @@ class ScanOrchestrator(
               val processedId =
                   processHashResult(
                       hashPipeline = hashPipeline,
+                      hashSettings = hashSettings,
                       entry = entry,
                       grant = grant,
                       initialStaged = statResult.staged,
@@ -359,6 +361,7 @@ class ScanOrchestrator(
 
       backfillImageContentFingerprints(
           hashPipeline = hashPipeline,
+          hashSettings = hashSettings,
           generation = generation,
           scanRunId = scanRunId,
           plan = plan,
@@ -366,6 +369,7 @@ class ScanOrchestrator(
       )
       backfillVideoContentFingerprints(
           hashPipeline = hashPipeline,
+          hashSettings = hashSettings,
           generation = generation,
           scanRunId = scanRunId,
           plan = plan,
@@ -406,6 +410,7 @@ class ScanOrchestrator(
 
   private fun processHashResult(
       hashPipeline: HashPipeline,
+      hashSettings: HashSettings,
       entry: DiscoveredEntry,
       grant: ScanRootGrant,
       initialStaged: StagedFile,
@@ -431,12 +436,13 @@ class ScanOrchestrator(
             return tombstoneDeletedMidHash(staged, generation)
       }
 
-      val hashResult = hashPipeline.hash(staged, HashSettings())
+      val hashResult = hashPipeline.hash(staged, hashSettings)
 
       when (val postCheck = toctouVerifier.verifyBaseline(staged)) {
         ToctouVerifyOutcome.Consistent ->
             return persistHashOutcome(
                 hashPipeline = hashPipeline,
+                hashSettings = hashSettings,
                 hashResult = hashResult,
                 staged = staged,
                 generation = generation,
@@ -448,6 +454,7 @@ class ScanOrchestrator(
           if (mismatchAttempts > ToctouStatVerifier.MAX_MISMATCH_RETRIES) {
             return persistHashOutcome(
                 hashPipeline = hashPipeline,
+                hashSettings = hashSettings,
                 hashResult = hashResult,
                 staged = toctouVerifier.applyFreshStat(staged, postCheck.freshStat),
                 generation = generation,
@@ -497,6 +504,7 @@ class ScanOrchestrator(
 
   private fun persistHashOutcome(
       hashPipeline: HashPipeline,
+      hashSettings: HashSettings,
       hashResult: HashResult,
       staged: StagedFile,
       generation: Int,
@@ -525,6 +533,7 @@ class ScanOrchestrator(
     if (hashResult !is HashResult.SizeBucketSkipped) {
       backfillSizeBucketSkippedPeers(
           hashPipeline = hashPipeline,
+          hashSettings = hashSettings,
           sizeBytes = staged.sizeBytes,
           generation = generation,
           scanRunId = scanRunId,
@@ -545,6 +554,7 @@ class ScanOrchestrator(
    */
   private fun backfillVideoContentFingerprints(
       hashPipeline: HashPipeline,
+      hashSettings: HashSettings,
       generation: Int,
       scanRunId: Long,
       plan: ScanRootResolver.ResolvedPlan,
@@ -561,6 +571,7 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
+                hashSettings = hashSettings,
                 entry = entry,
                 grant = grant,
                 initialStaged = statResult.staged,
@@ -580,6 +591,7 @@ class ScanOrchestrator(
 
   private fun backfillImageContentFingerprints(
       hashPipeline: HashPipeline,
+      hashSettings: HashSettings,
       generation: Int,
       scanRunId: Long,
       plan: ScanRootResolver.ResolvedPlan,
@@ -596,6 +608,7 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
+                hashSettings = hashSettings,
                 entry = entry,
                 grant = grant,
                 initialStaged = statResult.staged,
@@ -615,6 +628,7 @@ class ScanOrchestrator(
 
   private fun backfillSizeBucketSkippedPeers(
       hashPipeline: HashPipeline,
+      hashSettings: HashSettings,
       sizeBytes: Long,
       generation: Int,
       scanRunId: Long,
@@ -634,6 +648,7 @@ class ScanOrchestrator(
         is StatResult.Success ->
             processHashResult(
                 hashPipeline = hashPipeline,
+                hashSettings = hashSettings,
                 entry = entry,
                 grant = grant,
                 initialStaged = statResult.staged,

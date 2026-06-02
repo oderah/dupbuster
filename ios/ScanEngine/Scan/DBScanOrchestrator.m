@@ -320,6 +320,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     }
 
     DBHashPipeline *hashPipeline = _hashPipelineFactory(_indexWriter);
+    DBHashSettings *hashSettings = [[DBHashSettings alloc] init];
+    hashSettings.largeFilesOptIn = request.largeFilesOptIn;
     NSInteger totalFiles = entries.count;
     NSInteger filesProcessed = 0;
     NSInteger groupsFound = 0;
@@ -364,6 +366,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
         if (statResult.outcome == DBStatStageOutcomeSuccess) {
           [_grantRevocationTracker markSuccessfulAccessForScanRootId:entry.scanRootId];
           NSInteger fileEntryId = [self processHashResult:hashPipeline
+                                               hashSettings:hashSettings
                                                     entry:entry
                                                     grant:grant
                                             initialStaged:statResult.staged
@@ -457,6 +460,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
 }
 
 - (NSInteger)processHashResult:(DBHashPipeline *)hashPipeline
+                  hashSettings:(DBHashSettings *)hashSettings
                          entry:(DBDiscoveredEntry *)entry
                          grant:(DBScanRootGrant *)grant
                  initialStaged:(DBStagedFile *)initialStaged
@@ -488,12 +492,13 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
       return [self tombstoneDeletedMidHashForStaged:staged generation:generation];
     }
 
-    DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:[[DBHashSettings alloc] init]];
+    DBHashPipelineResult *hashResult = [hashPipeline hashStagedFile:staged settings:hashSettings];
 
     freshStat = nil;
     DBToctouVerifyOutcome postCheck = [_toctouVerifier verifyBaselineForStaged:staged freshStat:&freshStat];
     if (postCheck == DBToctouVerifyOutcomeConsistent) {
       return [self persistHashOutcome:hashPipeline
+                         hashSettings:hashSettings
                            hashResult:hashResult
                                staged:staged
                            generation:generation
@@ -505,6 +510,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
       if (mismatchAttempts > [DBToctouStatVerifier maxMismatchRetries]) {
         DBStagedFile *adjusted = [_toctouVerifier stagedByApplyingFreshStat:freshStat toStaged:staged];
         return [self persistHashOutcome:hashPipeline
+                           hashSettings:hashSettings
                              hashResult:hashResult
                                  staged:adjusted
                              generation:generation
@@ -550,6 +556,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
 }
 
 - (NSInteger)persistHashOutcome:(DBHashPipeline *)hashPipeline
+                   hashSettings:(DBHashSettings *)hashSettings
                      hashResult:(DBHashPipelineResult *)hashResult
                          staged:(DBStagedFile *)staged
                      generation:(NSInteger)generation
@@ -574,21 +581,23 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   }
   if (hashResult.outcome != DBHashPipelineOutcomeSizeBucketSkipped) {
     [self backfillSizeBucketSkippedPeersWithHashPipeline:hashPipeline
-                                               sizeBytes:staged.sizeBytes
-                                              generation:generation
-                                               scanRunId:scanRunId
-                                                    plan:plan
-                                      excludeFileEntryId:fileEntryId];
+                                           hashSettings:hashSettings
+                                              sizeBytes:staged.sizeBytes
+                                             generation:generation
+                                              scanRunId:scanRunId
+                                                   plan:plan
+                                     excludeFileEntryId:fileEntryId];
   }
   return fileEntryId;
 }
 
 - (void)backfillSizeBucketSkippedPeersWithHashPipeline:(DBHashPipeline *)hashPipeline
-                                             sizeBytes:(int64_t)sizeBytes
-                                            generation:(NSInteger)generation
-                                             scanRunId:(NSInteger)scanRunId
-                                                  plan:(DBScanRootResolverPlan *)plan
-                                    excludeFileEntryId:(NSInteger)excludeFileEntryId
+                                        hashSettings:(DBHashSettings *)hashSettings
+                                           sizeBytes:(int64_t)sizeBytes
+                                          generation:(NSInteger)generation
+                                           scanRunId:(NSInteger)scanRunId
+                                                plan:(DBScanRootResolverPlan *)plan
+                                  excludeFileEntryId:(NSInteger)excludeFileEntryId
 {
   NSArray<DBSizeBucketPendingEntry *> *pending =
       [_indexWriter listSizeBucketPendingEntriesWithSizeBytes:sizeBytes
@@ -600,6 +609,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     DBStatStageResult *statResult = _statFile(entry, grant);
     if (statResult.outcome == DBStatStageOutcomeSuccess) {
       [self processHashResult:hashPipeline
+                   hashSettings:hashSettings
                           entry:entry
                           grant:grant
                   initialStaged:statResult.staged

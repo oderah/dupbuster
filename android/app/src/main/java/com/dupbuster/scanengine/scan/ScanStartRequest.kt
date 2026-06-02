@@ -7,6 +7,7 @@ data class ScanStartRequest(
     val mode: ScanRootMode,
     val roots: List<ScanRootInput>,
     val resumeScanRunId: Long? = null,
+    val largeFilesOptIn: Boolean = false,
 )
 
 data class ScanRootInput(

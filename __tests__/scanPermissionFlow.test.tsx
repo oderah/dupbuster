@@ -7,6 +7,8 @@ import {createMockScanEnginePort} from '../src/native/scanEnginePort';
 import {buildScanStartRequest} from '../src/permissions/buildScanStartRequest';
 import {resolveCoverageFromPermission} from '../src/permissions/resolveCoverageFromPermission';
 import {createMockScanPermissionPort} from '../src/permissions/scanPermissionPort';
+import {createMemoryScanSettingsPort} from '../src/settings/scanSettingsStore';
+import type {ScanSettings} from '../src/types/scanSettings';
 
 describe('resolveCoverageFromPermission', () => {
   it('maps blocked platform discovery to denied', () => {
@@ -166,16 +168,60 @@ describe('useScanPermissionFlow', () => {
     );
     controller.dispose();
   });
+
+  it('passes largeFilesOptIn from scan settings on startScan (M3-11)', async () => {
+    const port = createMockScanPermissionPort();
+    const settingsPort = createMemoryScanSettingsPort({largeFilesOptIn: true});
+    const engine = createMockScanEnginePort({simulateScan: false});
+    const startScan = jest.spyOn(engine, 'startScan');
+    const controller = createScanSessionController(engine);
+    const handlers = mountPermissionFlow(controller, port, settingsPort, {
+      largeFilesOptIn: true,
+    });
+
+    await handlers.handleStartScan();
+    expect(startScan).toHaveBeenCalledWith(
+      expect.objectContaining({largeFilesOptIn: true}),
+    );
+    controller.dispose();
+  });
+
+  it('handleEnableLargeFiles opts in and rescans (AC-unscan-03)', async () => {
+    const port = createMockScanPermissionPort();
+    const settingsPort = createMemoryScanSettingsPort();
+    const engine = createMockScanEnginePort({simulateScan: false});
+    const startScan = jest.spyOn(engine, 'startScan');
+    const controller = createScanSessionController(engine);
+    const handlers = mountPermissionFlow(controller, port, settingsPort);
+
+    await handlers.handleEnableLargeFiles();
+    expect(await settingsPort.load()).toEqual({largeFilesOptIn: true});
+    expect(startScan).toHaveBeenCalledWith(
+      expect.objectContaining({largeFilesOptIn: true}),
+    );
+    controller.dispose();
+  });
 });
 
 function mountPermissionFlow(
   controller: ReturnType<typeof createScanSessionController>,
   port: ReturnType<typeof createMockScanPermissionPort>,
+  settingsPort = createMemoryScanSettingsPort(),
+  initialSettings: ScanSettings = {largeFilesOptIn: false},
 ) {
   let handlers: ReturnType<typeof useScanPermissionFlow> | null = null;
+  let settings = {...initialSettings};
 
   function Probe(): React.JSX.Element {
-    handlers = useScanPermissionFlow(controller, port);
+    handlers = useScanPermissionFlow(
+      controller,
+      port,
+      () => settings,
+      async value => {
+        settings = {largeFilesOptIn: value};
+        await settingsPort.save(settings);
+      },
+    );
     return <></>;
   }
 

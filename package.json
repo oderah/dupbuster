@@ -14,6 +14,7 @@
     "test:a11y": "jest --testPathPattern='__tests__/a11y/'"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-documents/picker": "^12.0.1",
     "@react-native/new-app-screen": "0.85.3",
     "react": "19.2.3",

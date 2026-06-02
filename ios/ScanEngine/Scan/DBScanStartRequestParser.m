@@ -62,6 +62,12 @@ NSString *const DBScanStartRequestParserErrorDomain = @"com.dupbuster.scanengine
   if (resumeValue != nil && resumeValue != [NSNull null]) {
     request.resumeScanRunId = @([(NSNumber *)resumeValue integerValue]);
   }
+
+  id largeFilesValue = options[@"largeFilesOptIn"];
+  request.largeFilesOptIn =
+      largeFilesValue != nil && largeFilesValue != [NSNull null] &&
+      [(NSNumber *)largeFilesValue boolValue];
+
   return request;
 }
 

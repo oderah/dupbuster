@@ -48,4 +48,18 @@ class ScanStartRequestParserTest {
     assertEquals("content://test/tree/docs", request.roots[0].uriGrant)
     assertEquals(7L, request.roots[0].scanRootId)
   }
+
+  @Test
+  fun parse_largeFilesOptIn() {
+    val options =
+        JavaOnlyMap().apply {
+          putString("mode", "platform_discovery")
+          putArray("roots", JavaOnlyArray())
+          putBoolean("largeFilesOptIn", true)
+        }
+
+    val request = ScanStartRequestParser.parse(options)
+
+    assertEquals(true, request.largeFilesOptIn)
+  }
 }

@@ -145,7 +145,7 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 | M3-08 | Permission revoke mid-scan pause + FD close | `GrantRevocationTracker`; AC-integrity-perm-01 |
 | M3-09 | Process kill resume/restart prompt | `ResumePromptBanner`, `getResumableScanRun`; AC-integrity-resume-01 |
 | M3-10 | Reclaimable space calculation on group detail | `resolveGroupDetailReclaimable`; AC-action-reclaim-01 |
-| M3-11 | Settings: `settings.largeFiles` opt-in preference | |
+| M3-11 | Settings: `settings.largeFiles` opt-in preference | `LargeFilesSettingRow`, bridge `largeFilesOptIn`; AC-unscan-03 |
 
 ### 5.2 M3 exit gate
 

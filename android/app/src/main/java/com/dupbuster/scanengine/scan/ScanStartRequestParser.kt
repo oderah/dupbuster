@@ -25,7 +25,17 @@ object ScanStartRequestParser {
           null
         }
 
-    return ScanStartRequest(mode = mode, roots = roots, resumeScanRunId = resumeScanRunId)
+    val largeFilesOptIn =
+        options.hasKey("largeFilesOptIn") &&
+            !options.isNull("largeFilesOptIn") &&
+            options.getBoolean("largeFilesOptIn")
+
+    return ScanStartRequest(
+        mode = mode,
+        roots = roots,
+        resumeScanRunId = resumeScanRunId,
+        largeFilesOptIn = largeFilesOptIn,
+    )
   }
 
   private fun parseRoots(array: ReadableArray?): List<ScanRootInput> {

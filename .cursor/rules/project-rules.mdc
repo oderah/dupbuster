@@ -539,6 +539,16 @@ New code must land in these areas unless architecture is amended first.
 - **Delete modal:** `resolveDeleteConfirmCounts` unchanged — non-keeper sum when confirm opens.
 - **Tests:** `groupDetailReclaimable.test.ts`, `DuplicateGroupDetailScreen.test.tsx` (AC-action-reclaim-01 layout + update).
 
+### Large files setting (M3-11)
+
+- **`@react-native-async-storage/async-storage`:** Persists `ScanSettings.largeFilesOptIn` under `dupbuster.scanSettings.v1` across cold start (FR-FP-03).
+- **`src/settings/scanSettingsStore.ts`:** `createAsyncStorageScanSettingsPort` / `createMemoryScanSettingsPort`; injectable `ScanSettingsPort`.
+- **`src/components/LargeFilesSettingRow.tsx`:** Switch with frozen `tokens.settings.largeFiles`; rendered on `ScanSessionScreen`.
+- **`useScanSettings` + `useScanPermissionFlow`:** `startScan` bridge payload includes `largeFilesOptIn`; `handleEnableLargeFiles` opts in + rescans (AC-unscan-03).
+- **Native:** `ScanStartRequest.largeFilesOptIn` → `HashSettings` in `ScanOrchestrator` / `DBScanOrchestrator` (hash + backfill paths).
+- **Bridge:** `ScanStartOptions.largeFilesOptIn` on `NativeScanEngine.ts` codegen spec + `scanEngineBridge.types.ts`.
+- **Tests:** `scanSettingsStore.test.ts`, `LargeFilesSettingRow.test.tsx`, `scanPermissionFlow.test.tsx`; `ScanStartRequestParserTest`, `DBScanStartRequestParserTests`.
+
 ### Permission revoke mid-scan pause (M3-08)
 
 - **Android:** `GrantRevocationTracker` — root with prior successful stat/hash that later returns `PERMISSION_DENIED` → grant revocation (not single-file deny). `ScanOpenFileRegistry` tracks read FDs; `ScanOrchestrator.pauseForPermissionRevoke` closes FDs, rebuilds partial duplicate groups, `checkpointStore.pauseRun`, emits `PAUSED` + bridge `PERMISSION_DENIED` for coverage banner.

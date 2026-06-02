@@ -20,6 +20,7 @@ FOUNDATION_EXPORT NSString *const DBScanRootModeBridgePlatformDiscovery;
 @property (nonatomic, assign) DBScanRootMode mode;
 @property (nonatomic, copy) NSArray<DBScanRootInput *> *roots;
 @property (nonatomic, strong, nullable) NSNumber *resumeScanRunId;
+@property (nonatomic, assign) BOOL largeFilesOptIn;
 
 @end
 

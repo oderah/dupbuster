@@ -83,6 +83,7 @@ export class ScanSessionController {
       mode: request.mode,
       roots: request.roots,
       resumeScanRunId: request.resumeScanRunId,
+      largeFilesOptIn: request.largeFilesOptIn,
     });
     this.dispatch(reduceScanSessionOnScanStarted(this.state, result.scanRunId));
   }

@@ -35,4 +35,16 @@
   XCTAssertNil(request.roots.firstObject.scanRootId);
 }
 
+- (void)testParse_largeFilesOptIn
+{
+  DBScanStartRequest *request =
+      [DBScanStartRequestParser parseDictionary:@{
+        @"mode" : DBScanRootModeBridgePlatformDiscovery,
+        @"roots" : @[],
+        @"largeFilesOptIn" : @YES,
+      }];
+
+  XCTAssertTrue(request.largeFilesOptIn);
+}
+
 @end

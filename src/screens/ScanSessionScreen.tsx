@@ -11,6 +11,7 @@ import {
 import {CoverageBanner} from '../components/CoverageBanner';
 import {DeleteConfirmModal} from '../components/DeleteConfirmModal';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
+import {LargeFilesSettingRow} from '../components/LargeFilesSettingRow';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ResumePromptBanner} from '../components/ResumePromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
@@ -37,6 +38,9 @@ export type ScanSessionScreenProps = {
   onRestartInterruptedScan: (scanRunId: number) => void;
   onExpandCoverage: () => void;
   onOpenSettings: () => void;
+  largeFilesOptIn: boolean;
+  onLargeFilesOptInChange: (value: boolean) => void;
+  onEnableLargeFiles: () => void;
   testID?: string;
 };
 
@@ -49,6 +53,9 @@ export function ScanSessionScreen({
   onRestartInterruptedScan,
   onExpandCoverage,
   onOpenSettings,
+  largeFilesOptIn,
+  onLargeFilesOptInChange,
+  onEnableLargeFiles,
   testID = 'scan-session',
 }: ScanSessionScreenProps): React.JSX.Element {
   const deleteTriggerRef = useRef<React.ComponentRef<typeof Pressable>>(null);
@@ -162,6 +169,12 @@ export function ScanSessionScreen({
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         accessibilityLabel="Duplicate scan results">
+        <LargeFilesSettingRow
+          value={largeFilesOptIn}
+          onValueChange={onLargeFilesOptInChange}
+          testID={`${testID}-large-files-setting`}
+        />
+
         {state.phase === 'idle' ? (
           <Pressable
             testID={`${testID}-start-scan`}
@@ -178,6 +191,7 @@ export function ScanSessionScreen({
         {showUnscannableSummary ? (
           <UnscannableSummaryCard
             countsByReason={state.unscannableCounts}
+            onEnableLargeFiles={onEnableLargeFiles}
             testID={`${testID}-unscannable-summary`}
           />
         ) : null}

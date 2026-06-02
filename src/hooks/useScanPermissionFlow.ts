@@ -2,6 +2,7 @@ import {useCallback, useEffect, useRef} from 'react';
 
 import type {ScanSessionController} from '../controllers/scanSessionController';
 import type {ScanPermissionPort} from '../types/scanPermission';
+import type {ScanSettings} from '../types/scanSettings';
 import {applyCoverageFromSnapshot} from '../permissions/applyCoverageFromSnapshot';
 import {buildScanStartRequest} from '../permissions/buildScanStartRequest';
 
@@ -12,6 +13,8 @@ export type ScanPermissionFlowHandlers = {
   handleRestartInterruptedScan: (scanRunId: number) => Promise<void>;
   handleExpandCoverage: () => Promise<void>;
   handleOpenSettings: () => Promise<void>;
+  /** AC-unscan-03 — opt in and rescan skipped large files. */
+  handleEnableLargeFiles: () => Promise<void>;
 };
 
 async function syncCoverage(
@@ -26,9 +29,15 @@ async function syncCoverage(
 export function useScanPermissionFlow(
   controller: ScanSessionController,
   port: ScanPermissionPort,
+  getScanSettings: () => ScanSettings,
+  setLargeFilesOptIn: (value: boolean) => Promise<void>,
 ): ScanPermissionFlowHandlers {
   const portRef = useRef(port);
   portRef.current = port;
+  const getScanSettingsRef = useRef(getScanSettings);
+  getScanSettingsRef.current = getScanSettings;
+  const setLargeFilesOptInRef = useRef(setLargeFilesOptIn);
+  setLargeFilesOptInRef.current = setLargeFilesOptIn;
 
   const refreshCoverage = useCallback(async () => {
     await syncCoverage(controller, portRef.current);
@@ -62,6 +71,7 @@ export function useScanPermissionFlow(
       await controller.startScan({
         ...request,
         resumeScanRunId,
+        largeFilesOptIn: getScanSettingsRef.current().largeFilesOptIn,
       });
     },
     [controller],
@@ -101,6 +111,11 @@ export function useScanPermissionFlow(
     controller.markCoverageBannerDisplayed();
   }, [controller]);
 
+  const handleEnableLargeFiles = useCallback(async () => {
+    await setLargeFilesOptInRef.current(true);
+    await startScanFromSnapshot();
+  }, [startScanFromSnapshot]);
+
   return {
     refreshCoverage,
     handleStartScan,
@@ -108,5 +123,6 @@ export function useScanPermissionFlow(
     handleRestartInterruptedScan,
     handleExpandCoverage,
     handleOpenSettings,
+    handleEnableLargeFiles,
   };
 }

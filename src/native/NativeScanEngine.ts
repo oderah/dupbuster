@@ -60,6 +60,8 @@ export type ScanStartOptions = {
   mode: ScanRootMode;
   roots: ScanRootInput[];
   resumeScanRunId?: Double;
+  /** FR-FP-03 — hash files > 2 GB when true. */
+  largeFilesOptIn?: boolean;
 };
 
 export type ScanStartResult = {

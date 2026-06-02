@@ -70,4 +70,5 @@ export type ScanSessionStartRequest = {
   mode: ScanRootMode;
   roots: ScanStartOptions['roots'];
   resumeScanRunId?: number;
+  largeFilesOptIn?: boolean;
 };
