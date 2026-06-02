@@ -33,9 +33,8 @@ class DeleteCoordinator(
   internal fun runDelete(command: DeleteDuplicatesCommand): DeleteDuplicatesResult {
     validateCommand(command)
 
-    var deletedCount = 0
+    val validatedTargets = mutableListOf<FileEntryDeleteTarget>()
     var failedCount = 0
-    val platformDeletedIds = mutableListOf<Long>()
 
     for (fileEntryId in command.deleteFileEntryIds) {
       val target = indexWriter.loadFileEntryDeleteTarget(fileEntryId)
@@ -52,29 +51,26 @@ class DeleteCoordinator(
               provenance = UriProvenance.DISCOVERY,
           )
       ) {
-        is UriValidationResult.Denied -> {
-          failedCount++
-        }
-        UriValidationResult.Allowed -> {
-          if (platformFileDeleter.delete(uri, target.grant)) {
-            platformDeletedIds.add(fileEntryId)
-            deletedCount++
-          } else {
-            failedCount++
-          }
-        }
+        is UriValidationResult.Denied -> failedCount++
+        UriValidationResult.Allowed -> validatedTargets.add(target)
       }
     }
+
+    val platformDeletedIds = platformFileDeleter.deleteTargets(validatedTargets).toSet()
+    failedCount += validatedTargets.count { it.fileEntryId !in platformDeletedIds }
 
     if (platformDeletedIds.isNotEmpty()) {
       indexWriter.applyDuplicateDelete(
           groupId = command.groupId,
           keeperFileEntryId = command.keeperFileEntryId,
-          deletedFileEntryIds = platformDeletedIds,
+          deletedFileEntryIds = platformDeletedIds.toList(),
       )
     }
 
-    return DeleteDuplicatesResult(deletedCount = deletedCount, failedCount = failedCount)
+    return DeleteDuplicatesResult(
+        deletedCount = platformDeletedIds.size,
+        failedCount = failedCount,
+    )
   }
 
   private fun validateCommand(command: DeleteDuplicatesCommand) {

@@ -8,6 +8,7 @@ import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashedFile
 import com.dupbuster.scanengine.hash.NormalizationProfile
 import com.dupbuster.scanengine.index.CatalogDatabase
+import com.dupbuster.scanengine.index.FileEntryDeleteTarget
 import com.dupbuster.scanengine.index.Grouper
 import com.dupbuster.scanengine.index.IndexWriter
 import com.dupbuster.scanengine.security.ScanRootGrant
@@ -159,7 +160,8 @@ class DeleteCoordinatorTest {
   }
 
   private class FakePlatformFileDeleter : PlatformFileDeleter {
-    override fun delete(uri: Uri, grant: ScanRootGrant): Boolean = true
+    override fun deleteTargets(targets: List<FileEntryDeleteTarget>): Set<Long> =
+        targets.map { it.fileEntryId }.toSet()
   }
 
   private fun staged(uri: Uri): StagedFile {

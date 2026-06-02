@@ -1,17 +1,17 @@
 package com.dupbuster.scanengine.delete
 
-import android.net.Uri
-import com.dupbuster.scanengine.security.ScanRootGrant
+import com.dupbuster.scanengine.index.FileEntryDeleteTarget
 
 /**
- * Platform delete API surface (FR-AC-07). Production wiring lands in M3-04 (Android) / M3-05 (iOS).
+ * Platform delete API surface (FR-AC-07). Production wiring: [AndroidPlatformFileDeleter] (M3-04)
+ * / iOS PHAsset (M3-05).
  */
 fun interface PlatformFileDeleter {
-  /** @return true when the platform reports the file removed. */
-  fun delete(uri: Uri, grant: ScanRootGrant): Boolean
+  /** @return [file_entry_id] values removed on disk. */
+  fun deleteTargets(targets: List<FileEntryDeleteTarget>): Set<Long>
 }
 
-/** Default until MediaStore / PHAsset delete is wired — coordinator counts failures, not catalog loss. */
+/** Test / headless fallback — coordinator counts failures, catalog unchanged. */
 class PendingPlatformFileDeleter : PlatformFileDeleter {
-  override fun delete(uri: Uri, grant: ScanRootGrant): Boolean = false
+  override fun deleteTargets(targets: List<FileEntryDeleteTarget>): Set<Long> = emptySet()
 }
