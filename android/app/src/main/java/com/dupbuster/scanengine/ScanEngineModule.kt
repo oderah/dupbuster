@@ -11,8 +11,10 @@ import com.dupbuster.scanengine.scan.ScanStartRequestParser
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
+import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.module.annotations.ReactModule
 
@@ -45,6 +47,72 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
         emitOnScanError(toEventEmitterMap(payload))
       }
     }
+  }
+
+  /**
+   * TurboModule / JSI needs [WritableNativeMap] for nested catalog payloads; flat [JavaOnlyMap]
+   * is insufficient for `getCatalogSnapshot` (duplicateGroups arrives empty on JS otherwise).
+   */
+  private fun toWritableMap(payload: ReadableMap): WritableMap {
+    val map = Arguments.createMap()
+    val iterator = payload.keySetIterator()
+    while (iterator.hasNextKey()) {
+      val key = iterator.nextKey()
+      when (payload.getType(key)) {
+        ReadableType.Null -> map.putNull(key)
+        ReadableType.Boolean -> map.putBoolean(key, payload.getBoolean(key))
+        ReadableType.Number -> map.putDouble(key, payload.getDouble(key))
+        ReadableType.String -> map.putString(key, payload.getString(key))
+        ReadableType.Map -> {
+          val nested = payload.getMap(key)
+          if (nested != null) {
+            map.putMap(key, toWritableMap(nested))
+          } else {
+            map.putNull(key)
+          }
+        }
+        ReadableType.Array -> {
+          val nested = payload.getArray(key)
+          if (nested != null) {
+            map.putArray(key, toWritableArray(nested))
+          } else {
+            map.putNull(key)
+          }
+        }
+        else -> Unit
+      }
+    }
+    return map
+  }
+
+  private fun toWritableArray(payload: ReadableArray): WritableArray {
+    val array = Arguments.createArray()
+    for (index in 0 until payload.size()) {
+      when (payload.getType(index)) {
+        ReadableType.Null -> array.pushNull()
+        ReadableType.Boolean -> array.pushBoolean(payload.getBoolean(index))
+        ReadableType.Number -> array.pushDouble(payload.getDouble(index))
+        ReadableType.String -> array.pushString(payload.getString(index))
+        ReadableType.Map -> {
+          val nested = payload.getMap(index)
+          if (nested != null) {
+            array.pushMap(toWritableMap(nested))
+          } else {
+            array.pushNull()
+          }
+        }
+        ReadableType.Array -> {
+          val nested = payload.getArray(index)
+          if (nested != null) {
+            array.pushArray(toWritableArray(nested))
+          } else {
+            array.pushNull()
+          }
+        }
+        else -> Unit
+      }
+    }
+    return array
   }
 
   /**
@@ -146,11 +214,10 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
   @DoNotStrip
   override fun getCatalogSnapshot(promise: Promise) {
     try {
-      val snapshot =
-          CatalogSnapshotBridgeMapper.toReadableMap(
-              CatalogReader(CatalogDatabase.getInstance(reactApplicationContext)).readSnapshot(),
-          )
-      promise.resolve(snapshot)
+      val catalogSnapshot =
+          CatalogReader(CatalogDatabase.getInstance(reactApplicationContext)).readSnapshot()
+      val bridgeMap = CatalogSnapshotBridgeMapper.toReadableMap(catalogSnapshot)
+      promise.resolve(toWritableMap(bridgeMap))
     } catch (error: Exception) {
       promise.reject(CODE_CATALOG_READ_FAILED, error.message, error)
     }
