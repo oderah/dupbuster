@@ -81,7 +81,7 @@ Declare **no collection** for: Contact Info, Health, Financial, Location, Sensit
 
 ## Store listing consistency
 
-- **Privacy policy URL:** M4-14 (link when published; must state on-device processing).
+- **Privacy policy URL:** `https://dupbuster.app/privacy` — publish [`privacy-policy.md`](./privacy-policy.md) (M4-14; must state on-device processing).
 - **No claims** of cloud duplicate sync, forensic erasure, or automatic deletion (requirements FR-SE-05, FR-AC-01).
 
 ---

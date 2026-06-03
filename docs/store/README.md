@@ -7,8 +7,11 @@ Operator-facing guides for **Play Console Data safety** and **App Store Connect 
 | [`privacy-store-disclosure.md`](./privacy-store-disclosure.md) | Filling both store forms; prod promote sign-off |
 | [`play-data-safety-answers.md`](./play-data-safety-answers.md) | Play Console → App content → Data safety (quick checklist) |
 | [`ios-app-privacy-answers.md`](./ios-app-privacy-answers.md) | App Store Connect → App Privacy (quick checklist) |
+| [`privacy-policy.md`](./privacy-policy.md) | User-facing policy — host at `https://dupbuster.app/privacy` (M4-14) |
 
-**Related (not M4-09):** M4-14 privacy policy URL; M4-13 opt-in crash analytics UI default off.
+**Related (not M4-09):** M4-13 opt-in crash analytics UI default off.
+
+**Privacy policy URL (M4-14):** `tests/manual/m4-privacy-policy-url.md` — publish `privacy-policy.md`, set Play + App Store privacy policy fields, sign off before prod; `npm run test:privacy-policy` locks repo contract on CI.
 
 **Automated alignment:** `npm run test:store-privacy` — `Info.plist` usage string vs `tokens.denied.blocking`; `PrivacyInfo.xcprivacy` declares no collected data types and no tracking.
 

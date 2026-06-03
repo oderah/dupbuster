@@ -167,6 +167,8 @@ export const tokens = {
     /** US-17 / NFR-06 — opt-in crash analytics default off. */
     crashAnalytics:
       'Send anonymous crash reports (no file paths or content)',
+    /** M4-14 — in-app link to hosted on-device privacy policy. */
+    privacyPolicy: 'Privacy policy',
   },
 
   reclaimable: {
@@ -294,6 +296,9 @@ export const tokens = {
     delete: {
       trigger: 'Delete duplicate files',
       cancel: 'Cancel deletion',
+    },
+    settings: {
+      privacyPolicyHint: 'Opens privacy policy in your browser',
     },
   },
 } as const;

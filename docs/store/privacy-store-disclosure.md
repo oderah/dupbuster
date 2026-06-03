@@ -75,8 +75,9 @@ Before `fastlane … prod` (`docs/implementation-plan.md` §6.2), confirm:
 - [ ] `npm run test:store-privacy` green on the release tag
 - [ ] Permission strings unchanged vs `tokens.ts` (or tokens updated with requirements doc amend)
 - [ ] Store listing does not claim cloud sync, forensic erasure, or auto-delete (FR-SE-05, FR-AC-01)
+- [ ] Privacy policy published at `https://dupbuster.app/privacy` per [`privacy-policy.md`](./privacy-policy.md) (M4-14 runbook: `tests/manual/m4-privacy-policy-url.md`)
 
-M4-14 privacy policy URL can ship in the same release window; link it in both store listings when available.
+M4-14 can ship in the same release window as M4-09; Play and App Store **Privacy policy URL** fields must match `src/config/privacyPolicyUrl.ts`.
 
 ---
 

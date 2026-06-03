@@ -31,6 +31,9 @@ npm run test:testflight-external
 echo "==> Crash analytics opt-in contract (M4-13)"
 npm run test:crash-analytics
 
+echo "==> Privacy policy URL contract (M4-14)"
+npm run test:privacy-policy
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \
@@ -44,6 +47,7 @@ echo "  - Store-matrix QA signed off: tests/manual/m4-store-matrix-qa.md (M4-10)
 echo "  - FGS cancel notification cleared ≤ 120 s (AC-integrity-cancel-01)"
 echo "  - Play pre-launch signed off: tests/manual/m4-play-prelaunch-report.md (M4-11, after M4-10)"
 echo "  - TestFlight external signed off: tests/manual/m4-testflight-external-beta.md (M4-12, after M4-10 iOS)"
+echo "  - Privacy policy URL signed off: tests/manual/m4-privacy-policy-url.md (M4-14, hosted + store listings)"
 echo "  - Manual VoiceOver/TalkBack smoke signed off (M2-11)"
 
 if [[ "${DUPBUSTER_PROD_PROMOTE_APPROVED:-}" != "1" ]]; then

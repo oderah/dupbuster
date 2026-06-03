@@ -19,7 +19,8 @@
     "test:store-matrix": "jest --testPathPattern=storeMatrixQaContract",
     "test:play-prelaunch": "jest --testPathPattern=playPrelaunchReportContract",
     "test:testflight-external": "jest --testPathPattern=testFlightExternalBetaContract",
-    "test:crash-analytics": "jest --testPathPattern='crashAnalyticsContract|CrashAnalyticsSettingRow|scanSettingsStore'"
+    "test:crash-analytics": "jest --testPathPattern='crashAnalyticsContract|CrashAnalyticsSettingRow|scanSettingsStore'",
+    "test:privacy-policy": "jest --testPathPattern='privacyPolicyContract|PrivacyPolicyLink'"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

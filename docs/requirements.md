@@ -230,6 +230,7 @@ Implement these strings verbatim from `tokens.ts`:
 | `keeper.rememberSession` | "Use largest for the rest of this session" |
 | `settings.largeFiles` | "Hash files larger than 2 GB (uses more battery)" |
 | `settings.crashAnalytics` | "Send anonymous crash reports (no file paths or content)" |
+| `settings.privacyPolicy` | "Privacy policy" |
 | `reclaimable.label` | "You can free up {size}" |
 | `rescan.required` | "This update changed how files are compared. Rescan to refresh results." |
 | `resume.interrupted` | "A scan was interrupted. Continue from where it stopped or start over." |

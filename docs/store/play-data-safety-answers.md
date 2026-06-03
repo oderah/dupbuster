@@ -76,4 +76,6 @@ Declared permissions in `android/app/src/main/AndroidManifest.xml` must match th
 | Release owner | | |
 | Privacy review | | |
 
+**Privacy policy URL (M4-14):** Play Console → App content → Privacy policy → `https://dupbuster.app/privacy` (text in [`privacy-policy.md`](./privacy-policy.md)).
+
 After sign-off, check **implementation-plan.md** §12 Play Data safety bullet.

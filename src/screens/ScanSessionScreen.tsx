@@ -13,6 +13,7 @@ import {DeleteConfirmModal} from '../components/DeleteConfirmModal';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
 import {CrashAnalyticsSettingRow} from '../components/CrashAnalyticsSettingRow';
 import {LargeFilesSettingRow} from '../components/LargeFilesSettingRow';
+import {PrivacyPolicyLink} from '../components/PrivacyPolicyLink';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ResumePromptBanner} from '../components/ResumePromptBanner';
 import {ScanProgress} from '../components/ScanProgress';
@@ -184,6 +185,7 @@ export function ScanSessionScreen({
           onValueChange={onCrashAnalyticsOptInChange}
           testID={`${testID}-crash-analytics-setting`}
         />
+        <PrivacyPolicyLink testID={`${testID}-privacy-policy`} />
 
         {state.phase === 'idle' ? (
           <Pressable

@@ -79,6 +79,8 @@ Sign off `tests/manual/m4-play-prelaunch-report.md` (M4-11) on the **same** rele
 
 Sign off `tests/manual/m4-testflight-external-beta.md` (M4-12) on the **same** release IPA (external TestFlight group + Beta App Review approved) before the Fastlane **prod** lane.
 
+Publish `docs/store/privacy-policy.md` at **https://dupbuster.app/privacy** and sign off `tests/manual/m4-privacy-policy-url.md` (M4-14) before prod store submit.
+
 ## CI
 
 `.github/workflows/fastlane-deploy.yml` — `workflow_dispatch` with `lane` (`internal` / `prod`) and `platform` (`android` / `ios` / `both`). Configure repository secrets before first run.

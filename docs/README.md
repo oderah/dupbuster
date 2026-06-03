@@ -18,6 +18,8 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 
 **Crash analytics opt-in (M4-13):** `CrashAnalyticsSettingRow` default off; native `ScanTelemetryEgress` gated (`npm run test:crash-analytics` contract).
 
+**Privacy policy URL (M4-14):** `docs/store/privacy-policy.md` → host at `https://dupbuster.app/privacy`; in-app `PrivacyPolicyLink` (`npm run test:privacy-policy` contract); runbook `tests/manual/m4-privacy-policy-url.md`.
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)

@@ -54,6 +54,7 @@ describe('tokens EN freeze (requirements §9)', () => {
     expect(tokens.settings.crashAnalytics).toBe(
       'Send anonymous crash reports (no file paths or content)',
     );
+    expect(tokens.settings.privacyPolicy).toBe('Privacy policy');
     expect(tokens.reclaimable.label).toBe('You can free up {size}');
     expect(tokens.rescan.required).toBe(
       'This update changed how files are compared. Rescan to refresh results.',
