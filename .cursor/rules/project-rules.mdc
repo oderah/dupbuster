@@ -620,6 +620,15 @@ New code must land in these areas unless architecture is amended first.
 - **Wrappers:** `scripts/run-fastlane-lane.sh`; `npm run release:internal` / `release:prod` (both platforms).
 - **Gem:** root `Gemfile` → `fastlane` ~> 2.227; `bundle install` before lanes.
 
+### Store privacy disclosures (M4-09)
+
+- **Docs:** `docs/store/` — `privacy-store-disclosure.md` (master), `play-data-safety-answers.md`, `ios-app-privacy-answers.md`.
+- **Claims:** On-device duplicate detection only; no upload of user files, paths, hashes, or unscannable codes in v1 default prod (opt-in analytics default off per M4-13).
+- **iOS:** `NSPhotoLibraryUsageDescription` = `tokens.denied.blocking` verbatim; limited-library honesty in-app via `partial.ios.limited` / `CoverageBanner`; `PrivacyInfo.xcprivacy` — empty `NSPrivacyCollectedDataTypes`, `NSPrivacyTracking` false.
+- **Android:** Data safety form — photos/video/audio/files **not collected** (local read only); permissions match `AndroidManifest.xml` (media read + FGS, no location/contacts).
+- **Tests:** `npm run test:store-privacy` (`__tests__/storePrivacyAlignment.test.ts`); included in `scripts/verify-prod-promote-gates.sh`.
+- **M4-14:** Privacy policy URL is separate; link in listings when published.
+
 ### iOS BGProcessingTask continuation (M4-03)
 
 - **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).

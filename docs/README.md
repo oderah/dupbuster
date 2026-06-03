@@ -8,6 +8,8 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 2. `docs/architecture.md` — system boundaries, bridge contracts, schema, and security rules
 3. `docs/implementation-plan.md` — milestone plan (M1–M5), tasks, and exit gates
 
+**Store privacy (M4-09):** `docs/store/` — Play Data safety + App Store App Privacy answer guides (`npm run test:store-privacy`).
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)

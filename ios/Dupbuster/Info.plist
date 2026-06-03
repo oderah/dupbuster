@@ -34,8 +34,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DupBuster needs storage access to find duplicates.</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>

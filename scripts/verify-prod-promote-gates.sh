@@ -16,6 +16,9 @@ bash scripts/run-security-ci-gates.sh
 echo "==> Automated a11y gate (M2-10)"
 npm run test:a11y
 
+echo "==> Store privacy alignment (M4-09)"
+npm run test:store-privacy
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \

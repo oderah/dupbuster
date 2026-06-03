@@ -71,6 +71,8 @@ Wrappers: `scripts/run-fastlane-lane.sh internal|prod android|ios`
 | `DUPBUSTER_PROD_PROMOTE_APPROVED` | Must be `1` after manual §6.2 checklist |
 | `DUPBUSTER_SKIP_PROD_GATES` | `1` only for local lane debugging (not CI) |
 
+Before **prod** submit, complete Play Data safety and App Store App Privacy using `docs/store/` (M4-09). `npm run test:store-privacy` must be green on the release tag.
+
 ## CI
 
 `.github/workflows/fastlane-deploy.yml` — `workflow_dispatch` with `lane` (`internal` / `prod`) and `platform` (`android` / `ios` / `both`). Configure repository secrets before first run.
