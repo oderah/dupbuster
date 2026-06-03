@@ -404,6 +404,16 @@
       "kind": "descriptor"
     },
     {
+      "id": "integrity-cancel-01",
+      "path": "integrity-cancel-01.json",
+      "category": "integrity",
+      "platform": "android",
+      "acceptanceCriteria": [
+        "AC-integrity-cancel-01"
+      ],
+      "kind": "descriptor"
+    },
+    {
       "id": "hash-pipeline-video-01",
       "path": "pipeline/hash-pipeline-video-01.json",
       "category": "pipeline",

@@ -23,6 +23,7 @@ class HashPipeline(
   fun hash(
       staged: StagedFile,
       settings: HashSettings = HashSettings(),
+      hashDeadlineMs: Long? = null,
   ): HashResult {
     if (staged.isSymlink) {
       return HashResult.SymlinkNode(staged)
@@ -57,7 +58,11 @@ class HashPipeline(
       SizeBucketDisposition.NEEDS_HASH -> Unit
     }
 
-    val deadlineMs = System.currentTimeMillis() + HashConstants.HASH_TIMEOUT_MS
+    val deadlineMs =
+        minOf(
+            System.currentTimeMillis() + HashConstants.HASH_TIMEOUT_MS,
+            hashDeadlineMs ?: Long.MAX_VALUE,
+        )
     val quickSampleHash: String? =
         if (staged.sizeBytes > HashConstants.SAMPLE_SIZE_THRESHOLD_BYTES) {
           when (val sample = computeQuickSample(staged, deadlineMs)) {

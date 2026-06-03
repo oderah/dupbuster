@@ -45,6 +45,10 @@ class ScanOrchestrator(
     private val grantRevocationTracker: GrantRevocationTracker = GrantRevocationTracker(),
     private val openFileRegistry: ScanOpenFileRegistry = ScanOpenFileRegistry(),
     private val foregroundController: ScanForegroundController = NoOpScanForegroundController,
+    private val cancelDrainWatchdog: ScanCancelDrainWatchdog = ScanCancelDrainWatchdog(),
+    private val cancelWatchdogExecutor: Executor = Executors.newSingleThreadExecutor { runnable ->
+      Thread(runnable, "dupbuster-cancel-drain-watchdog").apply { isDaemon = true }
+    },
     private val executor: Executor = Executors.newSingleThreadExecutor { runnable ->
       Thread(runnable, "dupbuster-scan-orchestrator").apply { isDaemon = true }
     },
@@ -53,6 +57,14 @@ class ScanOrchestrator(
   private data class ActiveSession(
       val scanRunId: Long,
       val control: ScanSessionControl,
+      @Volatile var lastProgress: ScanProgressSnapshot =
+          ScanProgressSnapshot(
+              filesProcessed = 0,
+              filesTotalKnown = null,
+              groupsFound = 0,
+              reclaimableBytesEst = 0,
+              phase = ScanPhase.IDLE,
+          ),
   )
 
   private val activeSession = AtomicReference<ActiveSession?>(null)
@@ -165,17 +177,43 @@ class ScanOrchestrator(
 
   fun cancelScan(scanRunId: Long) {
     val session = requireActiveSession(scanRunId)
+    val atMs = clock()
     session.control.cancelRequested = true
+    session.control.cancelStartedAtMs = atMs
     session.control.paused = false
+    openFileRegistry.closeAll()
     checkpointStore.markCancelling(scanRunId)
+    foregroundController.onCancelRequested(atMs)
+    scheduleCancelDrainWatchdog(scanRunId, session)
     emitPhase(
-        ScanProgressSnapshot(
-            filesProcessed = 0,
-            filesTotalKnown = null,
-            groupsFound = 0,
-            reclaimableBytesEst = 0,
-            phase = ScanPhase.CANCELLING,
-        ),
+        session.lastProgress.copy(phase = ScanPhase.CANCELLING),
+    )
+  }
+
+  private fun scheduleCancelDrainWatchdog(scanRunId: Long, session: ActiveSession) {
+    val cancelStartedAtMs = session.control.cancelStartedAtMs
+    cancelDrainWatchdog.scheduleDrainTimeout(
+        cancelStartedAtMs = cancelStartedAtMs,
+        isStillCancelling = {
+          val active = activeSession.get()
+          active?.scanRunId == scanRunId &&
+              active.control.shouldAbortScan() &&
+              checkpointStore.getRun(scanRunId)?.status == ScanRunStatus.CANCELLING
+        },
+        onDrainExpired = {
+          session.control.forceCancelDrainExpired = true
+          openFileRegistry.closeAll()
+        },
+        executor = cancelWatchdogExecutor,
+    )
+  }
+
+  private fun finishCancelledFromSession(session: ActiveSession) {
+    val progress = session.lastProgress
+    finishCancelled(
+        scanRunId = session.scanRunId,
+        filesProcessed = progress.filesProcessed,
+        filesTotalKnown = progress.filesTotalKnown ?: 0,
     )
   }
 
@@ -230,8 +268,8 @@ class ScanOrchestrator(
               isCancelled = control::isCancelled,
           )
 
-      if (control.isCancelled() || discoveryResult.cancelled) {
-        finishCancelled(scanRunId, filesProcessed = 0, filesTotalKnown = entries.size)
+      if (control.shouldAbortScan() || discoveryResult.cancelled) {
+        finishCancelledFromSession(activeSession.get()!!)
         return
       }
 
@@ -274,8 +312,8 @@ class ScanOrchestrator(
         var entryComplete = false
         while (!entryComplete) {
           control.awaitIfPaused()
-          if (control.isCancelled()) {
-            finishCancelled(scanRunId, filesProcessed, totalFiles)
+          if (control.shouldAbortScan()) {
+            finishCancelledFromSession(activeSession.get()!!)
             return
           }
 
@@ -293,7 +331,12 @@ class ScanOrchestrator(
                       generation = generation,
                       scanRunId = scanRunId,
                       plan = plan,
+                      control = control,
                   )
+              if (processedId == CANCELLED_SIGNAL) {
+                finishCancelledFromSession(activeSession.get()!!)
+                return
+              }
               if (processedId == GRANT_REVOKED_SIGNAL) {
                 val partial =
                     pauseForPermissionRevoke(
@@ -407,6 +450,7 @@ class ScanOrchestrator(
           ),
       )
     } finally {
+      openFileRegistry.closeAll()
       activeSession.set(null)
     }
   }
@@ -420,11 +464,16 @@ class ScanOrchestrator(
       generation: Int,
       scanRunId: Long,
       plan: ScanRootResolver.ResolvedPlan,
+      control: ScanSessionControl? = null,
   ): Long {
     var staged = initialStaged
     var mismatchAttempts = 0
 
     while (true) {
+      if (control?.shouldAbortScan() == true) {
+        return CANCELLED_SIGNAL
+      }
+
       when (val preCheck = toctouVerifier.verifyBaseline(staged)) {
         ToctouVerifyOutcome.Consistent -> Unit
         is ToctouVerifyOutcome.Changed -> {
@@ -439,7 +488,12 @@ class ScanOrchestrator(
             return tombstoneDeletedMidHash(staged, generation)
       }
 
-      val hashResult = hashPipeline.hash(staged, hashSettings)
+      val hashResult =
+          hashPipeline.hash(
+              staged,
+              hashSettings,
+              hashDeadlineMs = control?.perFileCancelReadDeadlineMs(),
+          )
 
       when (val postCheck = toctouVerifier.verifyBaseline(staged)) {
         ToctouVerifyOutcome.Consistent ->
@@ -565,7 +619,7 @@ class ScanOrchestrator(
   ) {
     for (pending in indexWriter.listVideoContentBackfillEntries(generation)) {
       control.awaitIfPaused()
-      if (control.isCancelled()) {
+      if (control.shouldAbortScan()) {
         return
       }
       val entry = pending.toDiscoveredEntry()
@@ -581,6 +635,7 @@ class ScanOrchestrator(
                 generation = generation,
                 scanRunId = scanRunId,
                 plan = plan,
+                control = control,
             )
         is StatResult.Unscannable ->
             indexWriter.upsertUnscannable(
@@ -602,7 +657,7 @@ class ScanOrchestrator(
   ) {
     for (pending in indexWriter.listImageContentBackfillEntries(generation)) {
       control.awaitIfPaused()
-      if (control.isCancelled()) {
+      if (control.shouldAbortScan()) {
         return
       }
       val entry = pending.toDiscoveredEntry()
@@ -618,6 +673,7 @@ class ScanOrchestrator(
                 generation = generation,
                 scanRunId = scanRunId,
                 plan = plan,
+                control = control,
             )
         is StatResult.Unscannable ->
             indexWriter.upsertUnscannable(
@@ -703,10 +759,12 @@ class ScanOrchestrator(
         atMs = atMs,
     )
     progressBridge.advanceTo(atMs)
+    activeSession.get()?.lastProgress = snapshot
     foregroundController.onProgress(snapshot, atMs)
   }
 
   private fun finishCancelled(scanRunId: Long, filesProcessed: Int, filesTotalKnown: Int) {
+    openFileRegistry.closeAll()
     checkpointStore.markCancelled(scanRunId)
     emitPhase(
         ScanProgressSnapshot(
@@ -734,6 +792,7 @@ class ScanOrchestrator(
 
   private fun emitPhase(snapshot: ScanProgressSnapshot) {
     val atMs = clock()
+    activeSession.get()?.lastProgress = snapshot
     progressBridge.report(snapshot, atMs)
     progressBridge.flush(atMs)
     foregroundController.onProgress(snapshot, atMs)
@@ -781,5 +840,8 @@ class ScanOrchestrator(
   companion object {
     /** Returned from [processHashResult] / [persistHashOutcome] when grant access is lost mid-run. */
     const val GRANT_REVOKED_SIGNAL: Long = -2L
+
+    /** Returned from [processHashResult] when cancel drain aborts in-flight hash work. */
+    const val CANCELLED_SIGNAL: Long = -3L
   }
 }

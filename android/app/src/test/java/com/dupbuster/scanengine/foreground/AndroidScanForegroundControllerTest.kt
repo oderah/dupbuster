@@ -51,6 +51,56 @@ class AndroidScanForegroundControllerTest {
     assertTrue(client.stopped)
   }
 
+  @Test
+  fun cancellingPhase_keepsForegroundActive() {
+    controller.onProgress(discoveringSnapshot(), atMs = 1_000L)
+    controller.onProgress(
+        hashingSnapshot(filesProcessed = 40).copy(phase = ScanPhase.CANCELLING),
+        atMs = 1_200L,
+    )
+
+    assertTrue(client.started)
+    org.junit.Assert.assertFalse(client.stopped)
+  }
+
+  @Test
+  fun cancelHardBound_forceStopsForegroundWithin120Seconds() {
+    val clock = object {
+      var now = 0L
+      fun get(): Long = now
+    }
+    val controllerWithWatchdog =
+        AndroidScanForegroundController(
+            client,
+            minUpdateIntervalMs = 250L,
+            notificationHardBoundMs = 120_000L,
+            cancelWatchdogExecutor = java.util.concurrent.Executor { it.run() },
+            clock = clock::get,
+            sleeper = { ms -> clock.now += ms },
+        )
+
+    controllerWithWatchdog.onProgress(discoveringSnapshot(), atMs = 0L)
+    controllerWithWatchdog.onCancelRequested(atMs = 0L)
+
+    assertTrue(client.stopped)
+  }
+
+  @Test
+  fun cancelledPhase_stopsForegroundAfterCancelling() {
+    controller.onProgress(discoveringSnapshot(), atMs = 1_000L)
+    controller.onProgress(
+        hashingSnapshot(filesProcessed = 40).copy(phase = ScanPhase.CANCELLING),
+        atMs = 1_200L,
+    )
+    controller.onCancelRequested(atMs = 1_200L)
+    controller.onProgress(
+        hashingSnapshot(filesProcessed = 40).copy(phase = ScanPhase.CANCELLED),
+        atMs = 1_500L,
+    )
+
+    assertTrue(client.stopped)
+  }
+
   private fun discoveringSnapshot() =
       ScanProgressSnapshot(
           filesProcessed = 0,

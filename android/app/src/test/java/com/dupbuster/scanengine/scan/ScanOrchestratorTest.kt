@@ -612,6 +612,50 @@ class ScanOrchestratorTest {
     assertTrue(phases.contains(ScanPhase.CANCELLED))
   }
 
+  @Test
+  fun cancelScan_closesOpenFileRegistry() {
+    val openFileRegistry = ScanOpenFileRegistry()
+    val closed = java.util.concurrent.atomic.AtomicBoolean(false)
+    openFileRegistry.register(AutoCloseable { closed.set(true) })
+
+    val asyncOrchestrator =
+        ScanOrchestrator(
+            indexWriter = indexWriter,
+            checkpointStore = checkpointStore,
+            grouper = Grouper(database),
+            discoveryRunner =
+                ScanDiscoveryRunner { _, _, _, _, isCancelled ->
+                  while (!isCancelled()) {
+                    Thread.sleep(20)
+                  }
+                  DiscoveryResult(0, 0, 0, cancelled = true)
+                },
+            statFile = { entry, _ -> StatResult.Success(staged(entry, 5)) },
+            hashPipelineFactory = { _ ->
+              HashPipeline(
+                  context,
+                  FakeContentReader("hello".toByteArray()),
+                  sizeBucketIndex = alwaysNeedsHashIndex(),
+              )
+            },
+            progressBridge = ScanProgressBridge(emitProgress = {}),
+            emitError = {},
+            toctouVerifier = echoToctouVerifier(),
+            openFileRegistry = openFileRegistry,
+            executor = Executors.newSingleThreadExecutor(),
+        )
+
+    val scanRunId =
+        asyncOrchestrator.startScan(
+            ScanStartRequest(mode = ScanRootMode.PLATFORM_DISCOVERY, roots = emptyList()),
+        )
+    Thread.sleep(50)
+    asyncOrchestrator.cancelScan(scanRunId)
+    Thread.sleep(200)
+
+    assertTrue(closed.get())
+  }
+
   private fun fakeDiscoveryRunner(): ScanDiscoveryRunner =
       ScanDiscoveryRunner { _, _, generation, consumer, _ ->
         consumer.onEntry(discoveredEntry(1, generation))

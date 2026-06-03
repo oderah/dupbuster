@@ -1,0 +1,18 @@
+{
+  "id": "integrity-cancel-01",
+  "description": "User cancel tears down FGS within drain/hard bounds (AC-integrity-cancel-01)",
+  "platform": "android",
+  "input": {
+    "cancelDuringHash": true,
+    "drainTimeoutMs": 30000,
+    "notificationHardBoundMs": 120000,
+    "perFileReadCancelCapMs": 5000
+  },
+  "expect": {
+    "statusCancellingThenCancelled": true,
+    "openFdsClosedOnCancel": true,
+    "foregroundStoppedOnCancelled": true,
+    "notificationClearedWithinHardBound": true,
+    "noOrphanForegroundService": true
+  }
+}

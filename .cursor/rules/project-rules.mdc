@@ -581,8 +581,8 @@ New code must land in these areas unless architecture is amended first.
 - **Copy:** `ScanForegroundNotificationCopy` mirrors frozen `tokens.notification.*` / `tokens.platform.notification.channelId` — no "delete"/"remove" in title, channel, or body.
 - **Lifecycle:** `AndroidScanForegroundController` wired in `ScanOrchestratorFactory`; `ScanOrchestrator.emitPhase` + `reportHashingProgress` drive start/update/stop; updates coalesce 250 ms.
 - **Manifest:** `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC`; service `android:foregroundServiceType="dataSync"`.
-- **Cancel teardown:** M4-02 — basic stop on `COMPLETE` / `ERROR` / `CANCELLED` only in M4-01.
-- **Tests:** `ScanForegroundNotificationCopyTest`, `AndroidScanForegroundControllerTest`, `ScanForegroundServiceTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.foreground.*'`.
+- **Cancel teardown (M4-02):** `cancelScan` → `CANCELLING` + `openFileRegistry.closeAll()` + `onCancelRequested`; `ScanCancelDrainWatchdog` force-expires drain at 30 s; hash uses 5 s per-file read cap via `HashPipeline.hash(..., hashDeadlineMs)`; FGS stops on `CANCELLED`; `AndroidScanForegroundController` hard-stops at 120 s; `ScanForegroundService.onDestroy` cancels notification ID.
+- **Tests:** `ScanForegroundNotificationCopyTest`, `AndroidScanForegroundControllerTest`, `ScanForegroundServiceTest`, `ScanCancelDrainWatchdogTest`, `IntegrityCancelFixtureTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.foreground.*' --tests 'com.dupbuster.scanengine.scan.ScanCancelDrainWatchdogTest'`.
 
 ### MatchKindBadge (M2-12)
 
