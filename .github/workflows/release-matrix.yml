@@ -1,0 +1,113 @@
+# M4-07: Tag-push matrix release build (Android AAB + iOS unsigned archive).
+# Pipeline step 3 per docs/implementation-plan.md §11.2; Fastlane upload is M4-08.
+name: Release matrix build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-matrix-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-js:
+    name: JS lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.11'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm test -- --testPathPattern='securityCiGate'
+
+  android-release:
+    name: Android release
+    needs: verify-js
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.11'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;27.1.12297006
+      - run: npm ci
+      - name: Security CI gates (native)
+        run: bash scripts/run-security-ci-gates.sh
+      - name: Gradle release builds
+        working-directory: android
+        run: ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dupbuster-android-aab-${{ github.ref_name }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dupbuster-android-apk-${{ github.ref_name }}
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  ios-release:
+    name: iOS release archive
+    needs: verify-js
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.11'
+          cache: npm
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - run: npm ci
+      - name: Install CocoaPods
+        working-directory: ios
+        run: bundle exec pod install
+      - name: DupbusterScanEngineTests
+        run: |
+          xcodebuild test \
+            -workspace ios/Dupbuster.xcworkspace \
+            -scheme Dupbuster \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:DupbusterScanEngineTests \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Release archive (unsigned)
+        env:
+          ARCHIVE_PATH: ${{ runner.temp }}/Dupbuster.xcarchive
+        run: |
+          xcodebuild archive \
+            -workspace ios/Dupbuster.xcworkspace \
+            -scheme Dupbuster \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=''
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dupbuster-ios-archive-${{ github.ref_name }}
+          path: ${{ runner.temp }}/Dupbuster.xcarchive
+          if-no-files-found: error
+          retention-days: 30

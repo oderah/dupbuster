@@ -601,6 +601,14 @@ New code must land in these areas unless architecture is amended first.
 - **CI:** `.github/workflows/security-ci-gates.yml` on `dev`/`main` push and PR; `npm run test:security-gates` → `scripts/run-security-ci-gates.sh` (Jest + Gradle `SecurityCiGateTest` + `SecurityUriCiGateTest` + `RedactionFilterTest` + `SafUriRulesTest`).
 - **Prod gate:** M4 prod promote requires green AC-security-redact-01 **and** AC-security-uri-01 on prod candidate.
 
+### Release matrix build (M4-07)
+
+- **Workflow:** `.github/workflows/release-matrix.yml` — triggers on tag push `v*` (implementation-plan §11.2 step 3).
+- **Jobs:** `verify-js` (lint + full Jest + securityCiGate contract) → `android-release` (security native gates + `bundleRelease` + `assembleRelease`) + `ios-release` (macOS: `DupbusterScanEngineTests` then unsigned Release `xcodebuild archive`).
+- **Artifacts:** `dupbuster-android-aab-{tag}`, `dupbuster-android-apk-{tag}`, `dupbuster-ios-archive-{tag}` (30-day retention); store signing/upload is M4-08 Fastlane.
+- **Local:** `scripts/ci-android-release.sh` (Linux/macOS); `scripts/ci-ios-release.sh` (macOS + Xcode only).
+- **Android CI:** `android-actions/setup-android@v3` with NDK `27.1.12297006`, platforms 36, build-tools 36.0.0; `bundleRelease` / `assembleRelease` use debug keystore until Fastlane prod signing.
+
 ### iOS BGProcessingTask continuation (M4-03)
 
 - **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).
