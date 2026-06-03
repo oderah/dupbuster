@@ -179,7 +179,7 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 | M4-12 | TestFlight external beta complete | |
 | M4-13 | Opt-in crash analytics default off | |
 | M4-14 | Privacy policy URL (on-device processing) | |
-| M4-15 | schema_version migration + rescan prompt golden test | |
+| M4-15 | schema_version migration + rescan prompt golden test | `index-schema-migration-01` + `test:schema-migration` |
 
 ### 6.2 M4 prod promote gates
 

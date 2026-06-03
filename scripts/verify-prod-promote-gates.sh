@@ -34,9 +34,13 @@ npm run test:crash-analytics
 echo "==> Privacy policy URL contract (M4-14)"
 npm run test:privacy-policy
 
+echo "==> Schema migration + rescan prompt golden (M4-15)"
+npm run test:schema-migration
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \
+  --tests 'com.dupbuster.scanengine.fixtures.SchemaMigrationFixtureTest' \
   --tests 'com.dupbuster.scanengine.fixtures.EquivFixturesTest' \
   --tests 'com.dupbuster.scanengine.fixtures.SecurityCiGateTest' \
   --tests 'com.dupbuster.scanengine.fixtures.SecurityUriCiGateTest' \

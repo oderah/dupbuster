@@ -20,6 +20,8 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 
 **Privacy policy URL (M4-14):** `docs/store/privacy-policy.md` → host at `https://dupbuster.app/privacy`; in-app `PrivacyPolicyLink` (`npm run test:privacy-policy` contract); runbook `tests/manual/m4-privacy-policy-url.md`.
 
+**Schema migration + rescan golden (M4-15):** `index-schema-migration-01.json` drives native fixture tests + JS golden (`npm run test:schema-migration`); links migration `fullRescanRequired` to `RescanPromptBanner` (FR-IX-05).
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)

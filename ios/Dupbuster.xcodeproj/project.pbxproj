@@ -193,6 +193,7 @@
 		D4M404142B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */; };
 		D4M404162B68260000A75B9A /* DBRedactionFilterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */; };
 		D4M405162B68270000A75B9A /* DBSecurityCiGateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M405062B68270000A75B9A /* DBSecurityCiGateTests.m */; };
+		D4M415162B68290000A75B9A /* DBSchemaMigrationFixtureTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M415062B68290000A75B9A /* DBSchemaMigrationFixtureTests.m */; };
 		D4M404222B68260000A75B9A /* DBRedactionFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404022B68260000A75B9A /* DBRedactionFilter.m */; };
 		D4M404242B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */; };
 		D4M406122B68280000A75B9A /* DBTelemetryAllowedFields.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M406022B68280000A75B9A /* DBTelemetryAllowedFields.m */; };
@@ -348,6 +349,7 @@
 		D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanTelemetryEgress.m; path = ScanEngine/Security/DBScanTelemetryEgress.m; sourceTree = "<group>"; };
 		D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBRedactionFilterTests.m; path = ScanEngineTests/DBRedactionFilterTests.m; sourceTree = "<group>"; };
 		D4M405062B68270000A75B9A /* DBSecurityCiGateTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBSecurityCiGateTests.m; path = ScanEngineTests/DBSecurityCiGateTests.m; sourceTree = "<group>"; };
+		D4M415062B68290000A75B9A /* DBSchemaMigrationFixtureTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBSchemaMigrationFixtureTests.m; path = ScanEngineTests/DBSchemaMigrationFixtureTests.m; sourceTree = "<group>"; };
 		D4M406012B68280000A75B9A /* DBTelemetryAllowedFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBTelemetryAllowedFields.h; path = ScanEngine/Security/DBTelemetryAllowedFields.h; sourceTree = "<group>"; };
 		D4M406022B68280000A75B9A /* DBTelemetryAllowedFields.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBTelemetryAllowedFields.m; path = ScanEngine/Security/DBTelemetryAllowedFields.m; sourceTree = "<group>"; };
 		D4M406032B68280000A75B9A /* DBScanTelemetryEgressTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanTelemetryEgressTests.m; path = ScanEngineTests/DBScanTelemetryEgressTests.m; sourceTree = "<group>"; };
@@ -700,6 +702,7 @@
 				D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */,
 				D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */,
 				D4M405062B68270000A75B9A /* DBSecurityCiGateTests.m */,
+				D4M415062B68290000A75B9A /* DBSchemaMigrationFixtureTests.m */,
 				D4M406032B68280000A75B9A /* DBScanTelemetryEgressTests.m */,
 			);
 			name = ScanEngineTests;
@@ -1035,6 +1038,7 @@
 				D4M404162B68260000A75B9A /* DBRedactionFilterTests.m in Sources */,
 				D4M406162B68280000A75B9A /* DBScanTelemetryEgressTests.m in Sources */,
 				D4M405162B68270000A75B9A /* DBSecurityCiGateTests.m in Sources */,
+				D4M415162B68290000A75B9A /* DBSchemaMigrationFixtureTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

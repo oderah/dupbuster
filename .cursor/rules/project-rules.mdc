@@ -653,6 +653,14 @@ New code must land in these areas unless architecture is amended first.
 - **Tests:** `npm run test:crash-analytics`; `ScanTelemetryEgressTest` / `DBScanTelemetryEgressTests`; included in `scripts/verify-prod-promote-gates.sh`.
 - **Store:** M4-09 privacy forms assume default off; enabling collection requires re-filing per `docs/store/privacy-store-disclosure.md` §6.
 
+### Schema migration + rescan golden (M4-15)
+
+- **Fixture:** `tests/fixtures/dupbuster/v1/index-schema-migration-01.json` — v1→v2 sets `full_rescan_required`, clears duplicate groups, adds video/match_kind columns (FR-IX-05 / M1-15).
+- **Native:** `SchemaMigrationFixtureTest` (Android), `DBSchemaMigrationFixtureTests` (iOS) assert fixture `expect` against `CatalogMigrator` / `DBCatalogDatabase` open path.
+- **JS golden:** `src/testing/schemaMigrationFixture.ts` + `RESCAN_AFTER_MIGRATION_GOLDEN` in `__tests__/schemaMigrationRescanGolden.test.ts` — post-migration `getCatalogMeta` shape → `reduceScanSessionOnCatalogMetaLoaded` → `RescanPromptBanner` frozen tokens/a11y.
+- **Tests:** `npm run test:schema-migration`; Android `SchemaMigrationFixtureTest` in `scripts/verify-prod-promote-gates.sh`.
+- **Manual:** M4-SMOKE-24 / M2-SMOKE-09 rescan banner on device after upgrade still required for VO/TB.
+
 ### Privacy policy URL (M4-14)
 
 - **Policy text:** `docs/store/privacy-policy.md` — user-facing on-device-only processing (NFR-06); aligned with M4-09 `privacy-store-disclosure.md`.

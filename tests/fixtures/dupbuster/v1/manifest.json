@@ -346,7 +346,7 @@
       "path": "index-schema-migration-01.json",
       "category": "index",
       "platform": "both",
-      "acceptanceCriteria": [],
+      "acceptanceCriteria": ["FR-IX-05"],
       "kind": "descriptor"
     },
     {
