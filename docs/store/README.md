@@ -11,3 +11,5 @@ Operator-facing guides for **Play Console Data safety** and **App Store Connect 
 **Related (not M4-09):** M4-14 privacy policy URL; M4-13 opt-in crash analytics UI default off.
 
 **Automated alignment:** `npm run test:store-privacy` — `Info.plist` usage string vs `tokens.denied.blocking`; `PrivacyInfo.xcprivacy` declares no collected data types and no tracking.
+
+**Device matrix QA (M4-10):** `tests/manual/m4-store-matrix-qa.md` — execute before prod promote; `npm run test:store-matrix` locks document contract on CI.

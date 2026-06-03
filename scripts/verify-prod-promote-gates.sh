@@ -19,6 +19,9 @@ npm run test:a11y
 echo "==> Store privacy alignment (M4-09)"
 npm run test:store-privacy
 
+echo "==> Store matrix QA contract (M4-10)"
+npm run test:store-matrix
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \
@@ -27,10 +30,11 @@ cd android
   --tests 'com.dupbuster.scanengine.fixtures.SecurityUriCiGateTest'
 
 echo "==> Manual §6.2 gates (confirm before prod promote)"
+echo "  - Store-matrix QA signed off: tests/manual/m4-store-matrix-qa.md (M4-10)"
 echo "  - FGS cancel notification cleared ≤ 120 s (AC-integrity-cancel-01)"
-echo "  - Play pre-launch report clean API 26/33/34"
+echo "  - Play pre-launch report clean API 26/33/34 (M4-11, after M4-10)"
 echo "  - TestFlight external beta complete"
-echo "  - Manual VoiceOver/TalkBack smoke signed off"
+echo "  - Manual VoiceOver/TalkBack smoke signed off (M2-11)"
 
 if [[ "${DUPBUSTER_PROD_PROMOTE_APPROVED:-}" != "1" ]]; then
   echo "Set DUPBUSTER_PROD_PROMOTE_APPROVED=1 after manual sign-off." >&2

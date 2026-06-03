@@ -15,7 +15,8 @@
     "test:security-gates": "bash scripts/run-security-ci-gates.sh",
     "release:internal": "bash scripts/run-fastlane-lane.sh internal both",
     "release:prod": "bash scripts/run-fastlane-lane.sh prod both",
-    "test:store-privacy": "jest --testPathPattern=storePrivacyAlignment"
+    "test:store-privacy": "jest --testPathPattern=storePrivacyAlignment",
+    "test:store-matrix": "jest --testPathPattern=storeMatrixQaContract"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

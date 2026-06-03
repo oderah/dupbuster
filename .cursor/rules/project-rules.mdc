@@ -629,6 +629,13 @@ New code must land in these areas unless architecture is amended first.
 - **Tests:** `npm run test:store-privacy` (`__tests__/storePrivacyAlignment.test.ts`); included in `scripts/verify-prod-promote-gates.sh`.
 - **M4-14:** Privacy policy URL is separate; link in listings when published.
 
+### Store-matrix QA (M4-10)
+
+- **Matrix:** `tests/manual/m4-store-matrix-qa.md` — manual QA on Android API **26, 33, 34** and iOS **15, 17, 18** per `implementation-plan.md` §9.3 (scoped storage, FGS/cancel, SAF, MediaStore/PHAsset delete, limited vs full Photos).
+- **Contract:** `npm run test:store-matrix` (`__tests__/storeMatrixQaContract.test.ts`); included in `scripts/verify-prod-promote-gates.sh`.
+- **Sign-off:** Required before prod promote and **M4-11** Play pre-launch on the same release AAB; complements M2-11 a11y smoke.
+- **Rows:** `M4-SMOKE-*`; AC-integrity-cancel-01 on A26/A33/A34; AC-security-uri-01 via CI (`M4-SMOKE-10`).
+
 ### iOS BGProcessingTask continuation (M4-03)
 
 - **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).

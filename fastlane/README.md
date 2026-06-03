@@ -73,6 +73,8 @@ Wrappers: `scripts/run-fastlane-lane.sh internal|prod android|ios`
 
 Before **prod** submit, complete Play Data safety and App Store App Privacy using `docs/store/` (M4-09). `npm run test:store-privacy` must be green on the release tag.
 
+Execute and sign off `tests/manual/m4-store-matrix-qa.md` (M4-10) on API 26/33/34 Android and iOS 15/17/18 before Play pre-launch (M4-11).
+
 ## CI
 
 `.github/workflows/fastlane-deploy.yml` — `workflow_dispatch` with `lane` (`internal` / `prod`) and `platform` (`android` / `ios` / `both`). Configure repository secrets before first run.

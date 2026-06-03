@@ -10,6 +10,8 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 
 **Store privacy (M4-09):** `docs/store/` — Play Data safety + App Store App Privacy answer guides (`npm run test:store-privacy`).
 
+**Store-matrix QA (M4-10):** `tests/manual/m4-store-matrix-qa.md` — manual API 26/33/34 + iOS 15/17/18 matrix (`npm run test:store-matrix` contract).
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)
