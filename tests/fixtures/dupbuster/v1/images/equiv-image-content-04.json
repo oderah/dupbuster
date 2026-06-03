@@ -1,0 +1,20 @@
+{
+  "id": "equiv-image-content-04",
+  "description": "Byte-identical copies → EXACT_BYTES only",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-image-content-04"
+  ],
+  "input": {
+    "rawHash": "samebytes",
+    "members": [
+      {
+        "dHash": 1088650727939268872
+      }
+    ]
+  },
+  "expect": {
+    "matchKind": "EXACT_BYTES",
+    "noSeparateSameContentImageGroup": true
+  }
+}

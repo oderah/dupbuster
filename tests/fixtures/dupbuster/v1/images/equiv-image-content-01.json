@@ -1,0 +1,29 @@
+{
+  "id": "equiv-image-content-01",
+  "description": "Three JPEGs same picture different compression → one SAME_CONTENT_IMAGE group",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-image-content-01"
+  ],
+  "input": {
+    "members": [
+      {
+        "rawHash": "raw-large",
+        "dHash": 1088650727939268872
+      },
+      {
+        "rawHash": "raw-large-2",
+        "dHash": 1088650727939268872
+      },
+      {
+        "rawHash": "raw-small",
+        "dHash": 1088650727939268880
+      }
+    ]
+  },
+  "expect": {
+    "matchKind": "SAME_CONTENT_IMAGE",
+    "memberCountMin": 3,
+    "contentMatchesAllPairs": true
+  }
+}

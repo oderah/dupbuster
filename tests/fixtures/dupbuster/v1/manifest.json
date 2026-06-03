@@ -286,6 +286,46 @@
       "kind": "equivalence"
     },
     {
+      "id": "equiv-image-content-01",
+      "path": "images/equiv-image-content-01.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-image-content-01"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-image-content-02",
+      "path": "images/equiv-image-content-02.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-image-content-02"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-image-content-03",
+      "path": "images/equiv-image-content-03.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-image-content-03"
+      ],
+      "kind": "equivalence"
+    },
+    {
+      "id": "equiv-image-content-04",
+      "path": "images/equiv-image-content-04.json",
+      "category": "images",
+      "platform": "both",
+      "acceptanceCriteria": [
+        "AC-equiv-image-content-04"
+      ],
+      "kind": "equivalence"
+    },
+    {
       "id": "index-duplicate-group-01",
       "path": "index-duplicate-group-01.json",
       "category": "index",

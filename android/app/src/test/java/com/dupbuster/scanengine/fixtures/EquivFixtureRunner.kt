@@ -18,7 +18,9 @@ import com.dupbuster.scanengine.hash.VideoFingerprinter
 import com.dupbuster.scanengine.hash.VideoFingerprint
 import com.dupbuster.scanengine.hash.VideoFrameExtractOutcome
 import com.dupbuster.scanengine.hash.VideoFrameExtractor
+import com.dupbuster.scanengine.hash.ImageContentMatcher
 import com.dupbuster.scanengine.hash.VideoContentMatcher
+import com.dupbuster.scanengine.hash.VideoFingerprintCodec
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.Grouper
 import com.dupbuster.scanengine.index.IndexWriter
@@ -50,6 +52,7 @@ object EquivFixtureRunner {
           id.startsWith("equiv-img-") ||
           id == "equiv-av-01" -> runGrouperHashFixture(fixture)
       id.startsWith("equiv-video-xres-") -> runVideoXresFixture(fixture)
+      id.startsWith("equiv-image-content-") -> runImageContentFixture(fixture)
       else -> error("Unhandled equivalence fixture: $id")
     }
   }
@@ -256,22 +259,30 @@ object EquivFixtureRunner {
     val expect = fixture.getJSONObject("expect")
     val rawHash = input.getString("rawHash")
     val members = parseVideoMembers(input.getJSONArray("members"))
-    val videoHash = members.first().frameHashes.joinToString("-")
+    val template = members.first()
+    val frameHashes = template.frameHashes
+    val videoHash = VideoFingerprintCodec.canonicalHashValue(frameHashes)
+    val frameHashesBlob = VideoFingerprintCodec.encodeFrameHashesBlob(frameHashes)
     val catalog = freshCatalog(context)
 
     repeat(2) { i ->
+      val staged =
+          staged(
+              context,
+              100L,
+              MediaTypeHint.VIDEO,
+              suffix = "v$i",
+              rootId = catalog.rootId,
+              durationMs = template.durationMs,
+          )
       catalog.writer.upsertVideoDualHashed(
-          rawBytes =
-              HashedFile(
-                  staged(context, 100L, MediaTypeHint.VIDEO, suffix = "v$i", rootId = catalog.rootId),
-                  rawHash,
-                  NormalizationProfile.RAW_BYTES,
-              ),
+          rawBytes = HashedFile(staged, rawHash, NormalizationProfile.RAW_BYTES),
           videoContent =
               HashedFile(
-                  staged(context, 100L, MediaTypeHint.VIDEO, suffix = "v$i", rootId = catalog.rootId),
-                  videoHash,
-                  NormalizationProfile.VIDEO_CONTENT_V1,
+                  staged = staged,
+                  hashValue = videoHash,
+                  normalizationProfile = NormalizationProfile.VIDEO_CONTENT_V1,
+                  frameHashesBlob = frameHashesBlob,
               ),
           generation = 1,
       )
@@ -286,6 +297,149 @@ object EquivFixtureRunner {
       assertEquals(1, catalog.grouper.duplicateGroupCount())
       assertTrue(catalog.grouper.duplicateGroupIdsWithMatchKind(MatchKind.SAME_CONTENT_VIDEO).isEmpty())
     }
+  }
+
+  private fun runImageContentFixture(fixture: JSONObject) {
+    val id = fixture.getString("id")
+    when (id) {
+      "equiv-image-content-04" -> runImageExactBytesPrecedenceFixture(fixture)
+      "equiv-image-content-01" -> runImageContentGrouperFixture(fixture)
+      else -> runImageMatcherFixture(fixture)
+    }
+  }
+
+  private fun runImageMatcherFixture(fixture: JSONObject) {
+    val input = fixture.getJSONObject("input")
+    val expect = fixture.getJSONObject("expect")
+    val members = parseImageMembers(input.getJSONArray("members"))
+
+    if (expect.has("contentMatchesAllPairs")) {
+      val allPairs = expect.getBoolean("contentMatchesAllPairs")
+      for (i in members.indices) {
+        for (j in i + 1 until members.size) {
+          val matches = ImageContentMatcher.matches(members[i].dHash, members[j].dHash)
+          if (allPairs) {
+            assertTrue("${fixture.getString("id")} pair $i,$j should match", matches)
+          } else {
+            assertFalse("${fixture.getString("id")} pair $i,$j should not match", matches)
+          }
+        }
+      }
+    }
+
+    if (expect.has("contentMatches")) {
+      assertEquals(
+          expect.getBoolean("contentMatches"),
+          ImageContentMatcher.matches(members[0].dHash, members[1].dHash),
+      )
+    }
+
+    if (expect.has("matchKind") && expect.optString("matchKind") == MatchKind.SAME_CONTENT_IMAGE) {
+      assertTrue(ImageContentMatcher.matches(members[0].dHash, members[1].dHash))
+    }
+
+    if (expect.has("memberCountMin")) {
+      val min = expect.getInt("memberCountMin")
+      assertTrue(members.size >= min)
+    }
+  }
+
+  private fun runImageContentGrouperFixture(fixture: JSONObject) {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val input = fixture.getJSONObject("input")
+    val expect = fixture.getJSONObject("expect")
+    val members = parseImageMembers(input.getJSONArray("members"))
+    val catalog = freshCatalog(context)
+
+    members.forEachIndexed { index, member ->
+      upsertImageDualInCatalog(
+          catalog = catalog,
+          suffix = "img-$index",
+          rawHash = member.rawHash ?: "raw-$index",
+          dHash = member.dHash,
+      )
+    }
+
+    catalog.grouper.rebuildDuplicateGroups()
+
+    if (expect.has("matchKind")) {
+      assertEquals(
+          expect.getString("matchKind"),
+          catalog.grouper.matchKindForGroup(requireNotNull(catalog.grouper.firstDuplicateGroupId())),
+      )
+    }
+    if (expect.has("memberCountMin")) {
+      val groupId = requireNotNull(catalog.grouper.firstDuplicateGroupId())
+      assertTrue(catalog.grouper.memberCountForGroup(groupId) >= expect.getInt("memberCountMin"))
+    }
+  }
+
+  private fun runImageExactBytesPrecedenceFixture(fixture: JSONObject) {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val input = fixture.getJSONObject("input")
+    val expect = fixture.getJSONObject("expect")
+    val rawHash = input.getString("rawHash")
+    val template = parseImageMembers(input.getJSONArray("members")).first()
+    val catalog = freshCatalog(context)
+
+    repeat(2) { index ->
+      upsertImageDualInCatalog(
+          catalog = catalog,
+          suffix = "img-$index",
+          rawHash = rawHash,
+          dHash = template.dHash,
+      )
+    }
+
+    catalog.grouper.rebuildDuplicateGroups()
+    assertEquals(
+        expect.getString("matchKind"),
+        catalog.grouper.matchKindForGroup(requireNotNull(catalog.grouper.firstDuplicateGroupId())),
+    )
+    if (expect.optBoolean("noSeparateSameContentImageGroup")) {
+      assertEquals(1, catalog.grouper.duplicateGroupCount())
+      assertTrue(catalog.grouper.duplicateGroupIdsWithMatchKind(MatchKind.SAME_CONTENT_IMAGE).isEmpty())
+    }
+  }
+
+  private data class ImageMember(val dHash: Long, val rawHash: String? = null)
+
+  private fun parseImageMembers(array: JSONArray): List<ImageMember> =
+      (0 until array.length()).map { index ->
+        val member = array.getJSONObject(index)
+        ImageMember(
+            dHash = member.getLong("dHash"),
+            rawHash = member.optString("rawHash", null),
+        )
+      }
+
+  private fun upsertImageDualInCatalog(
+      catalog: CatalogHarness,
+      suffix: String,
+      rawHash: String,
+      dHash: Long,
+  ) {
+    val staged =
+        staged(
+            ApplicationProvider.getApplicationContext(),
+            100L,
+            MediaTypeHint.IMAGE,
+            suffix = suffix,
+            rootId = catalog.rootId,
+        )
+    val frameHashesBlob = VideoFingerprintCodec.encodeFrameHashesBlob(longArrayOf(dHash))
+    val imageHash = VideoFingerprintCodec.canonicalHashValue(longArrayOf(dHash))
+    catalog.writer.upsertImageDualHashed(
+        rawBytes = HashedFile(staged, rawHash, NormalizationProfile.RAW_BYTES),
+        imageContent =
+            HashedFile(
+                staged = staged,
+                hashValue = imageHash,
+                normalizationProfile = NormalizationProfile.IMAGE_CONTENT_V1,
+                frameHashesBlob = frameHashesBlob,
+            ),
+        generation = 1,
+    )
   }
 
   private fun runVideoDecodeFailedFixture(fixture: JSONObject) {

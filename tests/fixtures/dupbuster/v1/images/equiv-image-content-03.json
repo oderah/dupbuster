@@ -1,0 +1,21 @@
+{
+  "id": "equiv-image-content-03",
+  "description": "Different pictures → not grouped",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-image-content-03"
+  ],
+  "input": {
+    "members": [
+      {
+        "dHash": 1088650727939268872
+      },
+      {
+        "dHash": 12297829400073008615
+      }
+    ]
+  },
+  "expect": {
+    "contentMatches": false
+  }
+}

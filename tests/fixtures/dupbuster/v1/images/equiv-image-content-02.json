@@ -1,0 +1,21 @@
+{
+  "id": "equiv-image-content-02",
+  "description": "Hamming distance above threshold → not grouped",
+  "platform": "both",
+  "acceptanceCriteria": [
+    "AC-equiv-image-content-02"
+  ],
+  "input": {
+    "members": [
+      {
+        "dHash": 1088650727939268872
+      },
+      {
+        "dHash": 17367009104252427255
+      }
+    ]
+  },
+  "expect": {
+    "contentMatches": false
+  }
+}
