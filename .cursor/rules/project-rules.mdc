@@ -590,8 +590,16 @@ New code must land in these areas unless architecture is amended first.
 - **iOS:** `DBRedactionFilter`, `DBScanTelemetryEgress` under `ScanEngine/Security/`.
 - **Placeholder:** `[REDACTED]` — pattern 1 matches full path segment (not prefix-only) for AC-security-redact-01.
 - **Bridge:** `ScanErrorBridgeMapper` / `DBScanErrorBridgeMapper` redact `unscannableReason`; `ScanEngineModule.toEventEmitterMap` redacts event string fields. Catalog `getCatalogSnapshot` paths are UI-only (FR-SE-04).
-- **Tests:** `RedactionFilterTest`, `SecurityRedactFixtureTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.security.RedactionFilterTest' --tests 'com.dupbuster.scanengine.fixtures.SecurityRedactFixtureTest'`; iOS `DBRedactionFilterTests`; fixture `security/security-redact-01.json`.
-- **M4-05:** CI gate wires `mustNotContainRawPath` / `ciGate` from fixture — not in M4-04.
+- **Tests:** `RedactionFilterTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.security.RedactionFilterTest'`; iOS `DBRedactionFilterTests`; fixture `security/security-redact-01.json`.
+
+### Security CI gate (M4-05)
+
+- **Fixture contract:** `expect.ciGate` + `expect.mustNotContainRawPath` on `security/security-redact-01.json` (AC-security-redact-01).
+- **Android:** `SecurityCiGateRunner` / `SecurityCiGateTest` (parameterized over `FixtureLoader.ciGateFixturePaths()`); asserts `ScanTelemetryEgress` crash message, structured payload, and exception line never contain raw paths.
+- **iOS:** `DBSecurityCiGateTests` — same fixture-driven checks via `DBScanTelemetryEgress`.
+- **JS:** `__tests__/securityCiGate.test.ts` — manifest/descriptor contract (native enforcement in CI).
+- **CI:** `.github/workflows/security-ci-gates.yml` on `dev`/`main` push and PR; `npm run test:security-gates` → `scripts/run-security-ci-gates.sh` (Jest + Gradle `SecurityCiGateTest` + `RedactionFilterTest`).
+- **Prod gate:** M4 prod promote requires green AC-security-redact-01 (with AC-security-uri-01 in M4-06).
 
 ### iOS BGProcessingTask continuation (M4-03)
 
@@ -636,7 +644,7 @@ Work must respect **dependency order:** M1 ScanEngine (critical path) → M2 RN 
 | ScanEngine / hash / schema | Native unit tests; all relevant `tests/fixtures/dupbuster/v1/` rows |
 | Bridge / progress | AC-integrity-progress-01 (≤4 events/s under load) |
 | URI / SAF | AC-security-uri-01 fixture |
-| Redaction / telemetry | AC-security-redact-01 CI gate |
+| Redaction / telemetry | `npm run test:security-gates` or workflow `security-ci-gates.yml` (AC-security-redact-01) |
 | RN UI catalog | Component tests + automated a11y (zero critical violations on M2 gate components) |
 | Delete / TOCTOU | M3 integration suite |
 

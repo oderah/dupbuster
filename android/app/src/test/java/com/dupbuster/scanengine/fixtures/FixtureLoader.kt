@@ -28,6 +28,19 @@ object FixtureLoader {
     return paths.sorted()
   }
 
+  /** Fixture paths with `expect.ciGate: true` (M4-05 prod security gates). */
+  fun ciGateFixturePaths(): List<String> {
+    val paths = mutableListOf<String>()
+    for (i in 0 until manifestFixtures().length()) {
+      val path = manifestFixtures().getJSONObject(i).getString("path")
+      val expect = load(path).optJSONObject("expect")
+      if (expect != null && expect.optBoolean("ciGate")) {
+        paths.add(path)
+      }
+    }
+    return paths.sorted()
+  }
+
   private fun manifestFixtures(): JSONArray {
     val manifest = JSONObject(readUtf8(root().resolve("manifest.json")))
     return manifest.getJSONArray("fixtures")

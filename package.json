@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "start": "react-native start --reset-cache --host 0.0.0.0 --port 8081",
     "test": "jest",
-    "test:a11y": "jest --testPathPattern='__tests__/a11y/'"
+    "test:a11y": "jest --testPathPattern='__tests__/a11y/'",
+    "test:security-gates": "bash scripts/run-security-ci-gates.sh"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
