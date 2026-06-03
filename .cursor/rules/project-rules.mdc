@@ -112,7 +112,7 @@ UTF-8 decode → strip BOM → NFC → CRLF→LF → SHA-256. **Do not trim** tr
 - Discovery: PHAsset + security-scoped bookmarks; limited library → authorized IDs only + `limited-library` banner.
 - Access: `NSFileCoordinator` + scoped resource access.
 - Delete: `PHAssetChangeRequest`.
-- Background: foreground-primary scan; BGProcessingTask continuation only.
+- Background: foreground-primary scan; `DBScanBackgroundContinuation` BGProcessingTask hook for in-flight continuation only (M4-03).
 
 ### Both
 
@@ -583,6 +583,16 @@ New code must land in these areas unless architecture is amended first.
 - **Manifest:** `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC`; service `android:foregroundServiceType="dataSync"`.
 - **Cancel teardown (M4-02):** `cancelScan` → `CANCELLING` + `openFileRegistry.closeAll()` + `onCancelRequested`; `ScanCancelDrainWatchdog` force-expires drain at 30 s; hash uses 5 s per-file read cap via `HashPipeline.hash(..., hashDeadlineMs)`; FGS stops on `CANCELLED`; `AndroidScanForegroundController` hard-stops at 120 s; `ScanForegroundService.onDestroy` cancels notification ID.
 - **Tests:** `ScanForegroundNotificationCopyTest`, `AndroidScanForegroundControllerTest`, `ScanForegroundServiceTest`, `ScanCancelDrainWatchdogTest`, `IntegrityCancelFixtureTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.foreground.*' --tests 'com.dupbuster.scanengine.scan.ScanCancelDrainWatchdogTest'`.
+
+### iOS BGProcessingTask continuation (M4-03)
+
+- **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).
+- **Info.plist:** `BGTaskSchedulerPermittedIdentifiers` + `UIBackgroundModes` `processing`; links `BackgroundTasks.framework`.
+- **Foreground-primary:** Scans start in foreground only; on `UIApplicationDidEnterBackground` with tracked active run → `beginBackgroundTask` grace + submit `BGProcessingTaskRequest`. No cold-start auto-resume from BG task (user resume stays `ResumePromptBanner` / FR-SI-03).
+- **Orchestrator:** `DBScanOrchestrator.backgroundContinuation` — `notifyActiveScanRunId` on start/resume, `notifyScanEnded` in pipeline `@finally` / abandon; `activeScanRunId` for BG handler.
+- **Expiration:** BG task or grace expiration → `pauseScanWithId` + checkpoint (same as user pause).
+- **Registration:** `RCTNativeScanEngine` `registerApplicationIntegration` + `bindOrchestrator` on first orchestrator create.
+- **Tests:** `DBScanBackgroundContinuationTests` in `DupbusterScanEngineTests` target.
 
 ### MatchKindBadge (M2-12)
 

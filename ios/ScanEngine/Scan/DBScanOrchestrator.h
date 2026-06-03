@@ -6,6 +6,7 @@
 #import "DBStatStage.h"
 
 @class DBCheckpointStore;
+@class DBScanBackgroundContinuation;
 @class DBScanRunSnapshot;
 @class DBIndexWriter;
 @class DBGrouper;
@@ -32,6 +33,9 @@ typedef NS_ERROR_ENUM(DBScanOrchestratorErrorDomain, DBScanOrchestratorError) {
 /** Wires discovery → stat → hash → index → group with throttled progress (M1-19). */
 @interface DBScanOrchestrator : NSObject
 
+/** Optional M4-03 BGProcessingTask continuation hook (foreground-primary). */
+@property (nonatomic, weak, nullable) DBScanBackgroundContinuation *backgroundContinuation;
+
 - (instancetype)initWithIndexWriter:(DBIndexWriter *)indexWriter
                    checkpointStore:(DBCheckpointStore *)checkpointStore
                            grouper:(DBGrouper *)grouper
@@ -54,6 +58,9 @@ typedef NS_ERROR_ENUM(DBScanOrchestratorErrorDomain, DBScanOrchestratorError) {
 - (nullable DBScanRunSnapshot *)resumableScanRun;
 
 - (BOOL)abandonScanForRestartWithId:(NSInteger)scanRunId error:(NSError *_Nullable *_Nullable)error;
+
+/** Active in-memory scan run id, or 0 when no session (M4-03). */
+- (NSInteger)activeScanRunId;
 
 @end
 

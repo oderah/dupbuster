@@ -1,5 +1,6 @@
 #import "DBScanOrchestrator.h"
 
+#import "DBScanBackgroundContinuation.h"
 #import "DBCheckpointStore.h"
 #import "DBDiscoveredEntry.h"
 #import "DBGrantRevocationTracker.h"
@@ -120,6 +121,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   _activeSession = session;
   [_sessionLock unlock];
 
+  [self.backgroundContinuation notifyActiveScanRunId:scanRunId];
+
   dispatch_async(_workQueue, ^{
     [self runScanWithRequest:request
                         plan:plan
@@ -145,6 +148,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   [_sessionLock lock];
   if (_activeSession.scanRunId == scanRunId) {
     _activeSession = nil;
+    [self.backgroundContinuation notifyScanEnded];
   }
   [_sessionLock unlock];
   return YES;
@@ -197,6 +201,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
   [_sessionLock lock];
   _activeSession = session;
   [_sessionLock unlock];
+
+  [self.backgroundContinuation notifyActiveScanRunId:resumeScanRunId];
 
   dispatch_async(_workQueue, ^{
     [self runScanWithRequest:request
@@ -463,6 +469,7 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
     [_sessionLock lock];
     _activeSession = nil;
     [_sessionLock unlock];
+    [self.backgroundContinuation notifyScanEnded];
   }
 }
 
@@ -745,6 +752,14 @@ typedef struct {
 }
 
 #pragma mark - Session helpers
+
+- (NSInteger)activeScanRunId
+{
+  [_sessionLock lock];
+  NSInteger scanRunId = _activeSession != nil ? _activeSession.scanRunId : 0;
+  [_sessionLock unlock];
+  return scanRunId;
+}
 
 - (BOOL)assertNoConflictingActiveScanWithError:(NSError **)error
 {

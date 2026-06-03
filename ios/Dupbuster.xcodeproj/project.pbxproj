@@ -182,6 +182,13 @@
 		D4M3121F2B68240000A75B9A /* DBImageContentMatcherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312122B68240000A75B9A /* DBImageContentMatcherTests.m */; };
 		D4M312202B68240000A75B9A /* DBGrouperImageContentTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312132B68240000A75B9A /* DBGrouperImageContentTests.m */; };
 		D4M312212B68240000A75B9A /* DBGrantRevocationTrackerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312142B68240000A75B9A /* DBGrantRevocationTrackerTests.m */; };
+		D4M403122B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403022B68250000A75B9A /* DBScanBackgroundContinuationConstants.m */; };
+		D4M403142B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */; };
+		D4M403162B68250000A75B9A /* DBScanBackgroundContinuationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */; };
+		D4M403222B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403022B68250000A75B9A /* DBScanBackgroundContinuationConstants.m */; };
+		D4M403242B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */; };
+		D4M403132B68250000A75B9A /* BackgroundTasks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4M403232B68250000A75B9A /* BackgroundTasks.framework */; };
+		D4M403332B68250000A75B9A /* BackgroundTasks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4M403232B68250000A75B9A /* BackgroundTasks.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -320,6 +327,12 @@
 		D4M312122B68240000A75B9A /* DBImageContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageContentMatcherTests.m; path = ScanEngineTests/DBImageContentMatcherTests.m; sourceTree = "<group>"; };
 		D4M312132B68240000A75B9A /* DBGrouperImageContentTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBGrouperImageContentTests.m; path = ScanEngineTests/DBGrouperImageContentTests.m; sourceTree = "<group>"; };
 		D4M312142B68240000A75B9A /* DBGrantRevocationTrackerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBGrantRevocationTrackerTests.m; path = ScanEngineTests/DBGrantRevocationTrackerTests.m; sourceTree = "<group>"; };
+		D4M403012B68250000A75B9A /* DBScanBackgroundContinuationConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanBackgroundContinuationConstants.h; path = ScanEngine/Background/DBScanBackgroundContinuationConstants.h; sourceTree = "<group>"; };
+		D4M403022B68250000A75B9A /* DBScanBackgroundContinuationConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanBackgroundContinuationConstants.m; path = ScanEngine/Background/DBScanBackgroundContinuationConstants.m; sourceTree = "<group>"; };
+		D4M403032B68250000A75B9A /* DBScanBackgroundContinuation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanBackgroundContinuation.h; path = ScanEngine/Background/DBScanBackgroundContinuation.h; sourceTree = "<group>"; };
+		D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanBackgroundContinuation.m; path = ScanEngine/Background/DBScanBackgroundContinuation.m; sourceTree = "<group>"; };
+		D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanBackgroundContinuationTests.m; path = ScanEngineTests/DBScanBackgroundContinuationTests.m; sourceTree = "<group>"; };
+		D4M403232B68250000A75B9A /* BackgroundTasks.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BackgroundTasks.framework; path = System/Library/Frameworks/BackgroundTasks.framework; sourceTree = SDKROOT; };
 		D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBEquivFixturesTests.m; path = ScanEngineTests/DBEquivFixturesTests.m; sourceTree = "<group>"; };
 		D4F8A3402B68210000A75B9A /* DBScanStartRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanStartRequest.h; path = ScanEngine/Scan/DBScanStartRequest.h; sourceTree = "<group>"; };
 		D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequest.m; path = ScanEngine/Scan/DBScanStartRequest.m; sourceTree = "<group>"; };
@@ -380,6 +393,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4F8A2342B68140000A75B9A /* Photos.framework in Frameworks */,
+				D4M403332B68250000A75B9A /* BackgroundTasks.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,6 +403,7 @@
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-Dupbuster.a in Frameworks */,
 				D4F8A2322B68140000A75B9A /* Photos.framework in Frameworks */,
+				D4M403132B68250000A75B9A /* BackgroundTasks.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,9 +443,21 @@
 				D4F8A2AE2B68180000A75B9A /* Index */,
 				D4F8A2D02B681A0000A75B9A /* Bridge */,
 				D4F8A33F2B68210000A75B9A /* Scan */,
+				D4M403302B68250000A75B9A /* Background */,
 				D4M303002B68230000A75B9A /* Delete */,
 			);
 			name = ScanEngine;
+			sourceTree = "<group>";
+		};
+		D4M403302B68250000A75B9A /* Background */ = {
+			isa = PBXGroup;
+			children = (
+				D4M403012B68250000A75B9A /* DBScanBackgroundContinuationConstants.h */,
+				D4M403022B68250000A75B9A /* DBScanBackgroundContinuationConstants.m */,
+				D4M403032B68250000A75B9A /* DBScanBackgroundContinuation.h */,
+				D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */,
+			);
+			name = Background;
 			sourceTree = "<group>";
 		};
 		D4F8A33F2B68210000A75B9A /* Scan */ = {
@@ -646,6 +673,7 @@
 				D4M305042B68230000A75B9A /* DBDeleteCoordinatorTests.m */,
 				D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */,
 				D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */,
+				D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -971,6 +999,9 @@
 				D4M306142B68230000A75B9A /* DBToctouStatVerifierTests.m in Sources */,
 				D4M308122B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */,
 				D4M308142B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */,
+				D4M403122B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */,
+				D4M403142B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */,
+				D4M403162B68250000A75B9A /* DBScanBackgroundContinuationTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1052,6 +1083,8 @@
 				D4M306322B68230000A75B9A /* DBToctouStatVerifier.m in Sources */,
 				D4M308222B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */,
 				D4M308242B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */,
+				D4M403222B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */,
+				D4M403242B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

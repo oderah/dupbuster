@@ -9,6 +9,7 @@
 #import "DBResumableScanRunBridgeMapper.h"
 #import "DBScanRunSnapshot.h"
 #import "DBIndexWriter.h"
+#import "DBScanBackgroundContinuation.h"
 #import "DBScanOrchestrator.h"
 #import "DBScanOrchestratorFactory.h"
 #import "DBScanStartRequest.h"
@@ -31,6 +32,9 @@ static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
 - (DBScanOrchestrator *)orchestrator
 {
   if (_orchestrator == nil) {
+    DBScanBackgroundContinuation *continuation = DBScanBackgroundContinuation.shared;
+    [continuation registerApplicationIntegration];
+
     __weak RCTNativeScanEngine *weakSelf = self;
     _orchestrator = [DBScanOrchestratorFactory createWithEmitProgress:^(NSDictionary *payload) {
       RCTNativeScanEngine *strongSelf = weakSelf;
@@ -50,6 +54,8 @@ static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
         [strongSelf emitOnScanError:payload];
       });
     }];
+    _orchestrator.backgroundContinuation = continuation;
+    [continuation bindOrchestrator:_orchestrator];
   }
   return _orchestrator;
 }
