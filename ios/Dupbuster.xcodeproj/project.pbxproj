@@ -169,6 +169,19 @@
 		D4M308222B68230000A75B9A /* DBGrantRevocationTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308022B68230000A75B9A /* DBGrantRevocationTracker.m */; };
 		D4M308142B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */; };
 		D4M308242B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M308052B68230000A75B9A /* DBScanOpenFileRegistry.m */; };
+		D4M312152B68240000A75B9A /* DBImageConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312022B68240000A75B9A /* DBImageConstants.m */; };
+		D4M312162B68240000A75B9A /* DBImageConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312022B68240000A75B9A /* DBImageConstants.m */; };
+		D4M312172B68240000A75B9A /* DBImageContentMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312042B68240000A75B9A /* DBImageContentMatcher.m */; };
+		D4M312182B68240000A75B9A /* DBImageContentMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312042B68240000A75B9A /* DBImageContentMatcher.m */; };
+		D4M312192B68240000A75B9A /* DBImageFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312062B68240000A75B9A /* DBImageFingerprint.m */; };
+		D4M3121A2B68240000A75B9A /* DBImageFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312062B68240000A75B9A /* DBImageFingerprint.m */; };
+		D4M3121B2B68240000A75B9A /* DBUiImageBitmapExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312092B68240000A75B9A /* DBUiImageBitmapExtractor.m */; };
+		D4M3121C2B68240000A75B9A /* DBUiImageBitmapExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312092B68240000A75B9A /* DBUiImageBitmapExtractor.m */; };
+		D4M3121D2B68240000A75B9A /* DBImageFingerprinter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312112B68240000A75B9A /* DBImageFingerprinter.m */; };
+		D4M3121E2B68240000A75B9A /* DBImageFingerprinter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312112B68240000A75B9A /* DBImageFingerprinter.m */; };
+		D4M3121F2B68240000A75B9A /* DBImageContentMatcherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312122B68240000A75B9A /* DBImageContentMatcherTests.m */; };
+		D4M312202B68240000A75B9A /* DBGrouperImageContentTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312132B68240000A75B9A /* DBGrouperImageContentTests.m */; };
+		D4M312212B68240000A75B9A /* DBGrantRevocationTrackerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M312142B68240000A75B9A /* DBGrantRevocationTrackerTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -291,8 +304,22 @@
 		D4F8A3182B681C0000A75B9A /* DBVideoFrameExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFrameExtractor.h; path = ScanEngine/Hash/DBVideoFrameExtractor.h; sourceTree = "<group>"; };
 		D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinter.m; path = ScanEngine/Hash/DBVideoFingerprinter.m; sourceTree = "<group>"; };
 		D4F8A31A2B681C0000A75B9A /* DBVideoFingerprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBVideoFingerprinter.h; path = ScanEngine/Hash/DBVideoFingerprinter.h; sourceTree = "<group>"; };
+		D4M312012B68240000A75B9A /* DBImageConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBImageConstants.h; path = ScanEngine/Hash/DBImageConstants.h; sourceTree = "<group>"; };
+		D4M312022B68240000A75B9A /* DBImageConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageConstants.m; path = ScanEngine/Hash/DBImageConstants.m; sourceTree = "<group>"; };
+		D4M312032B68240000A75B9A /* DBImageContentMatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBImageContentMatcher.h; path = ScanEngine/Hash/DBImageContentMatcher.h; sourceTree = "<group>"; };
+		D4M312042B68240000A75B9A /* DBImageContentMatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageContentMatcher.m; path = ScanEngine/Hash/DBImageContentMatcher.m; sourceTree = "<group>"; };
+		D4M312052B68240000A75B9A /* DBImageFingerprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBImageFingerprint.h; path = ScanEngine/Hash/DBImageFingerprint.h; sourceTree = "<group>"; };
+		D4M312062B68240000A75B9A /* DBImageFingerprint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageFingerprint.m; path = ScanEngine/Hash/DBImageFingerprint.m; sourceTree = "<group>"; };
+		D4M312072B68240000A75B9A /* DBImageBitmapExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBImageBitmapExtractor.h; path = ScanEngine/Hash/DBImageBitmapExtractor.h; sourceTree = "<group>"; };
+		D4M312082B68240000A75B9A /* DBUiImageBitmapExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBUiImageBitmapExtractor.h; path = ScanEngine/Hash/DBUiImageBitmapExtractor.h; sourceTree = "<group>"; };
+		D4M312092B68240000A75B9A /* DBUiImageBitmapExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBUiImageBitmapExtractor.m; path = ScanEngine/Hash/DBUiImageBitmapExtractor.m; sourceTree = "<group>"; };
+		D4M312102B68240000A75B9A /* DBImageFingerprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBImageFingerprinter.h; path = ScanEngine/Hash/DBImageFingerprinter.h; sourceTree = "<group>"; };
+		D4M312112B68240000A75B9A /* DBImageFingerprinter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageFingerprinter.m; path = ScanEngine/Hash/DBImageFingerprinter.m; sourceTree = "<group>"; };
 		D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoContentMatcherTests.m; path = ScanEngineTests/DBVideoContentMatcherTests.m; sourceTree = "<group>"; };
 		D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBVideoFingerprinterTests.m; path = ScanEngineTests/DBVideoFingerprinterTests.m; sourceTree = "<group>"; };
+		D4M312122B68240000A75B9A /* DBImageContentMatcherTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBImageContentMatcherTests.m; path = ScanEngineTests/DBImageContentMatcherTests.m; sourceTree = "<group>"; };
+		D4M312132B68240000A75B9A /* DBGrouperImageContentTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBGrouperImageContentTests.m; path = ScanEngineTests/DBGrouperImageContentTests.m; sourceTree = "<group>"; };
+		D4M312142B68240000A75B9A /* DBGrantRevocationTrackerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBGrantRevocationTrackerTests.m; path = ScanEngineTests/DBGrantRevocationTrackerTests.m; sourceTree = "<group>"; };
 		D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBEquivFixturesTests.m; path = ScanEngineTests/DBEquivFixturesTests.m; sourceTree = "<group>"; };
 		D4F8A3402B68210000A75B9A /* DBScanStartRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanStartRequest.h; path = ScanEngine/Scan/DBScanStartRequest.h; sourceTree = "<group>"; };
 		D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequest.m; path = ScanEngine/Scan/DBScanStartRequest.m; sourceTree = "<group>"; };
@@ -495,6 +522,17 @@
 				D4F8A3182B681C0000A75B9A /* DBVideoFrameExtractor.h */,
 				D4F8A31A2B681C0000A75B9A /* DBVideoFingerprinter.h */,
 				D4F8A3192B681C0000A75B9A /* DBVideoFingerprinter.m */,
+				D4M312012B68240000A75B9A /* DBImageConstants.h */,
+				D4M312022B68240000A75B9A /* DBImageConstants.m */,
+				D4M312032B68240000A75B9A /* DBImageContentMatcher.h */,
+				D4M312042B68240000A75B9A /* DBImageContentMatcher.m */,
+				D4M312052B68240000A75B9A /* DBImageFingerprint.h */,
+				D4M312062B68240000A75B9A /* DBImageFingerprint.m */,
+				D4M312072B68240000A75B9A /* DBImageBitmapExtractor.h */,
+				D4M312082B68240000A75B9A /* DBUiImageBitmapExtractor.h */,
+				D4M312092B68240000A75B9A /* DBUiImageBitmapExtractor.m */,
+				D4M312102B68240000A75B9A /* DBImageFingerprinter.h */,
+				D4M312112B68240000A75B9A /* DBImageFingerprinter.m */,
 			);
 			name = Hash;
 			sourceTree = "<group>";
@@ -598,6 +636,9 @@
 				D4F8A2F22B681B0000A75B9A /* DBCheckpointStoreTests.m */,
 				D4F8A31B2B681C0000A75B9A /* DBVideoContentMatcherTests.m */,
 				D4F8A31D2B681C0000A75B9A /* DBVideoFingerprinterTests.m */,
+				D4M312122B68240000A75B9A /* DBImageContentMatcherTests.m */,
+				D4M312132B68240000A75B9A /* DBGrouperImageContentTests.m */,
+				D4M312142B68240000A75B9A /* DBGrantRevocationTrackerTests.m */,
 				D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */,
 				D4F8A3522B68210000A75B9A /* DBScanStartRequestParserTests.m */,
 				D4F8A3532B68210000A75B9A /* DBScanOrchestratorTests.m */,
@@ -892,6 +933,14 @@
 				D4F8A3032B681C0000A75B9A /* DBVideoFingerprint.m in Sources */,
 				D4F8A3042B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */,
 				D4F8A3052B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */,
+				D4M312152B68240000A75B9A /* DBImageConstants.m in Sources */,
+				D4M312172B68240000A75B9A /* DBImageContentMatcher.m in Sources */,
+				D4M312192B68240000A75B9A /* DBImageFingerprint.m in Sources */,
+				D4M3121B2B68240000A75B9A /* DBUiImageBitmapExtractor.m in Sources */,
+				D4M3121D2B68240000A75B9A /* DBImageFingerprinter.m in Sources */,
+				D4M3121F2B68240000A75B9A /* DBImageContentMatcherTests.m in Sources */,
+				D4M312202B68240000A75B9A /* DBGrouperImageContentTests.m in Sources */,
+				D4M312212B68240000A75B9A /* DBGrantRevocationTrackerTests.m in Sources */,
 				D4F8A3062B681C0000A75B9A /* DBVideoContentMatcherTests.m in Sources */,
 				D4F8A3072B681C0000A75B9A /* DBVideoFingerprinterTests.m in Sources */,
 				D4F8A3312B68200000A75B9A /* DBEquivFixturesTests.m in Sources */,
@@ -957,6 +1006,11 @@
 				D4F8A30A2B681C0000A75B9A /* DBVideoFingerprint.m in Sources */,
 				D4F8A30B2B681C0000A75B9A /* DBVideoContentMatcher.m in Sources */,
 				D4F8A30C2B681C0000A75B9A /* DBVideoFingerprinter.m in Sources */,
+				D4M312162B68240000A75B9A /* DBImageConstants.m in Sources */,
+				D4M312182B68240000A75B9A /* DBImageContentMatcher.m in Sources */,
+				D4M3121A2B68240000A75B9A /* DBImageFingerprint.m in Sources */,
+				D4M3121C2B68240000A75B9A /* DBUiImageBitmapExtractor.m in Sources */,
+				D4M3121E2B68240000A75B9A /* DBImageFingerprinter.m in Sources */,
 				D4F8A2B12B68180000A75B9A /* DBCatalogSchema.m in Sources */,
 				D4F8A3192B681E0000A75B9A /* DBCatalogMigrator.m in Sources */,
 				D4F8A2B32B68180000A75B9A /* DBCatalogMeta.m in Sources */,

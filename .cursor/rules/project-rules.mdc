@@ -331,8 +331,8 @@ New code must land in these areas unless architecture is amended first.
 - **Grouper:** Fuzzy union-find on dHash Hamming ≤10 → `SAME_CONTENT_IMAGE`; mixed raw → `SAME_CONTENT_IMAGE`, all same raw → `EXACT_BYTES` (AC-equiv-image-content-04).
 - **Grouper (video):** Fuzzy union-find via `VideoContentMatcher.contentMatches` (duration gate + ≥3/5 frames Hamming ≤8) → `SAME_CONTENT_VIDEO`; all same `raw_content_fingerprint_id` → `EXACT_BYTES` (AC-equiv-video-xres-04). Replaces exact-`fingerprint_id`-only video grouping.
 - **UI:** `SAME_CONTENT_IMAGE` uses `match.imageContent.*`, `ContentMatchNotice`, `MatchKindBadge` caution surface; `IMAGE_DECODE_FAILED` in unscan tokens.
-- **iOS:** Parity pending — wire `DBImageFingerprinter` + `DBGrouper` image cluster before iOS ship.
-- **Tests:** `ImageContentMatcherTest`, `GrouperImageContentTest`; rescan required after upgrade.
+- **iOS:** `DBImageFingerprinter`, `DBImageContentMatcher`, `DBUiImageBitmapExtractor`, rewritten `DBGrouper` (fuzzy video+image clustering), `DBScanOrchestrator.backfillImageContentFingerprints`, `DBScanOrchestratorFactory` production wiring.
+- **Tests:** `ImageContentMatcherTest`, `GrouperImageContentTest`, `DBImageContentMatcherTests`, `DBGrouperImageContentTests`; extended `DBScanOrchestratorTests` (toctou/tombstone/grant-revoke/resume); rescan required after upgrade.
 
 ### Video pipeline exception (M1-14)
 

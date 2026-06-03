@@ -3,6 +3,8 @@
 #import "DBCatalogDatabase.h"
 #import "DBCheckpointStore.h"
 #import "DBFileContentReader.h"
+#import "DBHashPipeline.h"
+#import "DBImageFingerprinter.h"
 #import "DBGrouper.h"
 #import "DBIndexWriter.h"
 #import "DBProductionScanDiscoveryRunner.h"
@@ -11,6 +13,7 @@
 #import "DBSqliteSizeBucketIndex.h"
 #import "DBStatStage.h"
 #import "DBToctouStatVerifier.h"
+#import "DBUiImageBitmapExtractor.h"
 #import "DBUriValidator.h"
 
 @implementation DBScanOrchestratorFactory
@@ -43,7 +46,11 @@
                                        return [[DBHashPipeline alloc] initWithFileContentReader:contentReader
                                                                               sizeBucketIndex:sizeBucketIndex
                                                                          durationBucketIndex:durationBucketIndex
-                                                                           videoFingerprinter:nil];
+                                                                           videoFingerprinter:nil
+                                                                           imageFingerprinter:
+                                                                               [[DBImageFingerprinter alloc]
+                                                                                   initWithBitmapExtractor:
+                                                                                       [[DBUiImageBitmapExtractor alloc] init]]];
                                      }
                                               progressBridge:progressBridge
                                                    emitError:emitError

@@ -58,6 +58,16 @@ NS_ASSUME_NONNULL_BEGIN
                  videoUnscannableReason:(NSString *)videoUnscannableReason
                            generation:(NSInteger)generation;
 
+- (NSInteger)upsertImageDualHashed:(DBHashedFile *)rawBytes
+                      imageContent:(DBHashedFile *)imageContent
+                        generation:(NSInteger)generation;
+
+- (NSInteger)upsertImagePartialHashed:(DBHashedFile *)rawBytes
+                 imageUnscannableReason:(NSString *)imageUnscannableReason
+                           generation:(NSInteger)generation;
+
+- (NSArray<DBSizeBucketPendingEntry *> *)listImageContentBackfillEntriesWithGeneration:(NSInteger)generation;
+
 - (NSInteger)countIndexedFilesWithSize:(int64_t)sizeBytes;
 
 - (NSArray<DBSizeBucketPendingEntry *> *)listSizeBucketPendingEntriesWithSizeBytes:(int64_t)sizeBytes

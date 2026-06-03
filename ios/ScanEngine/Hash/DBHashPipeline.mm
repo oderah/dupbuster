@@ -7,6 +7,7 @@
 #import "DBTextNormalizer.h"
 #import "DBUnscannableReason.h"
 #import "DBVideoFingerprinter.h"
+#import "DBImageFingerprinter.h"
 #import "DBDurationBucketIndex.h"
 
 @implementation DBHashPipelineResult
@@ -17,6 +18,7 @@
 @property (nonatomic, strong) id<DBSizeBucketIndexing> sizeBucketIndex;
 @property (nonatomic, strong) id<DBDurationBucketIndexing> durationBucketIndex;
 @property (nonatomic, strong, nullable) DBVideoFingerprinter *videoFingerprinter;
+@property (nonatomic, strong, nullable) DBImageFingerprinter *imageFingerprinter;
 @end
 
 @implementation DBHashPipeline
@@ -27,7 +29,8 @@
   return [self initWithFileContentReader:contentReader
                          sizeBucketIndex:sizeBucketIndex
                     durationBucketIndex:[[DBInMemoryDurationBucketIndex alloc] init]
-                      videoFingerprinter:nil];
+                      videoFingerprinter:nil
+                      imageFingerprinter:nil];
 }
 
 - (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
@@ -37,7 +40,8 @@
   return [self initWithFileContentReader:contentReader
                          sizeBucketIndex:sizeBucketIndex
                     durationBucketIndex:[[DBInMemoryDurationBucketIndex alloc] init]
-                      videoFingerprinter:videoFingerprinter];
+                      videoFingerprinter:videoFingerprinter
+                      imageFingerprinter:nil];
 }
 
 - (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
@@ -45,12 +49,26 @@
                      durationBucketIndex:(id<DBDurationBucketIndexing>)durationBucketIndex
                        videoFingerprinter:(DBVideoFingerprinter *)videoFingerprinter
 {
+  return [self initWithFileContentReader:contentReader
+                         sizeBucketIndex:sizeBucketIndex
+                    durationBucketIndex:durationBucketIndex
+                      videoFingerprinter:videoFingerprinter
+                      imageFingerprinter:nil];
+}
+
+- (instancetype)initWithFileContentReader:(id<DBFileContentReading>)contentReader
+                          sizeBucketIndex:(id<DBSizeBucketIndexing>)sizeBucketIndex
+                     durationBucketIndex:(id<DBDurationBucketIndexing>)durationBucketIndex
+                       videoFingerprinter:(DBVideoFingerprinter *)videoFingerprinter
+                       imageFingerprinter:(DBImageFingerprinter *)imageFingerprinter
+{
   self = [super init];
   if (self) {
     _contentReader = contentReader;
     _sizeBucketIndex = sizeBucketIndex;
     _durationBucketIndex = durationBucketIndex;
     _videoFingerprinter = videoFingerprinter;
+    _imageFingerprinter = imageFingerprinter;
   }
   return self;
 }
@@ -138,6 +156,28 @@
                       normalizationProfile:profile
                            quickSampleHash:quickSampleHash
                           frameHashesBlob:nil];
+
+  if ([staged.mediaTypeHint isEqualToString:DBMediaTypeHintImage] && self.imageFingerprinter != nil) {
+    DBImageFingerprinterResult *imageResult =
+        [self.imageFingerprinter fingerprintStaged:staged settings:settings];
+    if (imageResult.outcome == DBImageFingerprinterOutcomeSuccess) {
+      DBHashedFile *imageHashed =
+          [[DBHashedFile alloc] initWithStaged:staged
+                                     hashValue:imageResult.fingerprint.hashValue
+                          normalizationProfile:DBNormalizationProfileImageContentV1
+                               quickSampleHash:nil
+                              frameHashesBlob:imageResult.fingerprint.frameHashesBlob];
+      result.outcome = DBHashPipelineOutcomeImageSuccess;
+      result.rawBytesHashed = rawHashed;
+      result.imageContentHashed = imageHashed;
+      return result;
+    }
+    result.outcome = DBHashPipelineOutcomeImagePartialSuccess;
+    result.rawBytesHashed = rawHashed;
+    result.unscannableReason = imageResult.unscannableReason;
+    return result;
+  }
+
   if (![staged.mediaTypeHint isEqualToString:DBMediaTypeHintVideo] || self.videoFingerprinter == nil) {
     result.hashed = rawHashed;
     return result;

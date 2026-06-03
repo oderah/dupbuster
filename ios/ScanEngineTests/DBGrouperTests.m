@@ -10,6 +10,7 @@
 #import "DBMediaTypeHintResolver.h"
 #import "DBNormalizationProfile.h"
 #import "DBStagedFile.h"
+#import "DBVideoFingerprint.h"
 
 @interface DBGrouperTests : XCTestCase
 @property (nonatomic, strong) DBCatalogDatabase *database;
@@ -68,12 +69,19 @@
 
 - (void)testRebuildDuplicateGroups_videoProfile_sameContentVideo
 {
-  [self upsertHashed:@"v1" hash:@"vid" size:100 profile:DBNormalizationProfileVideoContentV1];
-  [self upsertHashed:@"v2" hash:@"vid" size:100 profile:DBNormalizationProfileVideoContentV1];
+  uint64_t frameHash = 0x0F0E0D0C0B0A0908ULL;
+  NSData *blob = [NSData dataWithBytes:&frameHash length:sizeof(uint64_t)];
+  NSString *hash = [[[DBVideoFingerprint alloc] initWithFrameHashes:@[@(frameHash)]
+                                                         durationMs:60000
+                                                         videoWidth:1920
+                                                        videoHeight:1080] hashValue];
+  [self upsertHashed:@"v1.mp4" hash:hash size:100 profile:DBNormalizationProfileVideoContentV1 frameHashesBlob:blob durationMs:60000];
+  [self upsertHashed:@"v2.mp4" hash:hash size:100 profile:DBNormalizationProfileVideoContentV1 frameHashesBlob:blob durationMs:60000];
 
   [self.grouper rebuildDuplicateGroups];
 
   NSInteger groupId = [self.grouper firstDuplicateGroupId];
+  XCTAssertGreaterThan(groupId, 0);
   XCTAssertEqualObjects([self.grouper matchKindForGroupId:groupId], DBMatchKindSameContentVideo);
 }
 
@@ -89,17 +97,47 @@
                  size:(int64_t)size
               profile:(NSString *)profile
 {
+  [self upsertHashed:suffix hash:hash size:size profile:profile frameHashesBlob:nil];
+}
+
+- (void)upsertHashed:(NSString *)suffix
+                 hash:(NSString *)hash
+                 size:(int64_t)size
+              profile:(NSString *)profile
+      frameHashesBlob:(NSData *)frameHashesBlob
+{
+  [self upsertHashed:suffix
+                 hash:hash
+                 size:size
+              profile:profile
+      frameHashesBlob:frameHashesBlob
+           durationMs:0];
+}
+
+- (void)upsertHashed:(NSString *)suffix
+                 hash:(NSString *)hash
+                 size:(int64_t)size
+              profile:(NSString *)profile
+      frameHashesBlob:(NSData *)frameHashesBlob
+           durationMs:(int64_t)durationMs
+{
   NSString *uri = [NSString stringWithFormat:@"file:///doc/%@", suffix];
-  DBStagedFile *staged = [self stagedWithUri:uri sizeBytes:size];
+  DBStagedFile *staged = [self stagedWithUri:uri sizeBytes:size durationMs:durationMs];
   DBHashedFile *hashed =
       [[DBHashedFile alloc] initWithStaged:staged
                                  hashValue:hash
                       normalizationProfile:profile
-                           quickSampleHash:nil];
+                           quickSampleHash:nil
+                          frameHashesBlob:frameHashesBlob];
   [self.writer upsertHashedFile:hashed generation:1];
 }
 
 - (DBStagedFile *)stagedWithUri:(NSString *)uri sizeBytes:(int64_t)sizeBytes
+{
+  return [self stagedWithUri:uri sizeBytes:sizeBytes durationMs:0];
+}
+
+- (DBStagedFile *)stagedWithUri:(NSString *)uri sizeBytes:(int64_t)sizeBytes durationMs:(int64_t)durationMs
 {
   NSURL *url = [NSURL URLWithString:uri];
   DBDiscoveredEntry *entry =
@@ -116,7 +154,10 @@
                                     mtimeNs:1000
                                       inode:nil
                                    deviceId:nil
-                                 isSymlink:NO];
+                                 isSymlink:NO
+                               durationMs:durationMs
+                               videoWidth:durationMs > 0 ? 1920 : 0
+                              videoHeight:durationMs > 0 ? 1080 : 0];
   return [[DBStagedFile alloc] initWithDiscovered:entry fileStat:stat];
 }
 

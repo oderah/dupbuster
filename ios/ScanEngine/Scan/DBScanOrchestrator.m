@@ -426,6 +426,13 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                                                                    phase:DBScanPhaseGrouping
                                                                              contentKind:nil]];
 
+    [self backfillImageContentFingerprintsWithHashPipeline:hashPipeline
+                                              hashSettings:hashSettings
+                                                generation:generation
+                                                 scanRunId:scanRunId
+                                                      plan:plan
+                                                   control:control];
+
     DBGrouperRebuildResult *groupResult = [_grouper rebuildDuplicateGroups];
     groupsFound = groupResult.groupsCreated;
     reclaimableBytesEst = groupResult.totalReclaimableBytesEst;
@@ -573,7 +580,8 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
 
   NSInteger fileEntryId = [_indexWriter persistHashPipelineResult:hashResult staged:staged generation:generation];
   if (hashResult.outcome == DBHashPipelineOutcomeUnscannable ||
-      hashResult.outcome == DBHashPipelineOutcomeVideoPartialSuccess) {
+      hashResult.outcome == DBHashPipelineOutcomeVideoPartialSuccess ||
+      hashResult.outcome == DBHashPipelineOutcomeImagePartialSuccess) {
     NSString *reason = hashResult.unscannableReason ?: DBUnscannableReasonPermissionDenied;
     _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
                                                    unscannableReason:reason
@@ -589,6 +597,42 @@ static DBStagedFile *DBStagedFromDiscovered(DBDiscoveredEntry *entry)
                                      excludeFileEntryId:fileEntryId];
   }
   return fileEntryId;
+}
+
+- (void)backfillImageContentFingerprintsWithHashPipeline:(DBHashPipeline *)hashPipeline
+                                            hashSettings:(DBHashSettings *)hashSettings
+                                              generation:(NSInteger)generation
+                                               scanRunId:(NSInteger)scanRunId
+                                                    plan:(DBScanRootResolverPlan *)plan
+                                                 control:(DBScanSessionControl *)control
+{
+  for (DBSizeBucketPendingEntry *pending in
+       [_indexWriter listImageContentBackfillEntriesWithGeneration:generation]) {
+    [control awaitIfPaused];
+    if (control.isCancelled) {
+      return;
+    }
+    DBDiscoveredEntry *entry = [pending toDiscoveredEntry];
+    DBScanRootGrant *grant = [self grantForEntry:entry plan:plan];
+    DBStatStageResult *statResult = _statFile(entry, grant);
+    if (statResult.outcome == DBStatStageOutcomeSuccess) {
+      [self processHashResult:hashPipeline
+                   hashSettings:hashSettings
+                          entry:entry
+                          grant:grant
+                  initialStaged:statResult.staged
+                     generation:generation
+                      scanRunId:scanRunId
+                           plan:plan];
+    } else {
+      NSInteger fileEntryId = [_indexWriter upsertUnscannableWithReason:statResult.unscannableReason
+                                                                 staged:DBStagedFromDiscovered(entry)
+                                                             generation:generation];
+      _emitError([DBScanErrorBridgeMapper bridgePayloadWithFileEntryId:fileEntryId
+                                                     unscannableReason:statResult.unscannableReason
+                                                             scanRunId:@(scanRunId)];
+    }
+  }
 }
 
 - (void)backfillSizeBucketSkippedPeersWithHashPipeline:(DBHashPipeline *)hashPipeline

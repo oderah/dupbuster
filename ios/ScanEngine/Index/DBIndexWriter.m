@@ -18,6 +18,7 @@
 #import "DBScanStartRequest.h"
 #import "DBScanStartRequestParser.h"
 #import "DBVideoContentMatcher.h"
+#import "DBMediaTypeHintResolver.h"
 
 @implementation DBIndexWriter {
   DBCatalogDatabase *_database;
@@ -198,6 +199,14 @@
       return [self upsertVideoPartialHashed:result.rawBytesHashed
                       videoUnscannableReason:result.unscannableReason
                                 generation:generation];
+    case DBHashPipelineOutcomeImageSuccess:
+      return [self upsertImageDualHashed:result.rawBytesHashed
+                            imageContent:result.imageContentHashed
+                              generation:generation];
+    case DBHashPipelineOutcomeImagePartialSuccess:
+      return [self upsertImagePartialHashed:result.rawBytesHashed
+                     imageUnscannableReason:result.unscannableReason
+                               generation:generation];
   }
 }
 
@@ -232,6 +241,40 @@
                            fingerprintId:rawFingerprintId
                    rawContentFingerprintId:0
                        unscannableReason:videoUnscannableReason
+                               isSymlink:NO];
+}
+
+- (NSInteger)upsertImageDualHashed:(DBHashedFile *)rawBytes
+                      imageContent:(DBHashedFile *)imageContent
+                        generation:(NSInteger)generation
+{
+  NSInteger rawFingerprintId = [self getOrCreateFingerprintWithHashValue:rawBytes.hashValue
+                                                    normalizationProfile:rawBytes.normalizationProfile
+                                                         frameHashesBlob:nil];
+  NSInteger imageFingerprintId =
+      [self getOrCreateFingerprintWithHashValue:imageContent.hashValue
+                           normalizationProfile:imageContent.normalizationProfile
+                                frameHashesBlob:imageContent.frameHashesBlob];
+  return [self upsertFileEntryWithStaged:rawBytes.staged
+                              generation:generation
+                           fingerprintId:imageFingerprintId
+                   rawContentFingerprintId:rawFingerprintId
+                       unscannableReason:nil
+                               isSymlink:NO];
+}
+
+- (NSInteger)upsertImagePartialHashed:(DBHashedFile *)rawBytes
+                 imageUnscannableReason:(NSString *)imageUnscannableReason
+                           generation:(NSInteger)generation
+{
+  NSInteger rawFingerprintId = [self getOrCreateFingerprintWithHashValue:rawBytes.hashValue
+                                                    normalizationProfile:rawBytes.normalizationProfile
+                                                         frameHashesBlob:nil];
+  return [self upsertFileEntryWithStaged:rawBytes.staged
+                              generation:generation
+                           fingerprintId:rawFingerprintId
+                   rawContentFingerprintId:0
+                       unscannableReason:imageUnscannableReason
                                isSymlink:NO];
 }
 
@@ -294,6 +337,53 @@
                                                        rootId:sqlite3_column_int(stmt, 1)
                                                     uriOrPath:[NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 2)]
                                                   displayName:[NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 3)]
+                                                    sizeBytes:sqlite3_column_int64(stmt, 4)
+                                                      mtimeNs:sqlite3_column_int64(stmt, 5)
+                                                   generation:sqlite3_column_int(stmt, 6)];
+    [rows addObject:entry];
+  }
+  sqlite3_finalize(stmt);
+  return rows;
+}
+
+- (NSArray<DBSizeBucketPendingEntry *> *)listImageContentBackfillEntriesWithGeneration:(NSInteger)generation
+{
+  NSMutableArray<DBSizeBucketPendingEntry *> *rows = [NSMutableArray array];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  const char *sql =
+      "SELECT fe.id, fe.root_id, fe.uri_or_path, fe.display_name, fe.size, fe.mtime_ns, fe.last_seen_generation "
+      "FROM file_entry fe "
+      "LEFT JOIN fingerprint f ON f.id = fe.fingerprint_id "
+      "WHERE fe.last_seen_generation = ? "
+      "AND fe.unscannable_reason IS NULL "
+      "AND fe.is_symlink = 0 "
+      "AND (fe.duration_ms IS NULL OR fe.duration_ms = 0) "
+      "AND ( "
+      "  fe.fingerprint_id IS NULL "
+      "  OR ( "
+      "    f.normalization_profile = 'RAW_BYTES' "
+      "    AND fe.raw_content_fingerprint_id IS NULL "
+      "  ) "
+      ") "
+      "ORDER BY fe.id ASC";
+  if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+    return rows;
+  }
+  sqlite3_bind_int(stmt, 1, (int)generation);
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    NSString *displayName = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 3)];
+    if (displayName.length == 0) {
+      continue;
+    }
+    if (![[DBMediaTypeHintResolver hintForFileName:displayName] isEqualToString:DBMediaTypeHintImage]) {
+      continue;
+    }
+    DBSizeBucketPendingEntry *entry =
+        [[DBSizeBucketPendingEntry alloc] initWithFileEntryId:sqlite3_column_int(stmt, 0)
+                                                       rootId:sqlite3_column_int(stmt, 1)
+                                                    uriOrPath:[NSString stringWithUTF8String:(const char *)sqlite3_column_text(stmt, 2)]
+                                                  displayName:displayName
                                                     sizeBytes:sqlite3_column_int64(stmt, 4)
                                                       mtimeNs:sqlite3_column_int64(stmt, 5)
                                                    generation:sqlite3_column_int(stmt, 6)];

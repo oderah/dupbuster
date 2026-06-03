@@ -19,7 +19,8 @@
                                mediaTypeHint:(NSString *)mediaTypeHint
                                      isEmpty:(BOOL)isEmpty
 {
-  if (isEmpty || [mediaTypeHint isEqualToString:DBMediaTypeHintVideo]) {
+  if (isEmpty || [mediaTypeHint isEqualToString:DBMediaTypeHintVideo] ||
+      [mediaTypeHint isEqualToString:DBMediaTypeHintImage]) {
     return DBSizeBucketDispositionNeedsHash;
   }
   NSNumber *key = @(sizeBytes);

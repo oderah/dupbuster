@@ -6,5 +6,6 @@ FOUNDATION_EXPORT NSString *const DBNormalizationProfileRawBytes;
 FOUNDATION_EXPORT NSString *const DBNormalizationProfileTextNfcLf;
 FOUNDATION_EXPORT NSString *const DBNormalizationProfileEmpty;
 FOUNDATION_EXPORT NSString *const DBNormalizationProfileVideoContentV1;
+FOUNDATION_EXPORT NSString *const DBNormalizationProfileImageContentV1;
 
 NS_ASSUME_NONNULL_END

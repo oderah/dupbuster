@@ -3,8 +3,13 @@
 #import <sqlite3.h>
 
 #import "DBCatalogDatabase.h"
+#import "DBImageContentMatcher.h"
+#import "DBImageConstants.h"
 #import "DBMatchKind.h"
 #import "DBNormalizationProfile.h"
+#import "DBVideoContentMatcher.h"
+#import "DBVideoConstants.h"
+#import "DBVideoFingerprint.h"
 
 @implementation DBGrouperRebuildResult
 @end
@@ -17,6 +22,31 @@
 @end
 
 @implementation DBGrouperFingerprintAggregate
+@end
+
+@interface DBGrouperVideoContentEntry : NSObject
+@property (nonatomic, assign) NSInteger fileEntryId;
+@property (nonatomic, assign) NSInteger fingerprintId;
+@property (nonatomic, copy) NSArray<NSNumber *> *frameHashes;
+@property (nonatomic, assign) int64_t durationMs;
+@property (nonatomic, assign) NSInteger videoWidth;
+@property (nonatomic, assign) NSInteger videoHeight;
+@property (nonatomic, assign) int64_t sizeBytes;
+@property (nonatomic, strong, nullable) NSNumber *rawContentFingerprintId;
+@end
+
+@implementation DBGrouperVideoContentEntry
+@end
+
+@interface DBGrouperImageContentEntry : NSObject
+@property (nonatomic, assign) NSInteger fileEntryId;
+@property (nonatomic, assign) NSInteger fingerprintId;
+@property (nonatomic, assign) uint64_t dHash;
+@property (nonatomic, assign) int64_t sizeBytes;
+@property (nonatomic, strong, nullable) NSNumber *rawContentFingerprintId;
+@end
+
+@implementation DBGrouperImageContentEntry
 @end
 
 @interface DBGrouper ()
@@ -41,12 +71,11 @@
   sqlite3_exec(db, "DELETE FROM duplicate_member", NULL, NULL, NULL);
   sqlite3_exec(db, "DELETE FROM duplicate_group", NULL, NULL, NULL);
 
-  NSArray *exactCandidates = [self loadExactBytesCandidates];
   NSMutableSet<NSNumber *> *exactBytesMemberIds = [NSMutableSet set];
   NSInteger groupsCreated = 0;
   int64_t totalReclaimable = 0;
 
-  for (NSDictionary *candidate in exactCandidates) {
+  for (NSDictionary *candidate in [self loadExactBytesCandidates]) {
     NSInteger groupId = [self insertGroupWithCandidate:candidate matchKind:DBMatchKindExactBytes];
     if (groupId > 0) {
       groupsCreated++;
@@ -57,31 +86,35 @@
     }
   }
 
-  NSArray *videoCandidates = [self loadVideoContentCandidates];
-  for (NSDictionary *candidate in videoCandidates) {
-    NSString *profile = candidate[@"profile"];
-    if (![[DBGrouper matchKindForNormalizationProfile:profile]
-            isEqualToString:DBMatchKindSameContentVideo]) {
+  for (NSDictionary *cluster in [self clusterVideoContentEntries:[self loadVideoContentEntries]]) {
+    if ([cluster[@"fileEntryIds"] count] < 2) {
       continue;
     }
-    NSMutableArray<NSNumber *> *filtered = [NSMutableArray array];
-    for (NSNumber *entryId in candidate[@"fileEntryIds"]) {
-      if (![exactBytesMemberIds containsObject:entryId]) {
-        [filtered addObject:entryId];
-      }
-    }
-    if (filtered.count < 2) {
-      continue;
-    }
-    int64_t reclaimable = [self estimateReclaimableBytesForFileEntryIds:filtered];
-    NSMutableDictionary *adjusted = [candidate mutableCopy];
-    adjusted[@"fileEntryIds"] = filtered;
-    adjusted[@"memberCount"] = @(filtered.count);
-    adjusted[@"reclaimable"] = @(reclaimable);
-    NSInteger groupId = [self insertGroupWithCandidate:adjusted matchKind:DBMatchKindSameContentVideo];
+    NSInteger groupId = [self insertGroupWithCandidate:cluster matchKind:cluster[@"matchKind"]];
     if (groupId > 0) {
       groupsCreated++;
-      totalReclaimable += reclaimable;
+      totalReclaimable += [cluster[@"reclaimable"] longLongValue];
+      if ([cluster[@"matchKind"] isEqualToString:DBMatchKindExactBytes]) {
+        for (NSNumber *entryId in cluster[@"fileEntryIds"]) {
+          [exactBytesMemberIds addObject:entryId];
+        }
+      }
+    }
+  }
+
+  for (NSDictionary *cluster in [self clusterImageContentEntries:[self loadImageContentEntries]]) {
+    if ([cluster[@"fileEntryIds"] count] < 2) {
+      continue;
+    }
+    NSInteger groupId = [self insertGroupWithCandidate:cluster matchKind:cluster[@"matchKind"]];
+    if (groupId > 0) {
+      groupsCreated++;
+      totalReclaimable += [cluster[@"reclaimable"] longLongValue];
+      if ([cluster[@"matchKind"] isEqualToString:DBMatchKindExactBytes]) {
+        for (NSNumber *entryId in cluster[@"fileEntryIds"]) {
+          [exactBytesMemberIds addObject:entryId];
+        }
+      }
     }
   }
 
@@ -168,6 +201,9 @@
   if ([profile isEqualToString:DBNormalizationProfileVideoContentV1]) {
     return DBMatchKindSameContentVideo;
   }
+  if ([profile isEqualToString:DBNormalizationProfileImageContentV1]) {
+    return DBMatchKindSameContentImage;
+  }
   return DBMatchKindExactBytes;
 }
 
@@ -190,6 +226,21 @@
 
 #pragma mark - Private
 
+static NSArray<NSNumber *> *DBGrouperDecodeFrameHashesBlob(NSData *blob)
+{
+  if (blob.length == 0) {
+    return @[];
+  }
+  NSMutableArray<NSNumber *> *hashes = [NSMutableArray array];
+  const uint8_t *bytes = blob.bytes;
+  for (NSUInteger offset = 0; offset + sizeof(uint64_t) <= blob.length; offset += sizeof(uint64_t)) {
+    uint64_t value = 0;
+    memcpy(&value, bytes + offset, sizeof(uint64_t));
+    [hashes addObject:@(value)];
+  }
+  return hashes;
+}
+
 - (NSArray<NSDictionary *> *)loadExactBytesCandidates
 {
   const char *sql =
@@ -200,23 +251,297 @@
       "WHERE fe.fingerprint_id IS NOT NULL "
       "AND fe.is_symlink = 0 "
       "AND fe.unscannable_reason IS NULL "
-      "AND f.normalization_profile != 'VIDEO_CONTENT_V1' "
+      "AND fe.raw_content_fingerprint_id IS NULL "
+      "AND f.normalization_profile NOT IN ('VIDEO_CONTENT_V1', 'IMAGE_CONTENT_V1') "
       "ORDER BY 1 ASC, fe.id ASC";
   return [self aggregateCandidatesForSQL:sql];
 }
 
-- (NSArray<NSDictionary *> *)loadVideoContentCandidates
+- (NSArray<DBGrouperVideoContentEntry *> *)loadVideoContentEntries
 {
   const char *sql =
-      "SELECT fe.fingerprint_id, f.normalization_profile, fe.id, fe.size "
+      "SELECT fe.id, fe.fingerprint_id, f.frame_hashes_blob, fe.size, fe.raw_content_fingerprint_id, "
+      "fe.duration_ms, fe.video_width, fe.video_height "
       "FROM file_entry fe "
       "INNER JOIN fingerprint f ON fe.fingerprint_id = f.id "
       "WHERE fe.fingerprint_id IS NOT NULL "
       "AND fe.is_symlink = 0 "
       "AND fe.unscannable_reason IS NULL "
       "AND f.normalization_profile = 'VIDEO_CONTENT_V1' "
-      "ORDER BY fe.fingerprint_id ASC, fe.id ASC";
-  return [self aggregateCandidatesForSQL:sql];
+      "AND f.frame_hashes_blob IS NOT NULL "
+      "ORDER BY fe.id ASC";
+  NSMutableArray<DBGrouperVideoContentEntry *> *entries = [NSMutableArray array];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    NSData *blob = [NSData dataWithBytes:sqlite3_column_blob(stmt, 2)
+                                  length:(NSUInteger)sqlite3_column_bytes(stmt, 2)];
+    NSArray<NSNumber *> *hashes = DBGrouperDecodeFrameHashesBlob(blob);
+    if (hashes.count == 0) {
+      continue;
+    }
+    DBGrouperVideoContentEntry *entry = [[DBGrouperVideoContentEntry alloc] init];
+    entry.fileEntryId = sqlite3_column_int64(stmt, 0);
+    entry.fingerprintId = sqlite3_column_int64(stmt, 1);
+    entry.frameHashes = hashes;
+    entry.sizeBytes = sqlite3_column_int64(stmt, 3);
+    entry.rawContentFingerprintId =
+        sqlite3_column_type(stmt, 4) == SQLITE_NULL ? nil : @(sqlite3_column_int64(stmt, 4));
+    entry.durationMs = sqlite3_column_type(stmt, 5) == SQLITE_NULL ? 0 : sqlite3_column_int64(stmt, 5);
+    entry.videoWidth = sqlite3_column_type(stmt, 6) == SQLITE_NULL ? 0 : sqlite3_column_int(stmt, 6);
+    entry.videoHeight = sqlite3_column_type(stmt, 7) == SQLITE_NULL ? 0 : sqlite3_column_int(stmt, 7);
+    [entries addObject:entry];
+  }
+  sqlite3_finalize(stmt);
+  return entries;
+}
+
+- (NSArray<NSDictionary *> *)clusterVideoContentEntries:(NSArray<DBGrouperVideoContentEntry *> *)entries
+{
+  if (entries.count < 2) {
+    return @[];
+  }
+
+  NSInteger count = entries.count;
+  NSInteger *parent = malloc((size_t)count * sizeof(NSInteger));
+  for (NSInteger index = 0; index < count; index++) {
+    parent[index] = index;
+  }
+
+  NSInteger (^find)(NSInteger) = ^NSInteger(NSInteger index) {
+    NSInteger root = index;
+    while (parent[root] != root) {
+      root = parent[root];
+    }
+    NSInteger node = index;
+    while (parent[node] != node) {
+      NSInteger next = parent[node];
+      parent[node] = root;
+      node = next;
+    }
+    return root;
+  };
+
+  void (^unionNodes)(NSInteger, NSInteger) = ^(NSInteger left, NSInteger right) {
+    NSInteger rootLeft = find(left);
+    NSInteger rootRight = find(right);
+    if (rootLeft != rootRight) {
+      parent[rootRight] = rootLeft;
+    }
+  };
+
+  for (NSInteger i = 0; i < count; i++) {
+    DBGrouperVideoContentEntry *leftEntry = entries[i];
+    DBVideoFingerprint *leftFingerprint =
+        [[DBVideoFingerprint alloc] initWithFrameHashes:leftEntry.frameHashes
+                                             durationMs:leftEntry.durationMs
+                                             videoWidth:leftEntry.videoWidth
+                                            videoHeight:leftEntry.videoHeight];
+    for (NSInteger j = i + 1; j < count; j++) {
+      DBGrouperVideoContentEntry *rightEntry = entries[j];
+      DBVideoFingerprint *rightFingerprint =
+          [[DBVideoFingerprint alloc] initWithFrameHashes:rightEntry.frameHashes
+                                               durationMs:rightEntry.durationMs
+                                               videoWidth:rightEntry.videoWidth
+                                              videoHeight:rightEntry.videoHeight];
+      if ([DBVideoContentMatcher contentMatchesLeft:leftFingerprint
+                                              right:rightFingerprint
+                                   hammingThreshold:DBVideoHammingThresholdDefault]) {
+        unionNodes(i, j);
+      }
+    }
+  }
+
+  NSMutableDictionary<NSNumber *, NSMutableArray<DBGrouperVideoContentEntry *> *> *clusters =
+      [NSMutableDictionary dictionary];
+  for (NSInteger index = 0; index < count; index++) {
+    NSInteger root = find(index);
+    NSNumber *key = @(root);
+    NSMutableArray *bucket = clusters[key];
+    if (bucket == nil) {
+      bucket = [NSMutableArray array];
+      clusters[key] = bucket;
+    }
+    [bucket addObject:entries[index]];
+  }
+  free(parent);
+
+  NSMutableArray<NSDictionary *> *results = [NSMutableArray array];
+  for (NSArray<DBGrouperVideoContentEntry *> *cluster in clusters.allValues) {
+    if (cluster.count < 2) {
+      continue;
+    }
+    NSMutableArray<NSNumber *> *fileEntryIds = [NSMutableArray array];
+    NSMutableArray<NSNumber *> *sizes = [NSMutableArray array];
+    for (DBGrouperVideoContentEntry *entry in cluster) {
+      [fileEntryIds addObject:@(entry.fileEntryId)];
+      [sizes addObject:@(entry.sizeBytes)];
+    }
+    NSString *matchKind = [self matchKindForVideoCluster:cluster];
+    [results addObject:@{
+      @"fingerprintId" : @(cluster.firstObject.fingerprintId),
+      @"profile" : DBNormalizationProfileVideoContentV1,
+      @"fileEntryIds" : fileEntryIds,
+      @"memberCount" : @(fileEntryIds.count),
+      @"reclaimable" : @([[self class] estimateReclaimableBytesForSizes:sizes]),
+      @"matchKind" : matchKind,
+    }];
+  }
+  return results;
+}
+
+- (NSString *)matchKindForVideoCluster:(NSArray<DBGrouperVideoContentEntry *> *)cluster
+{
+  NSMutableSet<NSNumber *> *rawIds = [NSMutableSet set];
+  BOOL allPresent = YES;
+  for (DBGrouperVideoContentEntry *entry in cluster) {
+    if (entry.rawContentFingerprintId == nil) {
+      allPresent = NO;
+      break;
+    }
+    [rawIds addObject:entry.rawContentFingerprintId];
+  }
+  if (allPresent && rawIds.count == 1) {
+    return DBMatchKindExactBytes;
+  }
+  return DBMatchKindSameContentVideo;
+}
+
+- (NSArray<DBGrouperImageContentEntry *> *)loadImageContentEntries
+{
+  const char *sql =
+      "SELECT fe.id, fe.fingerprint_id, f.frame_hashes_blob, fe.size, fe.raw_content_fingerprint_id "
+      "FROM file_entry fe "
+      "INNER JOIN fingerprint f ON fe.fingerprint_id = f.id "
+      "WHERE fe.fingerprint_id IS NOT NULL "
+      "AND fe.is_symlink = 0 "
+      "AND fe.unscannable_reason IS NULL "
+      "AND f.normalization_profile = 'IMAGE_CONTENT_V1' "
+      "AND f.frame_hashes_blob IS NOT NULL "
+      "ORDER BY fe.id ASC";
+  NSMutableArray<DBGrouperImageContentEntry *> *entries = [NSMutableArray array];
+  sqlite3_stmt *stmt = NULL;
+  sqlite3 *db = _database.db;
+  sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    NSData *blob = [NSData dataWithBytes:sqlite3_column_blob(stmt, 2)
+                                  length:(NSUInteger)sqlite3_column_bytes(stmt, 2)];
+    NSArray<NSNumber *> *hashes = DBGrouperDecodeFrameHashesBlob(blob);
+    if (hashes.count == 0) {
+      continue;
+    }
+    DBGrouperImageContentEntry *entry = [[DBGrouperImageContentEntry alloc] init];
+    entry.fileEntryId = sqlite3_column_int64(stmt, 0);
+    entry.fingerprintId = sqlite3_column_int64(stmt, 1);
+    entry.dHash = hashes.firstObject.unsignedLongLongValue;
+    entry.sizeBytes = sqlite3_column_int64(stmt, 3);
+    entry.rawContentFingerprintId =
+        sqlite3_column_type(stmt, 4) == SQLITE_NULL ? nil : @(sqlite3_column_int64(stmt, 4));
+    [entries addObject:entry];
+  }
+  sqlite3_finalize(stmt);
+  return entries;
+}
+
+- (NSArray<NSDictionary *> *)clusterImageContentEntries:(NSArray<DBGrouperImageContentEntry *> *)entries
+{
+  if (entries.count < 2) {
+    return @[];
+  }
+
+  NSInteger count = entries.count;
+  NSInteger *parent = malloc((size_t)count * sizeof(NSInteger));
+  for (NSInteger index = 0; index < count; index++) {
+    parent[index] = index;
+  }
+
+  NSInteger (^find)(NSInteger) = ^NSInteger(NSInteger index) {
+    NSInteger root = index;
+    while (parent[root] != root) {
+      root = parent[root];
+    }
+    NSInteger node = index;
+    while (parent[node] != node) {
+      NSInteger next = parent[node];
+      parent[node] = root;
+      node = next;
+    }
+    return root;
+  };
+
+  void (^unionNodes)(NSInteger, NSInteger) = ^(NSInteger left, NSInteger right) {
+    NSInteger rootLeft = find(left);
+    NSInteger rootRight = find(right);
+    if (rootLeft != rootRight) {
+      parent[rootRight] = rootLeft;
+    }
+  };
+
+  for (NSInteger i = 0; i < count; i++) {
+    uint64_t leftHash = entries[i].dHash;
+    for (NSInteger j = i + 1; j < count; j++) {
+      if ([DBImageContentMatcher matchesLeft:leftHash
+                                       right:entries[j].dHash
+                            hammingThreshold:DBImageHammingThresholdDefault]) {
+        unionNodes(i, j);
+      }
+    }
+  }
+
+  NSMutableDictionary<NSNumber *, NSMutableArray<DBGrouperImageContentEntry *> *> *clusters =
+      [NSMutableDictionary dictionary];
+  for (NSInteger index = 0; index < count; index++) {
+    NSInteger root = find(index);
+    NSNumber *key = @(root);
+    NSMutableArray *bucket = clusters[key];
+    if (bucket == nil) {
+      bucket = [NSMutableArray array];
+      clusters[key] = bucket;
+    }
+    [bucket addObject:entries[index]];
+  }
+  free(parent);
+
+  NSMutableArray<NSDictionary *> *results = [NSMutableArray array];
+  for (NSArray<DBGrouperImageContentEntry *> *cluster in clusters.allValues) {
+    if (cluster.count < 2) {
+      continue;
+    }
+    NSMutableArray<NSNumber *> *fileEntryIds = [NSMutableArray array];
+    NSMutableArray<NSNumber *> *sizes = [NSMutableArray array];
+    for (DBGrouperImageContentEntry *entry in cluster) {
+      [fileEntryIds addObject:@(entry.fileEntryId)];
+      [sizes addObject:@(entry.sizeBytes)];
+    }
+    NSString *matchKind = [self matchKindForImageCluster:cluster];
+    [results addObject:@{
+      @"fingerprintId" : @(cluster.firstObject.fingerprintId),
+      @"profile" : DBNormalizationProfileImageContentV1,
+      @"fileEntryIds" : fileEntryIds,
+      @"memberCount" : @(fileEntryIds.count),
+      @"reclaimable" : @([[self class] estimateReclaimableBytesForSizes:sizes]),
+      @"matchKind" : matchKind,
+    }];
+  }
+  return results;
+}
+
+- (NSString *)matchKindForImageCluster:(NSArray<DBGrouperImageContentEntry *> *)cluster
+{
+  NSMutableSet<NSNumber *> *rawIds = [NSMutableSet set];
+  BOOL allPresent = YES;
+  for (DBGrouperImageContentEntry *entry in cluster) {
+    if (entry.rawContentFingerprintId == nil) {
+      allPresent = NO;
+      break;
+    }
+    [rawIds addObject:entry.rawContentFingerprintId];
+  }
+  if (allPresent && rawIds.count == 1) {
+    return DBMatchKindExactBytes;
+  }
+  return DBMatchKindSameContentImage;
 }
 
 - (NSArray<NSDictionary *> *)aggregateCandidatesForSQL:(const char *)sql
@@ -263,34 +588,18 @@
   return candidates;
 }
 
-- (int64_t)estimateReclaimableBytesForFileEntryIds:(NSArray<NSNumber *> *)fileEntryIds
-{
-  if (fileEntryIds.count == 0) {
-    return 0;
-  }
-  NSMutableArray<NSNumber *> *sizes = [NSMutableArray array];
-  for (NSNumber *entryId in fileEntryIds) {
-    sqlite3_stmt *stmt = NULL;
-    sqlite3 *db = _database.db;
-    sqlite3_prepare_v2(db, "SELECT size FROM file_entry WHERE id = ?", -1, &stmt, NULL);
-    sqlite3_bind_int64(stmt, 1, entryId.longLongValue);
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-      [sizes addObject:@(sqlite3_column_int64(stmt, 0))];
-    }
-    sqlite3_finalize(stmt);
-  }
-  return [[self class] estimateReclaimableBytesForSizes:sizes];
-}
-
 - (NSInteger)insertGroupWithCandidate:(NSDictionary *)candidate matchKind:(NSString *)matchKind
 {
   NSArray<NSNumber *> *fileEntryIds = candidate[@"fileEntryIds"];
   if (fileEntryIds.count < 2) {
     return 0;
   }
-  double confidence =
-      [matchKind isEqualToString:DBMatchKindSameContentVideo] ? DBMatchKindConfidenceVideoContent
-                                                              : DBMatchKindConfidenceExact;
+  double confidence = DBMatchKindConfidenceExact;
+  if ([matchKind isEqualToString:DBMatchKindSameContentVideo]) {
+    confidence = DBMatchKindConfidenceVideoContent;
+  } else if ([matchKind isEqualToString:DBMatchKindSameContentImage]) {
+    confidence = DBMatchKindConfidenceImageContent;
+  }
   sqlite3_stmt *stmt = NULL;
   sqlite3 *db = _database.db;
   sqlite3_prepare_v2(
