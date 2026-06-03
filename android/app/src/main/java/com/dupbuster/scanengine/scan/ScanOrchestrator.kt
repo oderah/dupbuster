@@ -4,6 +4,8 @@ import com.dupbuster.scanengine.bridge.ScanErrorBridgeMapper
 import com.dupbuster.scanengine.bridge.ScanPhase
 import com.dupbuster.scanengine.bridge.ScanProgressBridge
 import com.dupbuster.scanengine.bridge.ScanProgressSnapshot
+import com.dupbuster.scanengine.foreground.NoOpScanForegroundController
+import com.dupbuster.scanengine.foreground.ScanForegroundController
 import com.dupbuster.scanengine.discovery.DiscoveredEntry
 import com.dupbuster.scanengine.discovery.MediaTypeHint
 import com.dupbuster.scanengine.hash.HashPipeline
@@ -42,6 +44,7 @@ class ScanOrchestrator(
     private val toctouVerifier: ToctouStatVerifier,
     private val grantRevocationTracker: GrantRevocationTracker = GrantRevocationTracker(),
     private val openFileRegistry: ScanOpenFileRegistry = ScanOpenFileRegistry(),
+    private val foregroundController: ScanForegroundController = NoOpScanForegroundController,
     private val executor: Executor = Executors.newSingleThreadExecutor { runnable ->
       Thread(runnable, "dupbuster-scan-orchestrator").apply { isDaemon = true }
     },
@@ -681,6 +684,15 @@ class ScanOrchestrator(
       groupsFound: Int,
       reclaimableBytesEst: Long,
   ) {
+    val atMs = clock()
+    val snapshot =
+        ScanProgressSnapshot(
+            filesProcessed = filesProcessed,
+            filesTotalKnown = filesTotalKnown,
+            groupsFound = groupsFound,
+            reclaimableBytesEst = reclaimableBytesEst,
+            phase = ScanPhase.HASHING,
+        )
     progressBridge.reportHashingProgress(
         filesProcessed = filesProcessed,
         filesTotalKnown = filesTotalKnown,
@@ -688,9 +700,10 @@ class ScanOrchestrator(
         reclaimableBytesEst = reclaimableBytesEst,
         mediaTypeHint = mediaTypeHint,
         isVideoFingerprintPass = false,
-        atMs = clock(),
+        atMs = atMs,
     )
-    progressBridge.advanceTo(clock())
+    progressBridge.advanceTo(atMs)
+    foregroundController.onProgress(snapshot, atMs)
   }
 
   private fun finishCancelled(scanRunId: Long, filesProcessed: Int, filesTotalKnown: Int) {
@@ -720,8 +733,10 @@ class ScanOrchestrator(
   }
 
   private fun emitPhase(snapshot: ScanProgressSnapshot) {
-    progressBridge.report(snapshot, clock())
-    progressBridge.flush(clock())
+    val atMs = clock()
+    progressBridge.report(snapshot, atMs)
+    progressBridge.flush(atMs)
+    foregroundController.onProgress(snapshot, atMs)
   }
 
   /** AC-integrity-perm-01: pause run, close FDs, rebuild partial duplicate groups. */

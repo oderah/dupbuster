@@ -575,6 +575,15 @@ New code must land in these areas unless architecture is amended first.
 - **Education gate:** `reduceScanSessionBeginDeleteFlow` → `KeeperEducationSheet` once per session, then opens modal on dismiss (`pendingDeleteGroupId`).
 - **Tests:** `npm test -- --testPathPattern='DeleteConfirm|deleteConfirm|scanSessionReducer'`; a11y gate cases in `__tests__/a11y/m2GateComponents.a11y.test.tsx`; AC-action-delete-01, AC-action-keeper-01/02, AC-a11y-delete-01, AC-a11y-match-04.
 
+### ScanForegroundService (M4-01)
+
+- **Android:** `com.dupbuster.scanengine.foreground.ScanForegroundService` — FGS type `dataSync`; channel `com.dupbuster.scan.foreground.v1` ([ScanForegroundConstants]).
+- **Copy:** `ScanForegroundNotificationCopy` mirrors frozen `tokens.notification.*` / `tokens.platform.notification.channelId` — no "delete"/"remove" in title, channel, or body.
+- **Lifecycle:** `AndroidScanForegroundController` wired in `ScanOrchestratorFactory`; `ScanOrchestrator.emitPhase` + `reportHashingProgress` drive start/update/stop; updates coalesce 250 ms.
+- **Manifest:** `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC`; service `android:foregroundServiceType="dataSync"`.
+- **Cancel teardown:** M4-02 — basic stop on `COMPLETE` / `ERROR` / `CANCELLED` only in M4-01.
+- **Tests:** `ScanForegroundNotificationCopyTest`, `AndroidScanForegroundControllerTest`, `ScanForegroundServiceTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.foreground.*'`.
+
 ### MatchKindBadge (M2-12)
 
 - **`src/components/MatchKindBadge.tsx`:** Presentational badge for `EXACT_BYTES` vs `SAME_CONTENT_VIDEO`; copy from `getMatchKindLabel` / `tokens.match.*.label`; `presentation` `compact` (list) or `prominent` (detail).
