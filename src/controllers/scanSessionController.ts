@@ -193,7 +193,11 @@ export class ScanSessionController {
   /** Invokes native DeleteCoordinator after two-step confirm (M3-03). */
   async confirmDelete(): Promise<void> {
     const groupId = this.state.selectedGroupId;
-    if (groupId == null || !this.state.deleteConfirmVisible) {
+    if (
+      groupId == null ||
+      !this.state.deleteConfirmVisible ||
+      this.state.deleteConfirmStep !== 'confirm'
+    ) {
       return;
     }
     const group = this.state.groupDetailsById[groupId];

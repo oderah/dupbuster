@@ -256,7 +256,7 @@ Implementation proceeds in milestones as defined in `docs/implementation-plan.md
 
 - **M1** (exit gate ✅): Native ScanEngine — discovery, hashing, SQLite index, progress throttle, checkpoint, video fingerprinting, fixture matrix
 - **M2** (tasks ✅, exit gate partial): RN shell + UX catalog — M2-01…M2-14 complete; automated gate + live bridge green; manual smoke sign-off pending (see below)
-- **M3**: Actions + integrity (two-step delete, TOCTOU, permission-revoke pause/resume)
+- **M3** (exit gate ✅ automated): Actions + integrity — delete flow, TOCTOU, perm-revoke pause/resume, IMAGE_CONTENT_V1 (Android + iOS); manual smoke rows 30–31 still QA-pending
 - **M4**: Background + release hardening (Android FGS, redaction gate, store checklist)
 - **M5**: Deliverable docs (this folder)
 
@@ -278,7 +278,7 @@ Implementation proceeds in milestones as defined in `docs/implementation-plan.md
 | Exit-gate bullet | Blocker |
 |------------------|---------|
 | Manual smoke matrix | QA executes `tests/manual/m2-voiceover-talkback-smoke-matrix.md` §5–§6 on iOS VoiceOver + Android TalkBack; rows 30–31 blocked M3 |
-| `AC-a11y-delete-01` / `AC-a11y-path-01` | M3-01 `DeleteConfirmModal`, M3-02 `PathChipList` |
+| `AC-a11y-delete-01` / `AC-a11y-path-01` | Covered in Jest + a11y gate (M3-01/02); manual smoke QA pending |
 
 ## Working on a milestone
 

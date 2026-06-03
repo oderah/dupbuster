@@ -149,10 +149,11 @@ M2 RN shell stub work may begin after M1 week 1 using mock progress events match
 
 ### 5.2 M3 exit gate
 
-- [ ] AC-action-keeper-01 through AC-action-reclaim-01 pass
-- [ ] AC-integrity-toctou-01, toctou-02, perm-01, resume-01, hardlink-01 pass
-- [ ] Delete never invoked without two-step confirm
-- [ ] Keeper explicit selection enforced (including a11y)
+- [x] AC-action-keeper-01 through AC-action-reclaim-01 pass *(Jest: keeper/delete/reclaim suite)*
+- [x] AC-integrity-toctou-01, toctou-02, perm-01, resume-01, hardlink-01 pass *(Android native + iOS unit/orchestrator tests)*
+- [x] Delete never invoked without two-step confirm *(DeleteConfirmModal + `confirmDelete` step guard)*
+- [x] Keeper explicit selection enforced (including a11y) *(KeeperSelector + a11y gate)*
+- Manual smoke (M2-SMOKE-30/31 delete/path rows): QA sign-off still pending — not blocking automated M3 gate
 
 ---
 

@@ -134,4 +134,28 @@ describe('ScanSessionController', () => {
       dismissedForSession: false,
     });
   });
+
+  it('confirmDelete skips native delete until confirm step (AC-action-delete-01)', async () => {
+    const engine = createMockScanEnginePort();
+    const deleteDuplicates = jest.spyOn(engine, 'deleteDuplicates');
+    controller.dispose();
+    controller = createScanSessionController(engine);
+
+    await controller.startScan({mode: 'platform_discovery', roots: []});
+    await waitForPhase(controller, 'complete');
+
+    controller.openGroupDetail(1);
+    controller.selectKeeper(1, 101);
+    controller.beginDeleteFlow(1);
+    if (controller.getState().keeperEducationVisible) {
+      controller.dismissKeeperEducation();
+    }
+
+    await controller.confirmDelete();
+    expect(deleteDuplicates).not.toHaveBeenCalled();
+
+    controller.advanceDeleteConfirm();
+    await controller.confirmDelete();
+    expect(deleteDuplicates).toHaveBeenCalledTimes(1);
+  });
 });
