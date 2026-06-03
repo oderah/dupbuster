@@ -592,14 +592,14 @@ New code must land in these areas unless architecture is amended first.
 - **Bridge:** `ScanErrorBridgeMapper` / `DBScanErrorBridgeMapper` redact `unscannableReason`; `ScanEngineModule.toEventEmitterMap` redacts event string fields. Catalog `getCatalogSnapshot` paths are UI-only (FR-SE-04).
 - **Tests:** `RedactionFilterTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.security.RedactionFilterTest'`; iOS `DBRedactionFilterTests`; fixture `security/security-redact-01.json`.
 
-### Security CI gate (M4-05)
+### Security CI gates (M4-05 / M4-06)
 
-- **Fixture contract:** `expect.ciGate` + `expect.mustNotContainRawPath` on `security/security-redact-01.json` (AC-security-redact-01).
-- **Android:** `SecurityCiGateRunner` / `SecurityCiGateTest` (parameterized over `FixtureLoader.ciGateFixturePaths()`); asserts `ScanTelemetryEgress` crash message, structured payload, and exception line never contain raw paths.
-- **iOS:** `DBSecurityCiGateTests` — same fixture-driven checks via `DBScanTelemetryEgress`.
-- **JS:** `__tests__/securityCiGate.test.ts` — manifest/descriptor contract (native enforcement in CI).
-- **CI:** `.github/workflows/security-ci-gates.yml` on `dev`/`main` push and PR; `npm run test:security-gates` → `scripts/run-security-ci-gates.sh` (Jest + Gradle `SecurityCiGateTest` + `RedactionFilterTest`).
-- **Prod gate:** M4 prod promote requires green AC-security-redact-01 (with AC-security-uri-01 in M4-06).
+- **Discovery:** `FixtureLoader.ciGateFixturePaths()` — any fixture with `expect.ciGate: true`.
+- **Redact (M4-05):** `security/security-redact-01.json` — `expect.mustNotContainRawPath` (AC-security-redact-01). `SecurityCiGateRunner.runRedact` / parameterized `SecurityCiGateTest` over `redactCiGateFixturePaths()`; asserts `ScanTelemetryEgress` crash message, structured payload, and exception line never contain raw paths. iOS: `DBSecurityCiGateTests` (skips `platform: android` fixtures).
+- **URI (M4-06):** `security/security-uri-01.json` — crafted SAF `..` docId; `expect.mustNotOpen`, `validation: denied`, `unscannableReason: PERMISSION_DENIED` (AC-security-uri-01). `SecurityCiGateRunner.runUri` / Robolectric `SecurityUriCiGateTest` over `uriCiGateFixturePaths()`; `UriValidator` deny + `StatStage` with fail-closed `FileStatReader` (no open). Also `SafUriRulesTest` in CI.
+- **JS:** `__tests__/securityCiGate.test.ts` — manifest/descriptor contract per gate type (native enforcement in CI).
+- **CI:** `.github/workflows/security-ci-gates.yml` on `dev`/`main` push and PR; `npm run test:security-gates` → `scripts/run-security-ci-gates.sh` (Jest + Gradle `SecurityCiGateTest` + `SecurityUriCiGateTest` + `RedactionFilterTest` + `SafUriRulesTest`).
+- **Prod gate:** M4 prod promote requires green AC-security-redact-01 **and** AC-security-uri-01 on prod candidate.
 
 ### iOS BGProcessingTask continuation (M4-03)
 
@@ -644,7 +644,7 @@ Work must respect **dependency order:** M1 ScanEngine (critical path) → M2 RN 
 | ScanEngine / hash / schema | Native unit tests; all relevant `tests/fixtures/dupbuster/v1/` rows |
 | Bridge / progress | AC-integrity-progress-01 (≤4 events/s under load) |
 | URI / SAF | AC-security-uri-01 fixture |
-| Redaction / telemetry | `npm run test:security-gates` or workflow `security-ci-gates.yml` (AC-security-redact-01) |
+| Redaction / URI security gates | `npm run test:security-gates` or workflow `security-ci-gates.yml` (AC-security-redact-01, AC-security-uri-01) |
 | RN UI catalog | Component tests + automated a11y (zero critical violations on M2 gate components) |
 | Delete / TOCTOU | M3 integration suite |
 

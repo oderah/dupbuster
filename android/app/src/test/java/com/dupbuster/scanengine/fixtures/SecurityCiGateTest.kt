@@ -15,13 +15,13 @@ class SecurityCiGateTest(
 
   @Test
   fun ciGateFixture_passesRedactionPolicy() {
-    SecurityCiGateRunner.run(FixtureLoader.load(fixturePath))
+    SecurityCiGateRunner.runRedact(FixtureLoader.load(fixturePath))
   }
 
   companion object {
     @JvmStatic
     @Parameterized.Parameters(name = "{0}")
     fun ciGateFixtures(): List<Array<String>> =
-        FixtureLoader.ciGateFixturePaths().map { arrayOf(it) }
+        FixtureLoader.redactCiGateFixturePaths().map { arrayOf(it) }
   }
 }

@@ -112,16 +112,22 @@ static void DBRunSecurityRedact01(NSDictionary *fixture)
 
 - (void)testCiGateFixtures_securityRedact01
 {
+  NSUInteger ran = 0;
   for (NSString *relativePath in DBCiGateFixturePaths()) {
     NSDictionary *fixture = DBLoadFixture(relativePath);
+    NSString *platform = fixture[@"platform"];
+    if ([platform isEqualToString:@"android"]) {
+      continue;
+    }
     NSString *fixtureId = fixture[@"id"];
     if ([fixtureId isEqualToString:@"security-redact-01"]) {
       DBRunSecurityRedact01(fixture);
+      ran++;
     } else {
       XCTFail(@"Unhandled ciGate fixture: %@", fixtureId);
     }
   }
-  XCTAssertTrue(DBCiGateFixturePaths().count > 0);
+  XCTAssertTrue(ran > 0);
 }
 
 @end

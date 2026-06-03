@@ -10,7 +10,8 @@
   "expect": {
     "validation": "denied",
     "unscannableReason": "PERMISSION_DENIED",
-    "mustNotOpen": true
+    "mustNotOpen": true,
+    "ciGate": true
   },
   "acceptanceCriteria": [
     "AC-security-uri-01"
