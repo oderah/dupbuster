@@ -1,5 +1,6 @@
 package com.dupbuster.scanengine.bridge
 
+import com.dupbuster.scanengine.security.RedactionFilter
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReadableMap
 
@@ -17,7 +18,7 @@ object ScanErrorBridgeMapper {
     val map =
         JavaOnlyMap().apply {
           putDouble("fileEntryId", fileEntryId.toDouble())
-          putString("unscannableReason", unscannableReason)
+          putString("unscannableReason", RedactionFilter.apply(unscannableReason) ?: unscannableReason)
           if (scanRunId != null) {
             putDouble("scanRunId", scanRunId.toDouble())
           }

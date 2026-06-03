@@ -3,6 +3,7 @@ package com.dupbuster.scanengine
 import com.facebook.proguard.annotations.DoNotStrip
 import com.dupbuster.scanengine.bridge.CatalogSnapshotBridgeMapper
 import com.dupbuster.scanengine.bridge.ResumableScanRunBridgeMapper
+import com.dupbuster.scanengine.security.RedactionFilter
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.CatalogReader
 import com.dupbuster.scanengine.index.IndexWriter
@@ -131,7 +132,11 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
         ReadableType.Null -> nativeMap.putNull(key)
         ReadableType.Boolean -> nativeMap.putBoolean(key, payload.getBoolean(key))
         ReadableType.Number -> nativeMap.putDouble(key, payload.getDouble(key))
-        ReadableType.String -> nativeMap.putString(key, payload.getString(key))
+        ReadableType.String ->
+            nativeMap.putString(
+                key,
+                RedactionFilter.apply(payload.getString(key)) ?: payload.getString(key),
+            )
         else ->
             throw IllegalArgumentException(
                 "Unsupported TurboModule event field type for key: $key",

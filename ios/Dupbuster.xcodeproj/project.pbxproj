@@ -189,6 +189,11 @@
 		D4M403242B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */; };
 		D4M403132B68250000A75B9A /* BackgroundTasks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4M403232B68250000A75B9A /* BackgroundTasks.framework */; };
 		D4M403332B68250000A75B9A /* BackgroundTasks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4M403232B68250000A75B9A /* BackgroundTasks.framework */; };
+		D4M404122B68260000A75B9A /* DBRedactionFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404022B68260000A75B9A /* DBRedactionFilter.m */; };
+		D4M404142B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */; };
+		D4M404162B68260000A75B9A /* DBRedactionFilterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */; };
+		D4M404222B68260000A75B9A /* DBRedactionFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404022B68260000A75B9A /* DBRedactionFilter.m */; };
+		D4M404242B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */ = {isa = PBXBuildFile; fileRef = D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -333,6 +338,11 @@
 		D4M403042B68250000A75B9A /* DBScanBackgroundContinuation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanBackgroundContinuation.m; path = ScanEngine/Background/DBScanBackgroundContinuation.m; sourceTree = "<group>"; };
 		D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanBackgroundContinuationTests.m; path = ScanEngineTests/DBScanBackgroundContinuationTests.m; sourceTree = "<group>"; };
 		D4M403232B68250000A75B9A /* BackgroundTasks.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BackgroundTasks.framework; path = System/Library/Frameworks/BackgroundTasks.framework; sourceTree = SDKROOT; };
+		D4M404012B68260000A75B9A /* DBRedactionFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBRedactionFilter.h; path = ScanEngine/Security/DBRedactionFilter.h; sourceTree = "<group>"; };
+		D4M404022B68260000A75B9A /* DBRedactionFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBRedactionFilter.m; path = ScanEngine/Security/DBRedactionFilter.m; sourceTree = "<group>"; };
+		D4M404032B68260000A75B9A /* DBScanTelemetryEgress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanTelemetryEgress.h; path = ScanEngine/Security/DBScanTelemetryEgress.h; sourceTree = "<group>"; };
+		D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanTelemetryEgress.m; path = ScanEngine/Security/DBScanTelemetryEgress.m; sourceTree = "<group>"; };
+		D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBRedactionFilterTests.m; path = ScanEngineTests/DBRedactionFilterTests.m; sourceTree = "<group>"; };
 		D4F8A3302B68200000A75B9A /* DBEquivFixturesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBEquivFixturesTests.m; path = ScanEngineTests/DBEquivFixturesTests.m; sourceTree = "<group>"; };
 		D4F8A3402B68210000A75B9A /* DBScanStartRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DBScanStartRequest.h; path = ScanEngine/Scan/DBScanStartRequest.h; sourceTree = "<group>"; };
 		D4F8A3412B68210000A75B9A /* DBScanStartRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DBScanStartRequest.m; path = ScanEngine/Scan/DBScanStartRequest.m; sourceTree = "<group>"; };
@@ -510,6 +520,10 @@
 				D4F8A2062B68120000A75B9A /* DBUriValidator.mm */,
 				D4F8A2632B68160000A75B9A /* DBUnscannableReason.h */,
 				D4F8A2622B68160000A75B9A /* DBUnscannableReason.m */,
+				D4M404012B68260000A75B9A /* DBRedactionFilter.h */,
+				D4M404022B68260000A75B9A /* DBRedactionFilter.m */,
+				D4M404032B68260000A75B9A /* DBScanTelemetryEgress.h */,
+				D4M404042B68260000A75B9A /* DBScanTelemetryEgress.m */,
 			);
 			name = Security;
 			sourceTree = "<group>";
@@ -674,6 +688,7 @@
 				D4M305062B68230000A75B9A /* DBPhAssetPlatformFileDeleterTests.m */,
 				D4M306042B68230000A75B9A /* DBToctouStatVerifierTests.m */,
 				D4M403062B68250000A75B9A /* DBScanBackgroundContinuationTests.m */,
+				D4M404062B68260000A75B9A /* DBRedactionFilterTests.m */,
 			);
 			name = ScanEngineTests;
 			sourceTree = "<group>";
@@ -1002,6 +1017,9 @@
 				D4M403122B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */,
 				D4M403142B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */,
 				D4M403162B68250000A75B9A /* DBScanBackgroundContinuationTests.m in Sources */,
+				D4M404122B68260000A75B9A /* DBRedactionFilter.m in Sources */,
+				D4M404142B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */,
+				D4M404162B68260000A75B9A /* DBRedactionFilterTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1085,6 +1103,8 @@
 				D4M308242B68230000A75B9A /* DBScanOpenFileRegistry.m in Sources */,
 				D4M403222B68250000A75B9A /* DBScanBackgroundContinuationConstants.m in Sources */,
 				D4M403242B68250000A75B9A /* DBScanBackgroundContinuation.m in Sources */,
+				D4M404222B68260000A75B9A /* DBRedactionFilter.m in Sources */,
+				D4M404242B68260000A75B9A /* DBScanTelemetryEgress.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,7 @@
 #import "DBScanErrorBridgeMapper.h"
 
+#import "DBRedactionFilter.h"
+
 NSSet<NSString *> *DBScanErrorBridgeAllowedKeys(void)
 {
   static NSSet<NSString *> *keys;
@@ -18,7 +20,7 @@ NSSet<NSString *> *DBScanErrorBridgeAllowedKeys(void)
 {
   NSMutableDictionary *payload = [@{
     @"fileEntryId" : @(fileEntryId),
-    @"unscannableReason" : unscannableReason,
+    @"unscannableReason" : [DBRedactionFilter apply:unscannableReason],
   } mutableCopy];
   if (scanRunId != nil) {
     payload[@"scanRunId"] = scanRunId;

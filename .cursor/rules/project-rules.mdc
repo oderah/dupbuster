@@ -584,6 +584,15 @@ New code must land in these areas unless architecture is amended first.
 - **Cancel teardown (M4-02):** `cancelScan` → `CANCELLING` + `openFileRegistry.closeAll()` + `onCancelRequested`; `ScanCancelDrainWatchdog` force-expires drain at 30 s; hash uses 5 s per-file read cap via `HashPipeline.hash(..., hashDeadlineMs)`; FGS stops on `CANCELLED`; `AndroidScanForegroundController` hard-stops at 120 s; `ScanForegroundService.onDestroy` cancels notification ID.
 - **Tests:** `ScanForegroundNotificationCopyTest`, `AndroidScanForegroundControllerTest`, `ScanForegroundServiceTest`, `ScanCancelDrainWatchdogTest`, `IntegrityCancelFixtureTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.foreground.*' --tests 'com.dupbuster.scanengine.scan.ScanCancelDrainWatchdogTest'`.
 
+### RedactionFilter (M4-04)
+
+- **Android:** `com.dupbuster.scanengine.security.RedactionFilter` — denylist patterns 1–6 on free-form strings; pattern 7 via `CRASH_SENSITIVE_KEYS` on `applyToCrashPayload` / `applyToJsonObject`. `ScanTelemetryEgress` is the crash/analytics egress entry point (FR-SE-02).
+- **iOS:** `DBRedactionFilter`, `DBScanTelemetryEgress` under `ScanEngine/Security/`.
+- **Placeholder:** `[REDACTED]` — pattern 1 matches full path segment (not prefix-only) for AC-security-redact-01.
+- **Bridge:** `ScanErrorBridgeMapper` / `DBScanErrorBridgeMapper` redact `unscannableReason`; `ScanEngineModule.toEventEmitterMap` redacts event string fields. Catalog `getCatalogSnapshot` paths are UI-only (FR-SE-04).
+- **Tests:** `RedactionFilterTest`, `SecurityRedactFixtureTest`; `./gradlew :app:testDebugUnitTest --tests 'com.dupbuster.scanengine.security.RedactionFilterTest' --tests 'com.dupbuster.scanengine.fixtures.SecurityRedactFixtureTest'`; iOS `DBRedactionFilterTests`; fixture `security/security-redact-01.json`.
+- **M4-05:** CI gate wires `mustNotContainRawPath` / `ciGate` from fixture — not in M4-04.
+
 ### iOS BGProcessingTask continuation (M4-03)
 
 - **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).
