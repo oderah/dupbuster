@@ -609,6 +609,17 @@ New code must land in these areas unless architecture is amended first.
 - **Local:** `scripts/ci-android-release.sh` (Linux/macOS); `scripts/ci-ios-release.sh` (macOS + Xcode only).
 - **Android CI:** `android-actions/setup-android@v3` with NDK `27.1.12297006`, platforms 36, build-tools 36.0.0; `bundleRelease` / `assembleRelease` use debug keystore until Fastlane prod signing.
 
+### Fastlane store lanes (M4-08)
+
+- **Lanes:** `bundle exec fastlane android internal|prod`; `bundle exec fastlane ios internal|prod` — internal = Play internal + TestFlight; prod = Play production + App Store upload (no auto-submit).
+- **Internal:** No M4 §6.2 prod gates (authorized M1–M3 per implementation-plan).
+- **Prod:** `scripts/verify-prod-promote-gates.sh` — security CI gates, `test:a11y`, Android `EquivFixturesTest` + security CI tests; requires `DUPBUSTER_PROD_PROMOTE_APPROVED=1` after manual checklist (FGS cancel, pre-launch, external beta, manual smoke).
+- **Signing:** Android release via `ANDROID_KEYSTORE_*` or `ANDROID_KEYSTORE_BASE64` + Gradle injected signing; iOS `com.dupbuster` bundle id + App Store Connect API key + Xcode `build_app` / `upload_to_testflight` / `upload_to_app_store`.
+- **Version:** `DUPBUSTER_RELEASE_VERSION` (e.g. `v1.0.0`) → `versionName` / tag; optional `DUPBUSTER_VERSION_CODE` for Play/App Store build number.
+- **CI:** `.github/workflows/fastlane-deploy.yml` — `workflow_dispatch` (`lane`, `platform`, `release_version`); GitHub environments `internal` / `production`; secrets per `fastlane/README.md`.
+- **Wrappers:** `scripts/run-fastlane-lane.sh`; `npm run release:internal` / `release:prod` (both platforms).
+- **Gem:** root `Gemfile` → `fastlane` ~> 2.227; `bundle install` before lanes.
+
 ### iOS BGProcessingTask continuation (M4-03)
 
 - **iOS:** `ScanEngine/Background/DBScanBackgroundContinuation` — stable task id `com.dupbuster.scan.background-continuation.v1` ([DBScanBackgroundContinuationConstants]).

@@ -78,12 +78,22 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.dupbuster"
+    def dupbusterReleaseVersion = (findProperty("DUPBUSTER_RELEASE_VERSION")
+            ?: System.getenv("DUPBUSTER_RELEASE_VERSION")
+            ?: "")
+            .toString()
+            .replaceAll("^v", "")
+    def dupbusterVersionCode = (findProperty("DUPBUSTER_VERSION_CODE")
+            ?: System.getenv("DUPBUSTER_VERSION_CODE")
+            ?: "")
+            .toString()
+
     defaultConfig {
         applicationId "com.dupbuster"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode (dupbusterVersionCode ==~ /^\d+$/ ? dupbusterVersionCode.toInteger() : 1)
+        versionName dupbusterReleaseVersion.isEmpty() ? "1.0" : dupbusterReleaseVersion
     }
     signingConfigs {
         debug {

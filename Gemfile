@@ -15,3 +15,6 @@ gem 'logger'
 gem 'benchmark'
 gem 'mutex_m'
 gem 'nkf'
+
+# M4-08: Play internal/prod + TestFlight/App Store lanes
+gem 'fastlane', '~> 2.227'

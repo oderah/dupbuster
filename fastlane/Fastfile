@@ -1,0 +1,128 @@
+# frozen_string_literal: true
+
+# M4-08: Fastlane internal + prod lanes (implementation-plan §11.2 steps 4–5).
+#   bundle exec fastlane android internal|prod
+#   bundle exec fastlane ios internal|prod
+
+require_relative "helpers/signing_helper"
+require_relative "helpers/gates_helper"
+
+def play_store_json_key
+  path = ENV["PLAY_STORE_JSON_KEY_PATH"]
+  if path && File.exist?(path)
+    return { json_key: path }
+  end
+
+  data = ENV["PLAY_STORE_JSON_KEY"]
+  UI.user_error!("Set PLAY_STORE_JSON_KEY or PLAY_STORE_JSON_KEY_PATH") if data.nil? || data.empty?
+
+  { json_key_data: data }
+end
+
+def dupbuster_connect_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+    is_key_content_base64: true
+  )
+end
+
+platform :android do
+  desc "Build signed release AAB (release keystore required)"
+  lane :build_release do
+    SigningHelper.android_prepare_keystore!
+    gradle(
+      project_dir: File.join(SigningHelper.repo_root, "android"),
+      task: "bundleRelease",
+      properties: SigningHelper.android_gradle_signing_properties.merge(
+        SigningHelper.apply_release_version_properties
+      )
+    )
+    UI.success("AAB: #{SigningHelper.android_aab_path}")
+  end
+
+  desc "Play internal track (no M4 prod gate)"
+  lane :internal do
+    build_release
+    upload_to_play_store(
+      **play_store_json_key,
+      track: "internal",
+      release_status: "completed",
+      aab: SigningHelper.android_aab_path,
+      package_name: "com.dupbuster",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Play production (M4 §6.2 gates + DUPBUSTER_PROD_PROMOTE_APPROVED)"
+  lane :prod do
+    GatesHelper.verify_prod_promote_gates!
+    build_release
+    upload_to_play_store(
+      **play_store_json_key,
+      track: "production",
+      release_status: "completed",
+      aab: SigningHelper.android_aab_path,
+      package_name: "com.dupbuster",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+
+platform :ios do
+  private_lane :prepare_ios do
+    ios_dir = File.join(SigningHelper.repo_root, "ios")
+    Dir.chdir(ios_dir) { sh("bundle", "exec", "pod", "install") }
+  end
+
+  desc "Archive + export App Store IPA"
+  lane :build_release do
+    prepare_ios
+    api_key = dupbuster_connect_api_key
+    build_app(
+      workspace: File.join(SigningHelper.repo_root, "ios/Dupbuster.xcworkspace"),
+      scheme: "Dupbuster",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: File.join(ENV.fetch("RUNNER_TEMP", Dir.tmpdir), "dupbuster-ios"),
+      output_name: "Dupbuster",
+      xcargs: "PRODUCT_BUNDLE_IDENTIFIER=com.dupbuster",
+      api_key: api_key
+    )
+  end
+
+  desc "TestFlight internal testing (no M4 prod gate)"
+  lane :internal do
+    build_release
+    api_key = dupbuster_connect_api_key
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      distribute_external: false
+    )
+  end
+
+  desc "App Store production upload (M4 §6.2 gates; manual submit in ASC)"
+  lane :prod do
+    GatesHelper.verify_prod_promote_gates!
+    build_release
+    api_key = dupbuster_connect_api_key
+    upload_to_app_store(
+      api_key: api_key,
+      submit_for_review: false,
+      automatic_release: false,
+      skip_metadata: true,
+      skip_screenshots: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+end

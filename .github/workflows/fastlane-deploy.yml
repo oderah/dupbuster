@@ -1,0 +1,121 @@
+# M4-08: Fastlane internal + prod store lanes (implementation-plan §11.2 steps 4–5).
+# Requires repository secrets — see fastlane/README.md.
+name: Fastlane store deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: Fastlane lane
+        required: true
+        type: choice
+        options:
+          - internal
+          - prod
+      platform:
+        description: Platform
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+          - both
+      release_version:
+        description: Release tag (e.g. v1.0.0)
+        required: true
+        type: string
+      version_code:
+        description: Integer build number (optional)
+        required: false
+        type: string
+      prod_promote_approved:
+        description: For prod lane only — type "approved" after §6.2 manual sign-off
+        required: false
+        type: string
+
+concurrency:
+  group: fastlane-${{ github.event.inputs.lane }}-${{ github.event.inputs.platform }}-${{ github.event.inputs.release_version }}
+  cancel-in-progress: false
+
+jobs:
+  resolve-matrix:
+    name: Plan deploy matrix
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.plan.outputs.include }}
+    steps:
+      - id: plan
+        run: |
+          platform="${{ github.event.inputs.platform }}"
+          lane="${{ github.event.inputs.lane }}"
+          if [[ "$platform" == "both" ]]; then
+            json='[{"platform":"android","lane":"'"$lane"'"},{"platform":"ios","lane":"'"$lane"'"}]'
+          else
+            json='[{"platform":"'"$platform"'","lane":"'"$lane"'"}]'
+          fi
+          echo "include=$json" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Fastlane ${{ matrix.platform }} ${{ matrix.lane }}
+    needs: resolve-matrix
+    runs-on: ${{ matrix.platform == 'ios' && 'macos-14' || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.resolve-matrix.outputs.include) }}
+    environment: ${{ matrix.lane == 'prod' && 'production' || 'internal' }}
+    env:
+      DUPBUSTER_RELEASE_VERSION: ${{ github.event.inputs.release_version }}
+      DUPBUSTER_VERSION_CODE: ${{ github.event.inputs.version_code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.11'
+          cache: npm
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - run: npm ci
+
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+        if: matrix.platform == 'android'
+        with:
+          packages: >-
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;27.1.12297006
+
+      - name: Validate prod sign-off
+        if: matrix.lane == 'prod'
+        run: |
+          if [[ "${{ github.event.inputs.prod_promote_approved }}" != "approved" ]]; then
+            echo "prod lane requires workflow input prod_promote_approved=approved" >&2
+            exit 1
+          fi
+          echo "DUPBUSTER_PROD_PROMOTE_APPROVED=1" >> "$GITHUB_ENV"
+
+      - name: Fastlane ${{ matrix.platform }} ${{ matrix.lane }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          FASTLANE_TEAM_ID: ${{ secrets.FASTLANE_TEAM_ID }}
+          FASTLANE_ITC_TEAM_ID: ${{ secrets.FASTLANE_ITC_TEAM_ID }}
+        run: bundle exec fastlane ${{ matrix.platform }} ${{ matrix.lane }}

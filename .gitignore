@@ -52,6 +52,9 @@ yarn-error.log
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
+fastlane/.env
+*.jks
+play-store-key.json
 
 # Bundle artifact
 *.jsbundle

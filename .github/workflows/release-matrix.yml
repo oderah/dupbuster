@@ -1,5 +1,5 @@
 # M4-07: Tag-push matrix release build (Android AAB + iOS unsigned archive).
-# Pipeline step 3 per docs/implementation-plan.md §11.2; Fastlane upload is M4-08.
+# Pipeline step 3 per docs/implementation-plan.md §11.2; store upload via fastlane-deploy.yml (M4-08).
 name: Release matrix build
 
 on:
