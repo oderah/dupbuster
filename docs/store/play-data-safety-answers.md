@@ -55,6 +55,8 @@ For each type below, use **Not collected** / **Not shared** unless a future rele
 
 ## Permissions alignment (pre-launch)
 
+**Operator runbook:** `tests/manual/m4-play-prelaunch-report.md` (M4-11) — execute after M4-10 matrix on the same AAB.
+
 Declared permissions in `android/app/src/main/AndroidManifest.xml` must match this form:
 
 | Permission | Store justification |

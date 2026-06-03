@@ -48,7 +48,7 @@ Use the step-by-step answers in [`play-data-safety-answers.md`](./play-data-safe
 - **Account / location / contacts / financial:** Not used.
 - **Foreground service:** User-initiated local duplicate scan (`dataSync`); notification copy from `notification.*` tokens — no delete/remove wording.
 
-**Play pre-launch (M4-11):** Declarations here must match the built APK/AAB (permissions in `AndroidManifest.xml`: media read + FGS only; `INTERNET` for RN dev tooling — not used to upload user files).
+**Play pre-launch (M4-11):** Declarations here must match the built APK/AAB (permissions in `AndroidManifest.xml`: media read + FGS only; `INTERNET` for RN dev tooling — not used to upload user files). Sign-off runbook: `tests/manual/m4-play-prelaunch-report.md`.
 
 ---
 

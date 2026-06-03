@@ -22,6 +22,12 @@ npm run test:store-privacy
 echo "==> Store matrix QA contract (M4-10)"
 npm run test:store-matrix
 
+echo "==> Play pre-launch report contract (M4-11)"
+npm run test:play-prelaunch
+
+echo "==> TestFlight external beta contract (M4-12)"
+npm run test:testflight-external
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \
@@ -32,8 +38,8 @@ cd android
 echo "==> Manual §6.2 gates (confirm before prod promote)"
 echo "  - Store-matrix QA signed off: tests/manual/m4-store-matrix-qa.md (M4-10)"
 echo "  - FGS cancel notification cleared ≤ 120 s (AC-integrity-cancel-01)"
-echo "  - Play pre-launch report clean API 26/33/34 (M4-11, after M4-10)"
-echo "  - TestFlight external beta complete"
+echo "  - Play pre-launch signed off: tests/manual/m4-play-prelaunch-report.md (M4-11, after M4-10)"
+echo "  - TestFlight external signed off: tests/manual/m4-testflight-external-beta.md (M4-12, after M4-10 iOS)"
 echo "  - Manual VoiceOver/TalkBack smoke signed off (M2-11)"
 
 if [[ "${DUPBUSTER_PROD_PROMOTE_APPROVED:-}" != "1" ]]; then

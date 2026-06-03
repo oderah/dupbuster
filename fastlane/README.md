@@ -75,6 +75,10 @@ Before **prod** submit, complete Play Data safety and App Store App Privacy usin
 
 Execute and sign off `tests/manual/m4-store-matrix-qa.md` (M4-10) on API 26/33/34 Android and iOS 15/17/18 before Play pre-launch (M4-11).
 
+Sign off `tests/manual/m4-play-prelaunch-report.md` (M4-11) on the **same** release AAB in Play Console before the Fastlane **prod** lane.
+
+Sign off `tests/manual/m4-testflight-external-beta.md` (M4-12) on the **same** release IPA (external TestFlight group + Beta App Review approved) before the Fastlane **prod** lane.
+
 ## CI
 
 `.github/workflows/fastlane-deploy.yml` — `workflow_dispatch` with `lane` (`internal` / `prod`) and `platform` (`android` / `ios` / `both`). Configure repository secrets before first run.

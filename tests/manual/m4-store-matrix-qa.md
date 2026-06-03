@@ -265,6 +265,7 @@ Install TestFlight or archive build on each runtime. Limited-library tests requi
 | §6.2 FGS cancel ≤120 s | 07–08 |
 | §6.2 manual a11y smoke | 26 |
 | §6.2 store privacy forms | 27 |
-| M4-11 pre-launch report | Run Play pre-launch on **same** AAB after matrix green |
+| M4-11 pre-launch report | `tests/manual/m4-play-prelaunch-report.md` on **same** AAB after matrix green |
+| M4-12 TestFlight external | `tests/manual/m4-testflight-external-beta.md` on **same** IPA after iOS matrix green |
 
 Re-run matrix after changes to ScanEngine discovery, FGS, delete coordinator, or permission flows.

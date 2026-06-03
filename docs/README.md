@@ -12,6 +12,10 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 
 **Store-matrix QA (M4-10):** `tests/manual/m4-store-matrix-qa.md` — manual API 26/33/34 + iOS 15/17/18 matrix (`npm run test:store-matrix` contract).
 
+**Play pre-launch (M4-11):** `tests/manual/m4-play-prelaunch-report.md` — Play Console pre-launch sign-off on the same release AAB (`npm run test:play-prelaunch` contract).
+
+**TestFlight external (M4-12):** `tests/manual/m4-testflight-external-beta.md` — external beta + Beta App Review on the same release IPA (`npm run test:testflight-external` contract).
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)

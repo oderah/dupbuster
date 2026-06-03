@@ -73,6 +73,12 @@ Declare **no collection** for: Contact Info, Health, Financial, Location, Sensit
 
 ---
 
+## External TestFlight (M4-12)
+
+**Operator runbook:** `tests/manual/m4-testflight-external-beta.md` — execute after M4-10 iOS matrix on the same build; Beta App Review must approve before prod promote.
+
+---
+
 ## Store listing consistency
 
 - **Privacy policy URL:** M4-14 (link when published; must state on-device processing).
