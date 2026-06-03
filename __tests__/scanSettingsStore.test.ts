@@ -28,8 +28,11 @@ describe('scanSettingsStore', () => {
     const port = createMemoryScanSettingsPort();
     expect(await port.load()).toEqual(DEFAULT_SCAN_SETTINGS);
 
-    await port.save({largeFilesOptIn: true});
-    expect(await port.load()).toEqual({largeFilesOptIn: true});
+    await port.save({largeFilesOptIn: true, crashAnalyticsOptIn: false});
+    expect(await port.load()).toEqual({
+      largeFilesOptIn: true,
+      crashAnalyticsOptIn: false,
+    });
   });
 
   it('createAsyncStorageScanSettingsPort defaults when storage is empty', async () => {
@@ -39,16 +42,30 @@ describe('scanSettingsStore', () => {
   });
 
   it('createAsyncStorageScanSettingsPort persists opt-in', async () => {
-    mockGetItem.mockResolvedValue(JSON.stringify({largeFilesOptIn: true}));
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({largeFilesOptIn: true, crashAnalyticsOptIn: true}),
+    );
     mockSetItem.mockResolvedValue(undefined);
     const port = createAsyncStorageScanSettingsPort();
 
-    expect(await port.load()).toEqual({largeFilesOptIn: true});
+    expect(await port.load()).toEqual({
+      largeFilesOptIn: true,
+      crashAnalyticsOptIn: true,
+    });
 
-    await port.save({largeFilesOptIn: false});
+    await port.save({largeFilesOptIn: false, crashAnalyticsOptIn: true});
     expect(mockSetItem).toHaveBeenCalledWith(
       SCAN_SETTINGS_STORAGE_KEY,
-      JSON.stringify({largeFilesOptIn: false}),
+      JSON.stringify({largeFilesOptIn: false, crashAnalyticsOptIn: true}),
     );
+  });
+
+  it('defaults crashAnalyticsOptIn to false when missing from storage', async () => {
+    mockGetItem.mockResolvedValue(JSON.stringify({largeFilesOptIn: true}));
+    const port = createAsyncStorageScanSettingsPort();
+    expect(await port.load()).toEqual({
+      largeFilesOptIn: true,
+      crashAnalyticsOptIn: false,
+    });
   });
 });

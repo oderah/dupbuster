@@ -28,12 +28,16 @@ npm run test:play-prelaunch
 echo "==> TestFlight external beta contract (M4-12)"
 npm run test:testflight-external
 
+echo "==> Crash analytics opt-in contract (M4-13)"
+npm run test:crash-analytics
+
 echo "==> Android equivalence + video/security fixtures (M1-18, decode, blob, progress)"
 cd android
 ./gradlew :app:testDebugUnitTest \
   --tests 'com.dupbuster.scanengine.fixtures.EquivFixturesTest' \
   --tests 'com.dupbuster.scanengine.fixtures.SecurityCiGateTest' \
-  --tests 'com.dupbuster.scanengine.fixtures.SecurityUriCiGateTest'
+  --tests 'com.dupbuster.scanengine.fixtures.SecurityUriCiGateTest' \
+  --tests 'com.dupbuster.scanengine.security.ScanTelemetryEgressTest'
 
 echo "==> Manual §6.2 gates (confirm before prod promote)"
 echo "  - Store-matrix QA signed off: tests/manual/m4-store-matrix-qa.md (M4-10)"

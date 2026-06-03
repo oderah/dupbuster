@@ -644,6 +644,16 @@ New code must land in these areas unless architecture is amended first.
 - **Rows:** `M4-PRELAUNCH-*`; zero unmitigated launch crashes/ANRs on prod candidate; manifest policy enforced in contract (media read + `dataSync` FGS only; no location/contacts/`MANAGE_EXTERNAL_STORAGE`).
 - **Sign-off:** Required before `DUPBUSTER_PROD_PROMOTE_APPROVED=1` and Fastlane **prod** Android submit.
 
+### Opt-in crash analytics default off (M4-13)
+
+- **UI:** `CrashAnalyticsSettingRow` on `ScanSessionScreen`; copy `tokens.settings.crashAnalytics` (US-17); switch default **off**.
+- **Persistence:** `ScanSettings.crashAnalyticsOptIn` in `dupbuster.scanSettings.v1` via `scanSettingsStore` / `useScanSettings` (default `false`).
+- **Bridge:** `setCrashAnalyticsOptIn(enabled)` on `NativeScanEngine` codegen spec; `createNativeScanEnginePort` forwards to native.
+- **Native egress:** `ScanTelemetryEgress` / `DBScanTelemetryEgress` — `setCrashAnalyticsOptIn`, `isEgressEnabled`, `recordCrashPayload` no-ops when disabled; `TelemetryAllowedFields` / `DBTelemetryAllowedFields` allowlist (architecture §8.2); bans `unscannable_reason`, paths, hashes, `frame_hashes_blob`. Sanitize helpers unchanged for M4-05 redaction CI.
+- **v1:** No third-party crash SDK wired; opt-in only gates future egress.
+- **Tests:** `npm run test:crash-analytics`; `ScanTelemetryEgressTest` / `DBScanTelemetryEgressTests`; included in `scripts/verify-prod-promote-gates.sh`.
+- **Store:** M4-09 privacy forms assume default off; enabling collection requires re-filing per `docs/store/privacy-store-disclosure.md` §6.
+
 ### TestFlight external beta (M4-12)
 
 - **Runbook:** `tests/manual/m4-testflight-external-beta.md` — external TestFlight group + **Beta App Review approved** on the **same release IPA** as M4-10 iOS matrix; iOS **15, 17, 18** coverage per `implementation-plan.md` §6.2.

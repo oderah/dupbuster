@@ -42,6 +42,7 @@ export type ScanEnginePort = {
   deleteDuplicates: (
     command: DeleteDuplicatesCommand,
   ) => Promise<DeleteDuplicatesResult>;
+  setCrashAnalyticsOptIn: (enabled: boolean) => Promise<void>;
 };
 
 export type MockScanEngineOptions = {
@@ -383,6 +384,7 @@ export function createMockScanEnginePort(
         failedCount: 0,
       };
     },
+    async setCrashAnalyticsOptIn(_enabled) {},
   };
 }
 
@@ -647,6 +649,7 @@ type NativeScanEngineModule = {
   getCatalogSnapshot: () => Promise<CatalogSnapshot>;
   getResumableScanRun: () => Promise<NativeResumableScanRunPayload | null>;
   abandonScanForRestart: ScanEnginePort['abandonScanForRestart'];
+  setCrashAnalyticsOptIn: ScanEnginePort['setCrashAnalyticsOptIn'];
 };
 
 /** Wraps TurboModule; catalog snapshot from native CatalogReader (Phase B). */
@@ -662,6 +665,7 @@ export function createNativeScanEnginePort(
   const getCatalogSnapshot = module.getCatalogSnapshot.bind(module);
   const getResumableScanRun = module.getResumableScanRun.bind(module);
   const abandonScanForRestart = module.abandonScanForRestart.bind(module);
+  const setCrashAnalyticsOptIn = module.setCrashAnalyticsOptIn.bind(module);
 
   return {
     addProgressListener(listener) {
@@ -691,5 +695,6 @@ export function createNativeScanEnginePort(
       const snapshot = await getCatalogSnapshot();
       return mapCatalogSnapshot(snapshot);
     },
+    setCrashAnalyticsOptIn: enabled => setCrashAnalyticsOptIn(enabled),
   };
 }

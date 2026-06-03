@@ -18,6 +18,7 @@
 #import "DBDeleteCoordinatorFactory.h"
 #import "DBDeleteDuplicatesCommand.h"
 #import "DBDeleteDuplicatesCommandParser.h"
+#import "DBScanTelemetryEgress.h"
 
 static NSString *const kScanEngineNotImplemented = @"SCANENGINE_NOT_IMPLEMENTED";
 static NSString *const kScanStartFailed = @"SCAN_START_FAILED";
@@ -180,6 +181,15 @@ static NSString *const kDeleteInvalidCommand = @"DELETE_INVALID_COMMAND";
     reject(kScanControlFailed, error.localizedDescription ?: @"abandonScanForRestart failed", error);
     return;
   }
+  resolve(nil);
+}
+
+- (void)setCrashAnalyticsOptIn:(BOOL)enabled
+                        resolve:(RCTPromiseResolveBlock)resolve
+                         reject:(RCTPromiseRejectBlock)reject
+{
+  (void)reject;
+  [DBScanTelemetryEgress setCrashAnalyticsOptIn:enabled];
   resolve(nil);
 }
 

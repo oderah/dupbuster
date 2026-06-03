@@ -164,6 +164,9 @@ export const tokens = {
 
   settings: {
     largeFiles: 'Hash files larger than 2 GB (uses more battery)',
+    /** US-17 / NFR-06 — opt-in crash analytics default off. */
+    crashAnalytics:
+      'Send anonymous crash reports (no file paths or content)',
   },
 
   reclaimable: {

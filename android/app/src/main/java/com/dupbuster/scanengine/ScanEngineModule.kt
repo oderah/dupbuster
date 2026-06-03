@@ -4,6 +4,7 @@ import com.facebook.proguard.annotations.DoNotStrip
 import com.dupbuster.scanengine.bridge.CatalogSnapshotBridgeMapper
 import com.dupbuster.scanengine.bridge.ResumableScanRunBridgeMapper
 import com.dupbuster.scanengine.security.RedactionFilter
+import com.dupbuster.scanengine.security.ScanTelemetryEgress
 import com.dupbuster.scanengine.index.CatalogDatabase
 import com.dupbuster.scanengine.index.CatalogReader
 import com.dupbuster.scanengine.index.IndexWriter
@@ -256,6 +257,12 @@ class ScanEngineModule(reactContext: ReactApplicationContext) :
     } catch (error: Exception) {
       promise.reject(CODE_SCAN_CONTROL_FAILED, error.message, error)
     }
+  }
+
+  @DoNotStrip
+  override fun setCrashAnalyticsOptIn(enabled: Boolean, promise: Promise) {
+    ScanTelemetryEgress.setCrashAnalyticsOptIn(enabled)
+    promise.resolve(null)
   }
 
   @DoNotStrip

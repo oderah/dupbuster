@@ -16,6 +16,8 @@ This folder contains the **source of truth** documentation for DupBuster v1.
 
 **TestFlight external (M4-12):** `tests/manual/m4-testflight-external-beta.md` — external beta + Beta App Review on the same release IPA (`npm run test:testflight-external` contract).
 
+**Crash analytics opt-in (M4-13):** `CrashAnalyticsSettingRow` default off; native `ScanTelemetryEgress` gated (`npm run test:crash-analytics` contract).
+
 If there is any conflict, follow the authority order above.
 
 ## Project invariants (v1 quick recap)

@@ -91,6 +91,7 @@ describe('createNativeScanEnginePort', () => {
       getResumableScanRun: jest.fn(),
       abandonScanForRestart: jest.fn(),
       getCatalogSnapshot: jest.fn(),
+      setCrashAnalyticsOptIn: jest.fn(),
     });
 
     const onProgress = jest.fn();

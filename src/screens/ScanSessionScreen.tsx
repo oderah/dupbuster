@@ -11,6 +11,7 @@ import {
 import {CoverageBanner} from '../components/CoverageBanner';
 import {DeleteConfirmModal} from '../components/DeleteConfirmModal';
 import {DuplicateGroupListItem} from '../components/DuplicateGroupListItem';
+import {CrashAnalyticsSettingRow} from '../components/CrashAnalyticsSettingRow';
 import {LargeFilesSettingRow} from '../components/LargeFilesSettingRow';
 import {RescanPromptBanner} from '../components/RescanPromptBanner';
 import {ResumePromptBanner} from '../components/ResumePromptBanner';
@@ -40,6 +41,8 @@ export type ScanSessionScreenProps = {
   onOpenSettings: () => void;
   largeFilesOptIn: boolean;
   onLargeFilesOptInChange: (value: boolean) => void;
+  crashAnalyticsOptIn: boolean;
+  onCrashAnalyticsOptInChange: (value: boolean) => void;
   onEnableLargeFiles: () => void;
   testID?: string;
 };
@@ -55,6 +58,8 @@ export function ScanSessionScreen({
   onOpenSettings,
   largeFilesOptIn,
   onLargeFilesOptInChange,
+  crashAnalyticsOptIn,
+  onCrashAnalyticsOptInChange,
   onEnableLargeFiles,
   testID = 'scan-session',
 }: ScanSessionScreenProps): React.JSX.Element {
@@ -173,6 +178,11 @@ export function ScanSessionScreen({
           value={largeFilesOptIn}
           onValueChange={onLargeFilesOptInChange}
           testID={`${testID}-large-files-setting`}
+        />
+        <CrashAnalyticsSettingRow
+          value={crashAnalyticsOptIn}
+          onValueChange={onCrashAnalyticsOptInChange}
+          testID={`${testID}-crash-analytics-setting`}
         />
 
         {state.phase === 'idle' ? (

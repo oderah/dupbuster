@@ -171,7 +171,10 @@ describe('useScanPermissionFlow', () => {
 
   it('passes largeFilesOptIn from scan settings on startScan (M3-11)', async () => {
     const port = createMockScanPermissionPort();
-    const settingsPort = createMemoryScanSettingsPort({largeFilesOptIn: true});
+    const settingsPort = createMemoryScanSettingsPort({
+      largeFilesOptIn: true,
+      crashAnalyticsOptIn: false,
+    });
     const engine = createMockScanEnginePort({simulateScan: false});
     const startScan = jest.spyOn(engine, 'startScan');
     const controller = createScanSessionController(engine);
@@ -195,7 +198,10 @@ describe('useScanPermissionFlow', () => {
     const handlers = mountPermissionFlow(controller, port, settingsPort);
 
     await handlers.handleEnableLargeFiles();
-    expect(await settingsPort.load()).toEqual({largeFilesOptIn: true});
+    expect(await settingsPort.load()).toEqual({
+      largeFilesOptIn: true,
+      crashAnalyticsOptIn: false,
+    });
     expect(startScan).toHaveBeenCalledWith(
       expect.objectContaining({largeFilesOptIn: true}),
     );
@@ -207,7 +213,10 @@ function mountPermissionFlow(
   controller: ReturnType<typeof createScanSessionController>,
   port: ReturnType<typeof createMockScanPermissionPort>,
   settingsPort = createMemoryScanSettingsPort(),
-  initialSettings: ScanSettings = {largeFilesOptIn: false},
+  initialSettings: ScanSettings = {
+    largeFilesOptIn: false,
+    crashAnalyticsOptIn: false,
+  },
 ) {
   let handlers: ReturnType<typeof useScanPermissionFlow> | null = null;
   let settings = {...initialSettings};
@@ -218,7 +227,7 @@ function mountPermissionFlow(
       port,
       () => settings,
       async value => {
-        settings = {largeFilesOptIn: value};
+        settings = {...settings, largeFilesOptIn: value};
         await settingsPort.save(settings);
       },
     );

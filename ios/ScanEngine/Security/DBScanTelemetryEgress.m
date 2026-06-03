@@ -1,8 +1,25 @@
 #import "DBScanTelemetryEgress.h"
 
 #import "DBRedactionFilter.h"
+#import "DBTelemetryAllowedFields.h"
+
+static BOOL sCrashAnalyticsOptIn = NO;
+static NSDictionary *sLastRecordedPayload = nil;
 
 @implementation DBScanTelemetryEgress
+
++ (BOOL)isEgressEnabled
+{
+  return sCrashAnalyticsOptIn;
+}
+
++ (void)setCrashAnalyticsOptIn:(BOOL)enabled
+{
+  sCrashAnalyticsOptIn = enabled;
+  if (!enabled) {
+    sLastRecordedPayload = @{};
+  }
+}
 
 + (NSString *_Nullable)sanitizeCrashMessage:(NSString *_Nullable)message
 {
@@ -28,5 +45,25 @@
   }
   return [NSString stringWithFormat:@"%@: %@", typeName, message];
 }
+
++ (BOOL)recordCrashPayload:(NSDictionary *)payload
+{
+  if (!sCrashAnalyticsOptIn) {
+    return NO;
+  }
+  NSDictionary *allowed = [DBTelemetryAllowedFields filterToAllowedPayload:payload];
+  if (allowed.count == 0) {
+    return NO;
+  }
+  sLastRecordedPayload = [self sanitizeCrashPayload:allowed];
+  return YES;
+}
+
+#if DEBUG
++ (NSDictionary *)lastRecordedPayloadForTests
+{
+  return sLastRecordedPayload ?: @{};
+}
+#endif
 
 @end

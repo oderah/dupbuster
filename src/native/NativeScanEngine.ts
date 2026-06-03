@@ -144,6 +144,8 @@ export interface Spec extends TurboModule {
   getCatalogSnapshot(): Promise<CatalogSnapshot>;
   getResumableScanRun(): Promise<ResumableScanRun | null>;
   abandonScanForRestart(scanRunId: Double): Promise<void>;
+  /** US-17 / M4-13 — gates native ScanTelemetryEgress. */
+  setCrashAnalyticsOptIn(enabled: boolean): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('NativeScanEngine');

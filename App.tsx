@@ -20,7 +20,13 @@ function AppContent(): React.JSX.Element {
   const permissionPort = useMemo(() => createNativeScanPermissionPort(), []);
   const settingsPort = useMemo(() => createAsyncStorageScanSettingsPort(), []);
   const {state, controller} = useScanSessionController(engine);
-  const {settings, setLargeFilesOptIn} = useScanSettings(settingsPort);
+  const {settings, setLargeFilesOptIn, setCrashAnalyticsOptIn} = useScanSettings(
+    settingsPort,
+    {
+      onCrashAnalyticsOptInChange: enabled =>
+        engine.setCrashAnalyticsOptIn(enabled),
+    },
+  );
   const {
     handleStartScan,
     handleResumeInterruptedScan,
@@ -62,6 +68,10 @@ function AppContent(): React.JSX.Element {
       }}
       onEnableLargeFiles={() => {
         handleEnableLargeFiles().catch(() => {});
+      }}
+      crashAnalyticsOptIn={settings.crashAnalyticsOptIn}
+      onCrashAnalyticsOptInChange={value => {
+        setCrashAnalyticsOptIn(value).catch(() => {});
       }}
     />
   );

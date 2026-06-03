@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import {DEFAULT_SCAN_SETTINGS} from '../src/settings/scanSettingsStore';
 import {tokens} from '../src/tokens/tokens';
 
 const repoRoot = path.join(__dirname, '..');
@@ -55,6 +56,10 @@ describe('store privacy alignment (M4-09)', () => {
     const manifest = readPrivacyManifest();
     expect(manifest.collectedDataTypesEmpty).toBe(true);
     expect(manifest.trackingFalse).toBe(true);
+  });
+
+  it('default prod settings keep crash analytics opt-in off (M4-13)', () => {
+    expect(DEFAULT_SCAN_SETTINGS.crashAnalyticsOptIn).toBe(false);
   });
 
   it('Android manifest does not request location or contacts', () => {

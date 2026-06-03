@@ -6,6 +6,7 @@ export const SCAN_SETTINGS_STORAGE_KEY = 'dupbuster.scanSettings.v1';
 
 export const DEFAULT_SCAN_SETTINGS: ScanSettings = {
   largeFilesOptIn: false,
+  crashAnalyticsOptIn: false,
 };
 
 function parseStoredSettings(raw: string | null): ScanSettings {
@@ -16,6 +17,7 @@ function parseStoredSettings(raw: string | null): ScanSettings {
     const parsed = JSON.parse(raw) as Partial<ScanSettings>;
     return {
       largeFilesOptIn: parsed.largeFilesOptIn === true,
+      crashAnalyticsOptIn: parsed.crashAnalyticsOptIn === true,
     };
   } catch {
     return DEFAULT_SCAN_SETTINGS;
